@@ -4,17 +4,19 @@ import Material
 import Colour
 import Data.Function (on)
 import Fast_PPM
+import Linear
 
 type Object = (Material,Primitive)
 type Scene = [Object]
-type Position = Point3D
-type Forward = Point3D
-type Right = Point3D
-type Up = Point3D
+type Position = V3 Double
+type Forward = V3 Double
+type Right = V3 Double
+type Up = V3 Double
 
 --static camera to present the result
 data Camera = Camera Position Forward Right Up
-camera = Camera (Point3D 0 0 (-10)) (Point3D 0 0 1) (Point3D 1 0 0) (Point3D 0 1 0)
+
+camera = Camera (V3 0.0 0.0 (-10)) (V3 0.0 0 1) (V3 1.0 0 0) (V3 0.0 1 0)
 position (Camera p _ _ _) = p
 forward (Camera _ f _ _ ) = f
 right (Camera _ _ r _) = r
@@ -44,9 +46,9 @@ getPixelCoordinates m n = let range = take (max m n) [0,1..] in
 --genereate ray from camera and pixelcoordinates                            
 generateRay :: (Double,Double) -> Ray
 generateRay x = Ray (position camera) 
-                    (normalize $ forward camera `addPoints` 
-                     (multPointComp (fst x) (right camera)) `addPoints` 
-                     (multPointComp (snd x) (up camera)))
+                    (normalize $ forward camera ^+^ 
+                     ((fst x) *^ (right camera))^+^  
+                     ((snd x) *^ (up camera)))
 
 
 generateRays ::Int -> Int -> [Ray]
@@ -54,15 +56,15 @@ generateRays m n = map generateRay $ getPixelCoordinates m n
 
 --trace returns the distance the material and the distance to 
 --the intersected primitive
-trace :: Ray -> Object -> (Material, Double)
-trace ray (m,p) = let res = intersection ray p in
+tracer :: Ray -> Object -> (Material, Double)
+tracer ray (m,p) = let res = intersection ray p in
                   case res of
                   Nothing -> (noIntersection, infinity)
-                  Just a -> (m, getOrigin ray `distanceBetween` a)
+                  Just a -> (m, getOrigin ray `distance` a)
 
 
 rayTracing :: Ray -> Scene -> [(Material,Double)]
-rayTracing ray scene = map (trace ray) scene
+rayTracing ray scene = map (tracer ray) scene
  
 
 --combinding the functions to return pixels

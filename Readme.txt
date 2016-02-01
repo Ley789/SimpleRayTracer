@@ -6,7 +6,7 @@ To test the raytrace algorithm perform following steps
        basicCircle
        Material 
        Color
- e.g. let scene = insertPrimitice (Material (Colour 1 1 1), basicCircle 5) emptyScene
+ e.g. let scene = insertPrimitive (Material (Colour 1 1 1), basicCircle) emptyScene
 3. Function simpleRayTracer s m n
    where s is the scene
          m is the pixel width
@@ -14,4 +14,4 @@ To test the raytrace algorithm perform following steps
    return a list of pixel colors formated as [[Colour]]
 4. to safe the pixel array into a ppm file use:
    save_ppm OUTPUTFILE colorArray
-e.g. safe_ppm "test.ppm" (simpleRayTracer scene 255 255)
+e.g. save_ppm "test.ppm" (simpleRayTracer scene 255 255)
