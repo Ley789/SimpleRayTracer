@@ -1,3 +1,5 @@
+module Scene where 
+
 import Data.List
 import Primitives
 import Material
