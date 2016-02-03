@@ -14,7 +14,7 @@ module Primitives (
 
 import Linear
 
---represents an euklidean coordinate 
+--represents an Euclidean coordinate 
 type Center = V3 Double
 type Origin = V3 Double
 type Direction = V3 Double
