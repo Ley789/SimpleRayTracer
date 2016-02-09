@@ -1,15 +1,12 @@
 module Primitives (
-                   Primitive,
+                   Primitive(..),
                    Radius,
                    Ray(..),
                    basicCircle,
                    origin,
                    direction,
                    getOrigin,
-                   intersection,
-                   normalize,
-                   translate,
-                   distance
+                   intersection
                    )where
 
 import Linear
@@ -23,20 +20,14 @@ type Intersection = V3 Double
 
 
            
-
---todo change to radius 1 and apply matrix multiplication
-data Primitive = Circle Center Radius
+--Types that represent primitives
+data Primitive = Sphere     --sphere of raidus 1 with center in the origin
+                 deriving(Show)
 
 data Ray = Ray Origin Center
+           deriving Show
 
-instance Show Primitive where
-      show (Circle x y) = "Center: " ++ show x ++" radius: "++ show y
-
-
-basicCircle = Circle (V3 0.0 0.0 0.0) 1
-
-translate ::Primitive -> V3 Double -> Primitive
-translate (Circle p r) t = Circle (translatePoint p t) r
+basicCircle = Sphere
 
 origin :: Double -> Double -> Double -> Origin
 origin x y z = V3 x y z
@@ -52,44 +43,28 @@ getOrigin (Ray o _) = o
 
 
 intersection :: Ray -> Primitive -> Maybe Intersection
-intersection ray c@(Circle center radius)
-                       = sphereIntersection ray c
+intersection ray Sphere = sphereIntersection ray
+
 
 --calculates the possible intersectionpoint 
-sphereIntersection (Ray origin direction) (Circle center radius) 
-                       = if toSquare < 0 then 
-                            Nothing      else  
-                            nearestIntersectionSphere origin direction x y
-                            where v =  origin ^-^ center 
-                                  p = skalarProduct v direction 
-                                  toSquare = p**2 - (skalarProduct v v - radius**2)
-                                  x = (-p) + sqrt toSquare
-                                  y = (-p) - sqrt toSquare  
+sphereIntersection (Ray origin direction) 
+  | toSquare < 0 = Nothing
+  | otherwise = nearestIntersectionSphere origin direction x y
+                where a = dot direction direction
+                      b = 2 * (dot direction origin)
+                      c = (dot origin origin) -1
+                      toSquare = b**2 - 4 * a * c
+                      x = (-b) + sqrt toSquare
+                      y = (-b) - sqrt toSquare  
 
---there are always 2 intersections with a sphere and 
+--There can be 2 intersections with a sphere and 
 --this function returns the nearest one
-nearestIntersectionSphere origin direction res1 res2 =
-                                if res1 < 0 && res2 < 0 then 
-                                Nothing           else
-                                Just intersection
-                                where coefficient = minPos res1 res2
-                                      intersection = origin ^+^(coefficient *^ direction)
-
---only works if at least 1 element is positive
-minPos x y 
-         | x >= 0 && y >=0 = min x y
-         | x >= 0 =  x
-         | otherwise = y
-               
-    
-skalarProduct v w = sumPoint $ liftI2 (*) v w
-
-componentFunction f (V3 x y z) (V3 x' y' z') = V3 (f x x') (f y y') (f z z')
-
-translatePoint ::(Num a) => V3 a -> V3 a -> V3 a
-translatePoint x y = x ^+^ y
-
-sumPoint (V3 x y z) = x + y + z
+nearestIntersectionSphere origin direction res1 res2
+  | res1 >= 0 && res2 >= 0 = Just $ intersection $ min res1 res2
+  | res1 >= 0              = Just $ intersection res1
+  | res2 >= 0              = Just $ intersection res2
+  | otherwise              = Nothing
+  where intersection t = origin ^+^(t *^ direction)
 
 
 

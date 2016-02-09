@@ -5,10 +5,7 @@
 {-# LANGUAGE TypeSynonymInstances  #-}
 {-# LANGUAGE ViewPatterns          #-}
 
-
-
 module BackendRayTrace where
-
 
 import           Control.Lens                   (view)
 import           Data.Monoid                    (Last (..))
@@ -23,6 +20,7 @@ import           Scene
 import qualified Primitives                     as P
 import           Material
 import           Colour
+import           Linear
 data Ray = Ray
      deriving (Eq,Ord,Read,Show,Typeable)
 
@@ -34,7 +32,7 @@ instance Monoid (Render Ray V3 Double) where
    (MRay f) `mappend`(MRay s) = MRay (f ++ s)
 
 instance Backend Ray V3 Double where
-   data Render Ray V3 Double = MRay [Object]
+   data Render Ray V3 Double = MRay [SceneObject]
    type Result Ray V3 Double = Scene
    data Options Ray V3 Double = RayOptions
   
@@ -50,21 +48,30 @@ unRay (MRay x) = x
 
 
 class ToObject t where
-      toObject :: t -> Object
+      toObject :: t -> SceneObject
+
 
 -- change to use matrixHomeRep for more flexibility and change to use V3
 -- atm standard color is red
 instance ToObject (Ellipsoid Double) where
-  toObject (Ellipsoid t) =(Material $ Colour 1 0 0 ,rayPrimSphere t)
+  toObject (Ellipsoid t) = rayPrimSphere t
 
-rayPrimSphere t = P.translate P.basicCircle $ getTranslation t
 
-getTranslation :: T3 Double -> V3 Double
-getTranslation t = pointFromList . last . matrixHomRep $ t 
-                   where pointFromList (x:y:z:_) = V3 x y z 
+rayPrimSphere t = Object P.Sphere (rayTrans t)
+
+rayTrans :: T3 Double -> RayModifier
+rayTrans t = RM (getTransformation $ inv $ t)                    
+
+getTransformation = listToMatrix . matrixHomRep 
+--converts List of 3*3 elements to 4x4 homogenious matrix
+listToMatrix :: (Num a) => [[a]] -> M44 a
+listToMatrix (x:y:z:w:_) = transpose $ V4 (homVector x 0) (homVector y 0) 
+                                          (homVector z 0) (homVector w 1)
+
+homVector (x:y:z:_) c = V4 x y z c
 
 instance Renderable (Ellipsoid Double) Ray where
       render _ = wrapSolid . toObject
 
-wrapSolid :: Object -> Render Ray V3 Double
+wrapSolid :: SceneObject -> Render Ray V3 Double
 wrapSolid = MRay . (:[]) 
