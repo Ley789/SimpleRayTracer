@@ -2,6 +2,7 @@ module Scene where
 
 import qualified Debug.Trace as T
 import Data.List
+import Data.Maybe
 import Data.Monoid
 import Control.Lens
 import Primitives
@@ -11,104 +12,116 @@ import Data.Function (on)
 import Fast_PPM
 import Linear
 
-
-data SceneObject = Object Primitive RayModifier
+data Object = Object Primitive RayModifier 
 
 data RayModifier = RM {
-  inversOTrans :: M44 Double    --Inversed transformation matrix of the object
-  } deriving Show
-
-type Scene = [SceneObject]
+  inversOTrans :: M44 Double -- ^ Inverse transformation matrix of the object
+} deriving Show
 
 
-type Position = V3 Double
-type Forward = V3 Double
-type Right = V3 Double
-type Up = V3 Double
+data SceneItem = SIObject Object | SICamera SCamera
 
---static camera to present the result
-data Camera = Camera Position Forward Right Up
+type Scene = [SceneItem]
 
-camera = Camera (V3 0.0 0.0 (-10)) (V3 0.0 0 1) (V3 1.0 0 0) (V3 0.0 1 0)
-position (Camera p _ _ _) = p
-forward (Camera _ f _ _ ) = f
-right (Camera _ _ r _) = r
-up (Camera _ _ _ u) = u
-infinity = read "Infinity" 
+-- to rename used because type Scene changes to add light and camera and be more flexible
+type TmpTyName = [Object]
 
 
-emptyScene :: Scene
+data SCamera = SCamera {
+  cType :: CameraType,
+  pos :: V3 Double,
+  forward :: V3 Double,
+  right :: V3 Double,
+  up :: V3 Double
+}
+
+data CameraType = Perspective | Orthographic
+
+-- | Static camera will be used if no carmera was defined.
+camera = SCamera Perspective (V3 0.0 0.0 (-10)) (V3 0.0 0 1) (V3 1.0 0 0) (V3 0.0 1 0)
+
+emptyScene :: TmpTyName
 emptyScene = []
 
-insertPrimitive :: SceneObject -> Scene -> Scene
+insertPrimitive :: Object -> TmpTyName -> TmpTyName
 insertPrimitive o s = o : s
 
---this function does a division after the convertion from Int to Double
-division :: Int -> Int -> Double
-division = (/) `on` fromIntegral
-
---TODO chek m n positive
---we are mapping the pixel size to the intervall [-1, 1] e.g. left uper corner
---of the picture is (-1, 1), center (0,0) ect.
-getPixelCoordinates :: Int -> Int -> [(Double, Double)]
-getPixelCoordinates m n = 
-  let range = take (max m n) [0,1..] in
-      [(2*(division x (m-1)) -1 ,
-       -(2* (division y (n-1)) -1))
-       |y <- range, x <-range, x < m, y < n]
+-- | Convert to Num and divide.
+divNum :: (Num a, Fractional a) => Int -> Int -> a
+divNum = (/) `on` fromIntegral
 
 
---genereate ray from camera and pixelcoordinates                            
-generateRay :: (Double,Double) -> Ray
-generateRay x = Ray (position camera) 
-                    (normalize $ forward camera ^+^ 
-                     ((fst x) *^ (right camera))^+^  
-                     ((snd x) *^ (up camera)))
+--TODO check m n positive
+--we are mapping the pixel size to the interval [-1, 1] e.g. left upper corner
+--of the picture is (-1, 1), center (0,0) etc.
+pixelCoordinates :: (Int, Int) -> [[(Double, Double)]]
+pixelCoordinates (m, n) =
+  [[(f x m, negate $ f y n) | x <- [0 .. n]] | y <- [0 .. m]]
+  where f x a = 2*x `divNum` a - 1
 
-generateRays ::Int -> Int -> [Ray]
-generateRays m n = map generateRay $ getPixelCoordinates m n
-
-
-
---TODO check if both matrixes are needed...homogenious representation
---should take care of that
 
 --we transform the ray instead of the primitive.
---So we can use the standart intersection equations
+--So we can use the standard intersection equations
+-- Was macht das, und warum macht es das?
 transformRay :: Ray -> RayModifier -> Ray
 transformRay (Ray o d) (RM trans) =
   Ray newOrigin newDirection
-  where newOrigin    = (trans !* (point o)) ^. _xyz
-        newDirection = (trans !* (vector d)) ^. _xyz
+  where newOrigin    = (trans !* point o) ^. _xyz
+        newDirection = (trans !* vector d) ^. _xyz
 
 
---trace returns the distance the material and the distance to 
---atm material is colour red
---the intersected primitive
-tracer :: Ray -> SceneObject -> (Material, Double)
-tracer ray (Object p rm) =
-    case res of
-    Nothing -> (noIntersection, infinity)
-    Just a -> (colour 1 0 0, getOrigin ray `distance` a)
-    where transRay = transformRay ray rm
-          res = intersection transRay p
---T.trace ("old ray: " ++ show ray ++ " new ray: " ++ show transRay) (intersection transRay p)
+-- | Intersect ray with object and return color and
+-- distance from ray origin to object intersection.
+rayObjectIntersection :: Ray -> Object -> Maybe (Material, Double)
+rayObjectIntersection ray (Object p rm) = do
+  res <- intersection (transformRay ray rm) p
+  return (colour 1 0 0, getOrigin ray `distance` res)
 
-rayTracing :: Ray -> Scene -> [(Material,Double)]
-rayTracing ray scene = map (tracer ray) scene
- 
+mapTracing :: Ray -> TmpTyName -> [(Material,Double)]
+mapTracing ray = mapMaybe (rayObjectIntersection ray)
 
---combinding the functions to return pixels
-simpleRayTracer :: Scene -> Int -> Int -> [[Colour]]
-simpleRayTracer s m n = filterColour $ splitList m $ map (foldl1' nearest) $ map (`rayTracing` s) $ generateRays m n
+-- | Create image from a scene with given pixel size.
+simpleRayTracer :: Scene  -> (Int, Int) -> [[Colour]]
+simpleRayTracer s (m, n) = filterColour $ (map.map) (nearestIntersection . (`mapTracing` extractObject s)) $ generateRays (extractCamera s) (m, n)
 
-nearest f@(m,x) s@(m',y) 
-  | x < y = f
-  | otherwise = s
+-- | Extract nearest intersected primitive from list and return color.
+nearestIntersection l =
+  case l of
+    [] -> noIntersection
+    _  -> fst $ foldl1' nearest l
+    where nearest f@(m,x) s@(m',y) 
+            | x < y = f
+            | otherwise = s
 
+filterColour = (map.map) getColour
+generateRays c = (map.map) (`generateRay` c) . pixelCoordinates
 
-filterColour = map (map (\x -> getColour $ fst x))
- 
-splitList :: Int -> [a] -> [[a]]
-splitList _ [] = []
-splitList n l = take n l : splitList n (drop n l)
+-- generate ray from camera and pixel coordinates                            
+generateRay :: (Double,Double)-> SCamera -> Ray
+generateRay x c = 
+  case cType c of
+    Perspective -> perspecTrans x c
+    Orthographic -> orthoTrans x c
+
+perspecTrans x c = Ray (pos c) 
+                    (normalize $ forward c ^+^ 
+                     (fst x *^ right c) ^+^  
+                     (snd x *^ up c))
+
+orthoTrans x c = Ray (pos c ^+^ forward c ^+^ 
+                     (fst x *^ right c) ^+^ 
+                     (snd x *^ up c)) (normalize $ forward c) 
+
+-- ask for better solutions
+-- maybe using filter
+-- or extract in triple
+extractObject [] = []
+extractObject (x:xs) = 
+  case x of
+    SIObject o -> o: extractObject xs
+    _          -> extractObject xs 
+extractCamera [] = camera
+extractCamera (x:xs) =
+  case x of
+    SICamera c -> c
+    _          -> extractCamera xs
