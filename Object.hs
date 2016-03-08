@@ -64,18 +64,18 @@ instance Monoid OModifier where
 transformRay :: Ray -> M44 Double -> Ray
 transformRay (Ray o d) trans =
   Ray newOrigin newDirection
-  where newOrigin    = (trans !* point o) ^. _xyz
-        newDirection = (trans !* vector d) ^. _xyz
+  where newOrigin    = trans !* o
+        newDirection = trans !* d
 
 -- TODO Box is handelt different then Cones and spheres
 -- ASK prof for solution
 -- | Intersect ray with object and return ray, object and
 -- distance from ray origin to object intersection.
-rayObjectIntersection :: Ray -> Object -> Maybe (Ray, Object, Double)
+rayObjectIntersection :: Ray -> Object -> Maybe (Ray, Object,V4 Double, Double)
 rayObjectIntersection ray o@(Object p om) = do
   mat <- getLast $ transMatrix om
   res <- intersection (transformRay ray $ inv44 mat) p
-  return (ray, o, getOrigin ray `distance` res)
+  return (ray, o, normalVector (mat !* res) mat,getOrigin ray `distance` res)
 
 
 ------------------------------------------------------------------------------
@@ -84,10 +84,24 @@ rayObjectIntersection ray o@(Object p om) = do
 --
 ------------------------------------------------------------------------------
 
---normalVector :: Object -> V3 Double
+-- TODO Test this function
+-- Same problem as rayObjectIntersection funktion, this does not work for boxes
+normalVector :: V4 Double -> M44 Double -> V4 Double
+normalVector p tr = rot !*! invScale !*! invScale !* p
+  where invScale  = V4 (V4 (1 / scaleX tr) 0 0 0) (V4 0 (1 / scaleY tr) 0 0)
+                       (V4 0 0 (1 / scaleZ tr) 0) (V4 0 0 0 1)
+        rot       = V4 (tr ^._x) (tr ^._y) (tr ^._z) (V4 0 0 0 1)
 
+scaleX tr = sqrt $ dot c c 
+  where c = tr ^._x
 
-extractColour :: Object -> Colour
-extractColour (Object _ p) = case getLast . pigment $ texture p of
+scaleY tr = sqrt $ dot c c 
+  where c = tr ^._y
+
+scaleZ tr = sqrt $ dot c c 
+  where c = tr ^._z
+
+getColour :: Object -> Colour
+getColour (Object _ p) = case getLast . pigment $ texture p of
   Nothing -> Colour 0 0 0
   Just x -> x

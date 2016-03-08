@@ -12,11 +12,11 @@ module Primitive (
 import Linear
 
 --represents an Euclidean coordinate 
-type Center = V3 Double
-type Origin = V3 Double
-type Direction = V3 Double
+type Center = V4 Double
+type Origin = V4 Double
+type Direction = V4 Double
 type Radius = Double 
-type Intersection = V3 Double
+type Intersection = V4 Double
 
 
            
@@ -30,10 +30,10 @@ data Ray = Ray Origin Center
 basicCircle = Sphere
 
 origin :: Double -> Double -> Double -> Origin
-origin x y z = V3 x y z
+origin x y z = V4 x y z 1
 
 direction :: Double -> Double -> Double -> Direction
-direction = origin
+direction x y z = V4 x y z 0
 
 ray :: Origin -> Direction -> Ray
 ray o d = Ray o d
@@ -52,7 +52,7 @@ sphereIntersection (Ray origin direction)
   | otherwise = nearestIntersectionSphere origin direction x y
                 where a = dot direction direction
                       b = 2 * (dot direction origin)
-                      c = (dot origin origin) -1
+                      c = (dot origin origin) - 2
                       toSquare = b**2 - 4 * a * c
                       x = (-b) + sqrt toSquare
                       y = (-b) - sqrt toSquare  
