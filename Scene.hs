@@ -5,26 +5,18 @@ import Data.List
 import Data.Maybe
 import Data.Monoid
 import Control.Lens
-import Primitives
-import Material
+import Primitive
 import Colour
 import Data.Function (on)
 import Fast_PPM
 import Linear
-
-data Object = Object Primitive RayModifier 
-
-data RayModifier = RM {
-  inversOTrans :: M44 Double -- ^ Inverse transformation matrix of the object
-} deriving Show
+import Object
 
 
-data SceneItem = SIObject Object | SICamera SCamera
-
-type Scene = [SceneItem]
+type Scene = (Last SCamera, [Object])
 
 -- to rename used because type Scene changes to add light and camera and be more flexible
-type TmpTyName = [Object]
+type SceneObject = [Object]
 
 
 data SCamera = SCamera {
@@ -40,10 +32,10 @@ data CameraType = Perspective | Orthographic
 -- | Static camera will be used if no carmera was defined.
 camera = SCamera Perspective (V3 0.0 0.0 (-10)) (V3 0.0 0 1) (V3 1.0 0 0) (V3 0.0 1 0)
 
-emptyScene :: TmpTyName
+emptyScene :: SceneObject
 emptyScene = []
 
-insertPrimitive :: Object -> TmpTyName -> TmpTyName
+insertPrimitive :: Object -> SceneObject -> SceneObject
 insertPrimitive o s = o : s
 
 -- | Convert to Num and divide.
@@ -59,38 +51,21 @@ pixelCoordinates (m, n) =
   [[(f x m, negate $ f y n) | x <- [0 .. n]] | y <- [0 .. m]]
   where f x a = 2*x `divNum` a - 1
 
-
---we transform the ray instead of the primitive.
---So we can use the standard intersection equations
--- Was macht das, und warum macht es das?
-transformRay :: Ray -> RayModifier -> Ray
-transformRay (Ray o d) (RM trans) =
-  Ray newOrigin newDirection
-  where newOrigin    = (trans !* point o) ^. _xyz
-        newDirection = (trans !* vector d) ^. _xyz
-
-
--- | Intersect ray with object and return color and
--- distance from ray origin to object intersection.
-rayObjectIntersection :: Ray -> Object -> Maybe (Material, Double)
-rayObjectIntersection ray (Object p rm) = do
-  res <- intersection (transformRay ray rm) p
-  return (colour 1 0 0, getOrigin ray `distance` res)
-
-mapTracing :: Ray -> TmpTyName -> [(Material,Double)]
+mapTracing :: Ray -> SceneObject -> [(Ray, Object, V4 Double, V4 Double)]
 mapTracing ray = mapMaybe (rayObjectIntersection ray)
 
 -- | Create image from a scene with given pixel size.
 simpleRayTracer :: Scene  -> (Int, Int) -> [[Colour]]
 simpleRayTracer s (m, n) = filterColour $ (map.map) (nearestIntersection . (`mapTracing` extractObject s)) $ generateRays (extractCamera s) (m, n)
 
+-- TODO Change case [] represents no intersection
 -- | Extract nearest intersected primitive from list and return color.
 nearestIntersection l =
   case l of
     [] -> noIntersection
-    _  -> fst $ foldl1' nearest l
-    where nearest f@(m,x) s@(m',y) 
-            | x < y = f
+    _  -> getObject $ foldl1' nearest l
+    where nearest f@(r1,_,_,p1) s@(r2,_,_,p2) 
+            | rayPointDistance r1 p1 < rayPointDistance r2 p2 = f
             | otherwise = s
 
 filterColour = (map.map) getColour
@@ -103,25 +78,17 @@ generateRay x c =
     Perspective -> perspecTrans x c
     Orthographic -> orthoTrans x c
 
-perspecTrans x c = Ray (pos c) 
-                    (normalize $ forward c ^+^ 
+perspecTrans x c = Ray (point $ pos c) 
+                    (vector $ normalize $ forward c ^+^ 
                      (fst x *^ right c) ^+^  
                      (snd x *^ up c))
 
-orthoTrans x c = Ray (pos c ^+^ forward c ^+^ 
+orthoTrans x c = Ray (point $ pos c ^+^ forward c ^+^ 
                      (fst x *^ right c) ^+^ 
-                     (snd x *^ up c)) (normalize $ forward c) 
+                     (snd x *^ up c)) (vector $ normalize $ forward c) 
 
--- ask for better solutions
--- maybe using filter
--- or extract in triple
-extractObject [] = []
-extractObject (x:xs) = 
-  case x of
-    SIObject o -> o: extractObject xs
-    _          -> extractObject xs 
-extractCamera [] = camera
-extractCamera (x:xs) =
-  case x of
-    SICamera c -> c
-    _          -> extractCamera xs
+extractObject (_,x) = x 
+
+extractCamera (x,_) = fromMaybe camera (getLast x)
+
+noIntersection = Object Nil mempty

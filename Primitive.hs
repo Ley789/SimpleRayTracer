@@ -22,7 +22,8 @@ type Intersection = V4 Double
            
 --Types that represent primitives
 data Primitive = Sphere     --sphere of raidus 1 with center in the origin
-                 deriving(Show)
+               | Nil 
+                deriving(Show)
 
 data Ray = Ray Origin Center
            deriving Show

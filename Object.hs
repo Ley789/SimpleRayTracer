@@ -3,6 +3,7 @@ module Object where
 import Linear
 import Primitive
 import Colour
+import Data.Maybe
 import Data.Monoid
 import Control.Lens
 
@@ -12,21 +13,18 @@ import Control.Lens
 --
 -------------------------------------------------------------------------------
 
-
 data Object = Object {
   prim :: Primitive,
   oModifier :: OModifier
 }
-
 
 data OModifier = OModifier {
   transMatrix :: Last (M44 Double),
   texture :: Texture
 }
 
-
 data Texture = Texture {
-  pigment :: (Last Colour),
+  pigment :: Last Colour,
   propert :: TPropertie
   } deriving (Show, Eq)
 
@@ -52,12 +50,12 @@ instance Monoid OModifier where
   mappend (OModifier tr1 t1) (OModifier tr2 t2) = 
    OModifier (mappend tr1 tr2) (mappend t1 t2)
 
-
 -------------------------------------------------------------------------------
 --
 --                    Intersection functions
 --
 -------------------------------------------------------------------------------
+
 
 -- | Applying transformation to ray, that will simulate transformation on 
 -- primitive. So some intersection functions stay simple.
@@ -69,13 +67,13 @@ transformRay (Ray o d) trans =
 
 -- TODO Box is handelt different then Cones and spheres
 -- ASK prof for solution
--- | Intersect ray with object and return ray, object and
--- distance from ray origin to object intersection.
-rayObjectIntersection :: Ray -> Object -> Maybe (Ray, Object,V4 Double, Double)
+-- | Intersect ray with object and return ray, object, normal vector and
+-- point of the intersection.
+rayObjectIntersection :: Ray -> Object -> Maybe (Ray, Object,V4 Double, V4 Double)
 rayObjectIntersection ray o@(Object p om) = do
   mat <- getLast $ transMatrix om
   res <- intersection (transformRay ray $ inv44 mat) p
-  return (ray, o, normalVector (mat !* res) mat,getOrigin ray `distance` res)
+  return (ray, o, normalVector mat res, mat !* res)
 
 
 ------------------------------------------------------------------------------
@@ -84,10 +82,12 @@ rayObjectIntersection ray o@(Object p om) = do
 --
 ------------------------------------------------------------------------------
 
+rayPointDistance ray p = distance (normalizePoint $ getOrigin ray) (normalizePoint p)
+
 -- TODO Test this function
 -- Same problem as rayObjectIntersection funktion, this does not work for boxes
-normalVector :: V4 Double -> M44 Double -> V4 Double
-normalVector p tr = rot !*! invScale !*! invScale !* p
+normalVector :: M44 Double -> V4 Double -> V4 Double
+normalVector tr p = rot !*! invScale !*! invScale !* p
   where invScale  = V4 (V4 (1 / scaleX tr) 0 0 0) (V4 0 (1 / scaleY tr) 0 0)
                        (V4 0 0 (1 / scaleZ tr) 0) (V4 0 0 0 1)
         rot       = V4 (tr ^._x) (tr ^._y) (tr ^._z) (V4 0 0 0 1)
@@ -102,6 +102,6 @@ scaleZ tr = sqrt $ dot c c
   where c = tr ^._z
 
 getColour :: Object -> Colour
-getColour (Object _ p) = case getLast . pigment $ texture p of
-  Nothing -> Colour 0 0 0
-  Just x -> x
+getColour (Object _ p) = fromMaybe (Colour 0 0 0) (getLast . pigment $ texture p)
+
+getObject (_,x,_,_) = x
