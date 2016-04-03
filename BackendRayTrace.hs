@@ -15,7 +15,7 @@ import           Data.List                      (last, foldl1')
 import           Diagrams.Core.Transform
 import           Diagrams.Core.Types
 import           Diagrams.Prelude              as D hiding (Last (..), view)
-import           Scene
+import           SceneTypes
 import qualified Primitive                     as P
 import           Object
 import qualified Colour                        as C
@@ -28,11 +28,11 @@ type instance V Ray = V3
 type instance N Ray = Double
 
 instance Monoid (Render Ray V3 Double) where
-   mempty = MRay (mempty,[])
-   MRay (c1, l1) `mappend` MRay (c2, l2) = MRay (mappend c1 c2, l1 ++ l2)
+   mempty = MRay mempty
+   MRay s1 `mappend` MRay s2 = MRay $ mappend s1 s2
 
 instance Backend Ray V3 Double where
-   data Render Ray V3 Double = MRay (Last SCamera, [Object])
+   data Render Ray V3 Double = MRay Scene
    type Result Ray V3 Double = Scene
    data Options Ray V3 Double = RayOptions
   
@@ -71,31 +71,30 @@ instance Renderable (Ellipsoid Double) Ray where
       render _ = wrapSolid . toObject
 
 wrapSolid :: Object -> Render Ray V3 Double
-wrapSolid x = MRay (Last Nothing ,[x])  
+wrapSolid x = MRay $ setObject [x] mempty  
 
 --------------------------------------------------------------------
 -- Edit Style
 --------------------------------------------------------------------
 
--- ASK better structure for scene, so if the type does change the function does still work
 addTexture :: Style V3 Double -> Scene -> Scene
-addTexture st (c,l) = (c, map (setTexture st) l)
+addTexture st s = setObject (map (setTexture st) $ s ^. sObjects) s
 
 convertColor :: Color c => c -> C.Colour
 convertColor (colorToSRGBA -> (r,g,b,_)) = C.Colour r g b
 
-
 setTexture :: Style V3 Double -> Object -> Object
-setTexture sty (Object o om) = Object o (om `mappend` 
-                 OModifier mempty (Texture (mkPigment sty) (mkFinish sty)))
+setTexture sty o = setObjectModifier o $ createTexture sty
 
+createTexture :: Style V3 Double -> OModifier
+createTexture sty = OModifier mempty (Texture (mkPigment sty) (mkFinish sty)) 
 
 mkPigment :: Style V3 Double -> Last C.Colour
 mkPigment = Last . fmap convertColor . view _sc
 
 
-mkFinish :: Style V3 Double -> TPropertie
-mkFinish sty = TPropertie
+mkFinish :: Style V3 Double -> TProperty
+mkFinish sty = TProperty
                (Last $ sty ^. _ambient)
                (Last $ sty ^. _diffuse)
                (Last $ hl  ^? _Just . specularIntensity)
@@ -110,14 +109,15 @@ mkFinish sty = TPropertie
 -- Renderable Camera
 --------------------------------------------------------------------
 
+--TODO Test 
 instance Renderable (Camera PerspectiveLens Double) Ray where
-  render _ c = MRay (Last . Just $ SCamera {
+  render _ c = MRay $ setCamera (Last . Just $ SCamera {
     cType   = t,
     pos     = l,
     forward = forLen *^ forUnit,
     right   = rightLen *^ rightUnit,
     up      = upUnit
-    }, [])
+    }) mempty
     where
       l         = camLoc c .-. origin
       (PerspectiveLens h v) = camLens c
@@ -129,13 +129,13 @@ instance Renderable (Camera PerspectiveLens Double) Ray where
       t         = Perspective
 
 instance Renderable (Camera OrthoLens Double) Ray where
-  render _ c = MRay (Last . Just $ SCamera {
+  render _ c = MRay $ setCamera (Last . Just $ SCamera {
     cType   = t, 
     pos     = l,
     forward = forUnit,
     right   = h *^ rightUnit,
     up      = v *^ upUnit
-    }, [])
+    }) mempty
     where
       l               = camLoc c .-. origin
       (OrthoLens h v) = camLens c

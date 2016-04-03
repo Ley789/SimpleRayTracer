@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Scene where 
 
 import qualified Debug.Trace as T
@@ -11,23 +12,8 @@ import Data.Function (on)
 import Fast_PPM
 import Linear
 import Object
-
-
-type Scene = (Last SCamera, [Object])
-
--- to rename used because type Scene changes to add light and camera and be more flexible
-type SceneObject = [Object]
-
-
-data SCamera = SCamera {
-  cType :: CameraType,
-  pos :: V3 Double,
-  forward :: V3 Double,
-  right :: V3 Double,
-  up :: V3 Double
-}
-
-data CameraType = Perspective | Orthographic
+import SceneTypes
+import Blinn_Phong
 
 -- | Static camera will be used if no carmera was defined.
 camera = SCamera Perspective (V3 0.0 0.0 (-10)) (V3 0.0 0 1) (V3 1.0 0 0) (V3 0.0 1 0)
@@ -51,25 +37,30 @@ pixelCoordinates (m, n) =
   [[(f x m, negate $ f y n) | x <- [0 .. n]] | y <- [0 .. m]]
   where f x a = 2*x `divNum` a - 1
 
-mapTracing :: Ray -> SceneObject -> [(Ray, Object, V4 Double, V4 Double)]
+mapTracing :: Ray -> SceneObject -> [Intersection]
 mapTracing ray = mapMaybe (rayObjectIntersection ray)
 
 -- | Create image from a scene with given pixel size.
 simpleRayTracer :: Scene  -> (Int, Int) -> [[Colour]]
-simpleRayTracer s (m, n) = filterColour $ (map.map) (nearestIntersection . (`mapTracing` extractObject s)) $ generateRays (extractCamera s) (m, n)
+simpleRayTracer s (m, n) = T.trace ("Objects: " ++ show (s ^. sObjects)) $
+  filterColour (s ^. sObjects) $ (map.map) (nearestIntersection . (`mapTracing` (s ^. sObjects))) $ generateRays (extractCamera $ s ^. sCamera) (m, n)
 
 -- TODO Change case [] represents no intersection
 -- | Extract nearest intersected primitive from list and return color.
 nearestIntersection l =
   case l of
-    [] -> noIntersection
-    _  -> getObject $ foldl1' nearest l
-    where nearest f@(r1,_,_,p1) s@(r2,_,_,p2) 
-            | rayPointDistance r1 p1 < rayPointDistance r2 p2 = f
+    [] -> Nothing
+    _  -> Just $ foldl1' nearest l
+    where nearest f s
+            | rayPointDistance (f ^. ray) (f ^. itPoint) 
+              < rayPointDistance (s ^. ray) (s ^. itPoint) = f
             | otherwise = s
 
-filterColour = (map.map) getColour
+filterColour :: SceneObject -> [[Maybe Intersection]] -> [[Colour]]
+filterColour s = (map.map) (`intersectionColour` s) 
+
 generateRays c = (map.map) (`generateRay` c) . pixelCoordinates
+
 
 -- generate ray from camera and pixel coordinates                            
 generateRay :: (Double,Double)-> SCamera -> Ray
@@ -87,8 +78,41 @@ orthoTrans x c = Ray (point $ pos c ^+^ forward c ^+^
                      (fst x *^ right c) ^+^ 
                      (snd x *^ up c)) (vector $ normalize $ forward c) 
 
-extractObject (_,x) = x 
 
-extractCamera (x,_) = fromMaybe camera (getLast x)
+extractCamera x = fromMaybe camera (getLast x)
 
 noIntersection = Object Nil mempty
+
+
+-------------------------------------------------------------------------------
+-- shading functions 
+-------------------------------------------------------------------------------
+
+intersectionColour :: Maybe Intersection -> SceneObject -> Colour
+intersectionColour i s =
+  case i of
+    Nothing -> Colour 0 0 0
+    Just x  -> if hitLight light (rayToLight light x) s then
+                  blinn_phong light x else
+                  Colour 0 0 0
+
+rayToLight :: Light -> Intersection -> Ray
+rayToLight l i = Ray (origin ^+^ (direction ^* 0.1) ) (direction)
+  where direction = l ^. lPosition - i ^. itPoint
+        origin = i ^. itPoint
+
+hitLight :: Light -> Ray -> SceneObject -> Bool
+hitLight l r s = case filter (filterIntersection l r) (mapTracing r s) of
+  [] -> True
+  _  -> False
+
+filterIntersection :: Light -> Ray -> Intersection -> Bool
+filterIntersection l r i = 
+  (rayPointDistance r $ i ^. itPoint) > (rayPointDistance r $ l ^.lPosition) 
+
+
+-------------------------------------------------------------------------------
+-- test functions 
+-------------------------------------------------------------------------------
+
+light = Light (V4 0 0 (-5) 1) (Colour 1 1 1)
