@@ -52,10 +52,16 @@ class ToObject t where
 instance ToObject (Ellipsoid Double) where
   toObject (Ellipsoid t) = rayPrimSphere t
 
-rayPrimSphere t = Object P.Sphere (rayTrans t)
+instance ToObject (D.Box Double) where
+  toObject (D.Box t) = Object P.Box (trans t) 
 
-rayTrans :: T3 Double -> OModifier
-rayTrans t = OModifier (getTransformation t) 
+instance ToObject (Frustum Double) where
+  toObject (Frustum r0 r1 t) = Object (P.Cone r0 r1) (trans t) 
+
+rayPrimSphere t = Object P.Sphere (trans t)
+
+trans :: T3 Double -> OModifier
+trans t = OModifier (getTransformation t) 
                        (Texture (Last . Just $ C.Colour 1 1 1) mempty)
 
 getTransformation = Last . Just . listToMatrix . matrixHomRep 
@@ -68,6 +74,12 @@ listToMatrix (x:y:z:w:_) = transpose $ V4 (homVector x 0) (homVector y 0)
 homVector (x:y:z:_) = V4 x y z
 
 instance Renderable (Ellipsoid Double) Ray where
+      render _ = wrapSolid . toObject
+
+instance Renderable (D.Box Double) Ray where
+      render _ = wrapSolid . toObject
+
+instance Renderable (Frustum Double) Ray where
       render _ = wrapSolid . toObject
 
 wrapSolid :: Object -> Render Ray V3 Double

@@ -16,7 +16,7 @@ import SceneTypes
 import Blinn_Phong
 
 -- | Static camera will be used if no carmera was defined.
-camera = SCamera Perspective (V3 0.0 0.0 (-10)) (V3 0.0 0 1) (V3 1.0 0 0) (V3 0.0 1 0)
+camera = SCamera Perspective (V3 0.0 0.0 (-20)) (V3 0.0 0 1) (V3 1.0 0 0) (V3 0.0 1 0)
 
 emptyScene :: SceneObject
 emptyScene = []
@@ -94,10 +94,10 @@ intersectionColour i s =
     Nothing -> Colour 0 0 0
     Just x  -> if hitLight light (rayToLight light x) s then
                   blinn_phong light x else
-                  Colour 0 0 0
+                  Colour 0 1 0
 
 rayToLight :: Light -> Intersection -> Ray
-rayToLight l i = Ray (origin ^+^ (direction ^* 0.1) ) (direction)
+rayToLight l i = Ray (origin ^+^ direction) (direction)
   where direction = l ^. lPosition - i ^. itPoint
         origin = i ^. itPoint
 
