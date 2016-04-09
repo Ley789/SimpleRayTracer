@@ -141,6 +141,3 @@ nearestIntersectionSphere r res1 res2
 
 
 itPoint (Ray origin direction) t = origin ^+^ (t *^ direction)
-    
-
-

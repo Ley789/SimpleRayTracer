@@ -120,6 +120,15 @@ combine (Just b) a = b
 --------------------------------------------------------------------
 -- Renderable Light
 --------------------------------------------------------------------
+instance Renderable (ParallelLight Double) Ray where
+  render _ (ParallelLight v c)
+    = MRay $ setLight [(Light p c')] mempty
+      where p = point $ negated (1000 *^ v)
+            c' = convertColor c
+
+instance Renderable (PointLight Double) Ray where
+  render _ (PointLight (P p) (convertColor -> c))
+    = MRay $ setLight [(Light (point p) c)] mempty
 
 --------------------------------------------------------------------
 -- Renderable Camera

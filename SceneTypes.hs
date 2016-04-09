@@ -15,7 +15,7 @@ data CameraType = Perspective | Orthographic
 data Light = Light {
   _lPosition :: V4 Double,
   _lColour   :: Colour
-}
+} deriving(Show)
 
 data SCamera = SCamera {
   cType :: CameraType,
@@ -29,7 +29,7 @@ data Scene = Scene {
   _sCamera :: Last SCamera, 
   _sObjects :: [Object],
   _sLights  :: [Light]
-}
+} deriving(Show)
 
 instance Monoid Scene where
   mempty = Scene mempty mempty mempty

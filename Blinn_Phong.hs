@@ -30,7 +30,7 @@ blinn_phong :: Light -> Intersection -> Colour
 blinn_phong li i = 
     (ambient (getProperty ob tAmbient)
     + diffuse lc (getProperty ob tDiffuse) l n
-    + specular lc (getProperty ob tSpecular) l n v (getProperty ob tRoughness)) * getColour ob 
+    + specular lc (getProperty ob tSpecular) l n v (getProperty ob tRoughness)) 
       where lc = li ^. lColour
             lp = li ^. lPosition
             ob = i ^. object

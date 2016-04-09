@@ -28,17 +28,17 @@ data Matrixes = Matrixes {
 } deriving(Show)
 
 data Object = Object {
-  _prim :: Primitive,
+  _prim      :: Primitive,
   _oModifier :: OModifier
 } deriving(Show)
 
 data OModifier = OModifier {
-  _mSet :: MatSet,
+  _mSet    :: MatSet,
   _texture :: Texture
 } deriving(Show)
 
 data Texture = Texture {
-  _pigment ::  Colour,
+  _pigment  ::  Colour,
   _property :: TProperty
 } deriving (Show, Eq)
 
@@ -50,9 +50,9 @@ data TProperty = TProperty {
 } deriving (Show, Eq)
 
 data Intersection = Intersection {
-  _ray :: Ray, 
-  _object:: Object,
-  _normal :: V4 Double, 
+  _ray     :: Ray, 
+  _object  :: Object,
+  _normal  :: V4 Double, 
   _itPoint :: V4 Double
 } deriving (Show)
 
