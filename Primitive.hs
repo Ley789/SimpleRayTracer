@@ -27,7 +27,6 @@ type Intersection = V4 Double
 data Primitive = Sphere     --sphere of raidus 1 with center in the origin
                | Box        --box with length and width 1. Aligned at axes.
                | Cone Radius Radius
-               | Nil 
                 deriving(Show)
 
 data Ray = Ray Origin Direction
@@ -57,7 +56,7 @@ getNormal Box p
     where x = abs p ^._x
           y = abs p ^._y
           z = abs p ^._z
-          e = 0.0000001
+          e = 0.000000001
 
 -- TODO r/h fix h = 0
 getNormal c@(Cone r1 r2) p = V4 (pre ^._x * (h/r1)) (pre ^._y * (h/r1)) (-(r1 / h)) 0

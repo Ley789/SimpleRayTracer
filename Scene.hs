@@ -81,8 +81,6 @@ orthoTrans x c = Ray (point $ pos c ^+^ forward c ^+^
 
 extractCamera x = fromMaybe camera (getLast x)
 
-noIntersection = Object Nil mempty
-
 
 -------------------------------------------------------------------------------
 -- shading functions 
@@ -115,4 +113,4 @@ filterIntersection l r i =
 -- test functions 
 -------------------------------------------------------------------------------
 
-light = Light (V4 0 0 (-5) 1) (Colour 1 1 1)
+light = Light (V4 100 0 (-5) 1) (Colour 1 1 1)

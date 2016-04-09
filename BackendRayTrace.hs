@@ -17,7 +17,7 @@ import           Diagrams.Core.Types
 import           Diagrams.Prelude              as D hiding (Last (..), view)
 import           SceneTypes
 import qualified Primitive                     as P
-import           Object
+import           Object                        as O
 import qualified Colour                        as C
 import           Linear
 
@@ -61,10 +61,9 @@ instance ToObject (Frustum Double) where
 rayPrimSphere t = Object P.Sphere (trans t)
 
 trans :: T3 Double -> OModifier
-trans t = OModifier (getTransformation t) 
-                       (Texture (Last . Just $ C.Colour 1 1 1) mempty)
+trans t = OModifier (getTransformation t) mempty
 
-getTransformation = Last . Just . listToMatrix . matrixHomRep 
+getTransformation t = createMapSet $ (listToMatrix . matrixHomRep) t
 
 -- | Convert list to homogenious matrix.
 listToMatrix :: (Num a) => [[a]] -> M44 a
@@ -95,24 +94,29 @@ addTexture st s = setObject (map (setTexture st) $ s ^. sObjects) s
 convertColor :: Color c => c -> C.Colour
 convertColor (colorToSRGBA -> (r,g,b,_)) = C.Colour r g b
 
-setTexture :: Style V3 Double -> Object -> Object
-setTexture sty o = setObjectModifier o $ createTexture sty
+setTexture sty = 
+  (over (oModifier . texture . pigment) (mkPigment sty)) .
+  (setProperty sty)
 
-createTexture :: Style V3 Double -> OModifier
-createTexture sty = OModifier mempty (Texture (mkPigment sty) (mkFinish sty)) 
+setProperty sty =
+  (over (len . tAmbient)   f1) . 
+  (over (len . tDiffuse)   f2) .
+  (over (len . tSpecular)  f3) .
+  (over (len . tRoughness) f4)
+     where len = oModifier . texture . property
+           (f1,f2,f3,f4) = mkFinish sty
 
-mkPigment :: Style V3 Double -> Last C.Colour
-mkPigment = Last . fmap convertColor . view _sc
+mkPigment :: Style V3 Double -> C.Colour -> C.Colour
+mkPigment sty = combine (fmap convertColor (view _sc sty))
 
-
-mkFinish :: Style V3 Double -> TProperty
-mkFinish sty = TProperty
-               (Last $ sty ^. _ambient)
-               (Last $ sty ^. _diffuse)
-               (Last $ hl  ^? _Just . specularIntensity)
-               (Last $ hl  ^? _Just . specularSize)
+mkFinish sty = ((combine $ sty ^. _ambient),
+               (combine $ sty ^. _diffuse),
+               (combine $ hl  ^? _Just . specularIntensity),
+               (combine $ hl  ^? _Just . specularSize))
   where hl = sty ^. _highlight
 
+combine Nothing a = a
+combine (Just b) a = b 
 --------------------------------------------------------------------
 -- Renderable Light
 --------------------------------------------------------------------
