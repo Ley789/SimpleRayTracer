@@ -32,8 +32,9 @@ divNum = (/) `on` fromIntegral
 --of the picture is (-1, 1), center (0,0) etc.
 pixelCoordinates :: (Int, Int) -> [[(Double, Double)]]
 pixelCoordinates (m, n) =
-  [[(f x m, negate $ f y n) | x <- [0 .. n]] | y <- [0 .. m]]
-  where f x a = 2*x `divNum` a - 1
+  [[(f x m, negate $ f y n) | x <- [0 .. m]] | y <- [0 .. n]]
+  where f x a = x `divNum` a - 0.5
+
 
 mapTracing :: Ray -> SceneObject -> [Intersection]
 mapTracing ray = mapMaybe (rayObjectIntersection ray)

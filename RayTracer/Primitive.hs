@@ -25,7 +25,7 @@ type Intersection = V4 Double
            
 --Types that represent primitives
 data Primitive = Sphere     --sphere of raidus 1 with center in the origin
-               | Box        --box with length and width 1. Aligned at axes.
+               | Box        
                | Cone Radius Radius
                 deriving(Show)
 
@@ -101,8 +101,8 @@ boxIntersection r@(Ray origin direction)
   | tMin > 0                        = Just $ itPoint r tMin
   | tMax > 0                        = Just $ itPoint r tMax
   | otherwise                       = Nothing
-    where minB          = -0.5
-          maxB          =  0.5
+    where minB          =  0
+          maxB          =  1
           invDir        = 1 / direction
           (txMin, txMax)  = slabIntersection (minB,maxB) (origin ^._x) (invDir ^._x)
           (tyMin, tyMax)  = slabIntersection (minB,maxB) (origin ^._y) (invDir ^._y)
