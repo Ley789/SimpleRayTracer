@@ -1,19 +1,21 @@
-# Predefinition
+# Preliminaries
 
 ### Homogeneous coordinates
 
 ### Primitives
 
-A computer-graphic system defines a set of types of shapes. A primitive of this system is a shape and it's type was defined by the system.
+A computer graphic system defines a set of types of shapes.
+A primitive of this system is a shape and its type was defined by the system.
 Every shape thats type is not part of the set must be approximated with primitives. For example, a sphere can visually be represented with triangles.
 
 ### Ray
 A ray can mathematically be described as point $o$ and a direction $d$. Where $o$ represents the origin of the ray and $d$ the direction in which the ray travels. Every point that intersects with the ray can be calculated using the function:
 $$
-r(t): \Bbb R_\ge \rightarrow \Bbb R_\ge : t \mapsto o + t * d
+r(t): \mathbb{R}_\ge \rightarrow \mathbb{R} _\ge : t \mapsto o + t * d
 $$
 
-where $\Bbb R_\ge := \{ x | x \in \Bbb R, x \ge 0 \} $
+where $$\mathbb{R}_\ge := \{ x | x \in \mathbb{R}, x \ge 0 \} $$
+
 
 ### Scaling matrix
 
@@ -42,7 +44,7 @@ inverted Scale error fix program code
 With homogeneous coordinates the translation matrix can easily be defined as:
 
 $$
-  Tr := \left(
+  T(x,y,z) := \left(
           \begin{array}{cccc}
               0 & 0 & 0 & x \\
               0 & 0 & 0 & y \\
