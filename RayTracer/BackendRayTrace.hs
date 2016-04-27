@@ -56,7 +56,9 @@ instance ToObject (D.Box Double) where
   toObject (D.Box t) = Object P.Box (trans t) 
 
 instance ToObject (Frustum Double) where
-  toObject (Frustum r0 r1 t) = Object (P.Cone r0 r1) (trans t) 
+  toObject (Frustum r0 r1 t)
+    | r0 == r1  = Object (P.Cylinder r0) (trans t) 
+    | otherwise = Object (P.Cone r0 r1) (trans t) 
 
 rayPrimSphere t = Object P.Sphere (trans t)
 
@@ -123,12 +125,12 @@ combine (Just b) a = b
 instance Renderable (ParallelLight Double) Ray where
   render _ (ParallelLight v c)
     = MRay $ setLight [(Light p c')] mempty
-      where p = point $ negated (1000 *^ v)
+      where p = negated (1000 *^ v)
             c' = convertColor c
 
 instance Renderable (PointLight Double) Ray where
   render _ (PointLight (P p) (convertColor -> c))
-    = MRay $ setLight [(Light (point p) c)] mempty
+    = MRay $ setLight [(Light p c)] mempty
 
 --------------------------------------------------------------------
 -- Renderable Camera

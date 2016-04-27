@@ -96,8 +96,8 @@ instance Monoid OModifier where
 transformRay :: Ray -> M44 Double -> Ray
 transformRay (Ray o d) trans =
   Ray newOrigin newDirection
-  where newOrigin    = trans !* o
-        newDirection = trans !* d
+  where newOrigin    = (trans !* point o) ^._xyz
+        newDirection = (trans !* vector d) ^._xyz
 
 -- TODO Check functionality with translaten in the matrix!!
 -- | Intersect ray with object and return ray, object, normal vector and
@@ -105,8 +105,9 @@ transformRay (Ray o d) trans =
 rayObjectIntersection :: Ray -> Object -> Maybe Intersection
 rayObjectIntersection ray o@(Object p om) = do
   res <- intersection (transformRay ray $ om ^. mSet . invTMat) p
-  return $ Intersection ray  o (normalVector (om ^. mSet) $ getNormal p res) 
-                               (om ^. mSet . tMat !* res) 
+  return $ Intersection ray  o 
+           (normalVector (om ^. mSet) $ point $ getNormal p res) 
+           (om ^. mSet . tMat !* point res)
 
 ------------------------------------------------------------------------------
 --
@@ -114,10 +115,10 @@ rayObjectIntersection ray o@(Object p om) = do
 --
 ------------------------------------------------------------------------------
 
-rayPointDistance ray p = distance (normalizePoint $ getOrigin ray) (normalizePoint p)
+rayPointDistance ray p = distance (getOrigin ray) (normalizePoint p)
 
 normalVector :: MatSet -> V4 Double -> V4 Double
-normalVector m p = normalize $ m ^. norMat !* p
+normalVector m p =  m ^. norMat !* p
        
 -- TODO Test
 rot44 s t = r !*! s !*! s

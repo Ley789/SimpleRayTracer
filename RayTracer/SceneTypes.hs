@@ -13,7 +13,7 @@ data CameraType = Perspective | Orthographic
   deriving (Show)
 
 data Light = Light {
-  _lPosition :: V4 Double,
+  _lPosition :: V3 Double,
   _lColour   :: Colour
 } deriving(Show)
 

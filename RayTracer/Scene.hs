@@ -62,7 +62,6 @@ nearestIntersection l =
 
 generateRays c = (map.map) (`generateRay` c) . pixelCoordinates
 
-
 -- generate ray from camera and pixel coordinates                            
 generateRay :: (Double,Double)-> SCamera -> Ray
 generateRay x c = -- T.trace ("\n" ++ show c) $
@@ -70,14 +69,14 @@ generateRay x c = -- T.trace ("\n" ++ show c) $
     Perspective -> perspecTrans x c
     Orthographic -> orthoTrans x c
 
-perspecTrans x c = Ray (point $ pos c) 
-                    (vector $ normalize $ forward c ^+^ 
-                     (fst x *^ right c) ^+^  
-                     (snd x *^ up c))
+perspecTrans x c = Ray (pos c) 
+                    (normalize $ forward c ^+^ 
+                    (fst x *^ right c) ^+^  
+                    (snd x *^ up c))
 
-orthoTrans x c = Ray (point $ pos c ^+^ forward c ^+^ 
+orthoTrans x c = Ray (pos c ^+^ forward c ^+^ 
                      (fst x *^ right c) ^+^ 
-                     (snd x *^ up c)) (vector $ normalize $ forward c) 
+                     (snd x *^ up c)) (normalize $ forward c) 
 
 -------------------------------------------------------------------------------
 -- shading functions 
@@ -100,14 +99,14 @@ lightIntersectionColour x s l = -- T.trace ("\n" ++ show l) $
 
 rayToLight :: Light -> Intersection -> Ray
 rayToLight l i = Ray (origin ^+^ direction) (direction)
-  where direction = l ^. lPosition - i ^. itPoint
-        origin = i ^. itPoint
+  where direction = l ^. lPosition ^-^ normalizePoint (i ^. itPoint)
+        origin = normalizePoint $ i ^. itPoint
 
 hitLight :: Light -> Ray -> SceneObject -> Bool
 hitLight l r s = case filter (not . (filterIntersection distL r)) (mapTracing r s) of
   [] -> True
   _  -> False
-  where distL = rayPointDistance r $ l ^. lPosition 
+  where distL = distance (getOrigin r) $ l ^. lPosition 
 
 filterIntersection distL r i = 
   (rayPointDistance r $ i ^. itPoint) > distL
