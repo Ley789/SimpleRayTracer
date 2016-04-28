@@ -100,6 +100,8 @@ setTexture sty =
   (over (oModifier . texture . pigment) (mkPigment sty)) .
   (setProperty sty)
 
+-- MF: This code is very hard to understand, especially the "over" operation.
+-- In general, please avoid functions à la "set*", "add*".
 setProperty sty =
   (over (len . tAmbient)   f1) . 
   (over (len . tDiffuse)   f2) .
@@ -117,8 +119,10 @@ mkFinish sty = ((combine $ sty ^. _ambient),
                (combine $ hl  ^? _Just . specularSize))
   where hl = sty ^. _highlight
 
+-- MF: this is just "flip fromMaybe"!
 combine Nothing a = a
-combine (Just b) a = b 
+combine (Just b) a = b
+
 --------------------------------------------------------------------
 -- Renderable Light
 --------------------------------------------------------------------
