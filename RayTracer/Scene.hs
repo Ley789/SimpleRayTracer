@@ -88,14 +88,12 @@ intersectionColour :: SceneObject -> [Light] -> Maybe Intersection -> Colour
 intersectionColour s ls i = 
   case i of
     Nothing -> Colour 0 0 0
-    Just x  -> getColour (x ^. object) * 
-               foldl' (+) (Colour 0 0 0) (map (lightIntersectionColour x s) ls)
+    Just x  -> x ^. itTex . pigment * sum (mapMaybe (lightIntersectionColour x s) ls)
 
-lightIntersectionColour :: Intersection -> SceneObject -> Light -> Colour
-lightIntersectionColour x s l = -- T.trace ("\n" ++ show l) $ 
-   if hitLight l (rayToLight l x) s then
-      blinn_phong l x else
-      Colour 0 0 0
+lightIntersectionColour :: Intersection -> SceneObject -> Light -> Maybe Colour
+lightIntersectionColour x s l
+  | hitLight l (rayToLight l x) s = Just $ blinn_phong l x
+  | otherwise = Nothing
 
 rayToLight :: Light -> Intersection -> Ray
 rayToLight l i = Ray (origin ^+^ direction) (direction)

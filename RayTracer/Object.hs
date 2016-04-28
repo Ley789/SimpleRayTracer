@@ -45,7 +45,7 @@ data TProperty = TProperty {
 
 data Intersection = Intersection {
   _ray     :: Ray, 
-  _object  :: Object,
+  _itTex   :: Texture,
   _normal  :: V4 Double, 
   _itPoint :: V4 Double
 } deriving (Show)
@@ -90,7 +90,7 @@ rayObjectIntersection ray o@(Object p om) = do
   res <- intersection (transformRay ray $ om ^. matrices . invM) p
   let norm = (normalVector (om ^. matrices) $ point $ getNormal p res)
   let pos = (om ^. matrices . transM !* point res)
-  return $ Intersection ray o norm pos
+  return $ Intersection ray (o ^. oModifier . texture) norm pos
 
 
 ------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ rayPointDistance ray p = distance (getOrigin ray) (normalizePoint p)
 
 normalVector :: Matrices -> V4 Double -> V4 Double
 normalVector m p =  m ^. normM !* p
-       
+
 -- TODO Test
 rot44 s t = r !*! s !*! s
   where r = dropTrans t
@@ -120,12 +120,9 @@ invScale44 t =
 scale tr l = sqrt $ dot c c 
   where c = tr ^. l
 
+-- | Set translation to (0, 0, 0).
 dropTrans :: M44 Double -> M44 Double
-dropTrans = (dropComp _x) . (dropComp _y) . (dropComp _z)
-  where dropComp lens = over (lens . _w) (\_ -> 0)
-
-getColour :: Object -> Colour
-getColour o = o ^. oModifier . texture . pigment
+dropTrans = over _xyz (fmap (set _w 0))
 
 oProp :: Lens' Object TProperty
 oProp = oModifier . texture . property

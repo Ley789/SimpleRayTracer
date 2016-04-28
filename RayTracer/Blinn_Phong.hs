@@ -28,12 +28,13 @@ combine c d = cmap (* d) c
 
 blinn_phong :: Light -> Intersection -> Colour
 blinn_phong li i = 
-    (ambient (ob ^. oProp . tAmbient)
-    + diffuse lc (ob ^. oProp . tDiffuse) l n
-    + specular lc (ob ^. oProp . tSpecular) l n v (ob ^. oProp . tRoughness))
-      where lc = li ^. lColour
-            lp = li ^. lPosition
-            ob = i ^. object
-            v  = negated . normalize $ getDirection $ i ^. ray 
-            l  = normalize $ lp - normalizePoint (i ^. itPoint)
-            n  = normalizePoint $ i ^. normal
+    ambient (prop ^. tAmbient)
+  + diffuse lc (prop ^. tDiffuse) l n
+  + specular lc (prop ^. tSpecular) l n v (prop ^. tRoughness)
+  where
+    lc = li ^. lColour
+    lp = li ^. lPosition
+    v  = negated . normalize $ getDirection $ i ^. ray
+    prop = i ^. itTex . property
+    l  = normalize $ lp - normalizePoint (i ^. itPoint)
+    n  = normalizePoint $ i ^. normal
