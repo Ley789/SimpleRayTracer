@@ -14,16 +14,11 @@ import Control.Lens
 --                      Types representing a scene object
 --
 -------------------------------------------------------------------------------
-newtype MatSet = MatSet {
-  _matrixes :: Matrixes
-} deriving(Show)
 
--- intern reprensentation
--- will not be exported to ensure consistency
-data Matrixes = Matrixes { 
-  _transformationM   :: M44 Double,
-  _invertMatrix      :: M44 Double,
-  _normalTMatrix     :: M44 Double
+data Matrices = Matrices {
+  _transM :: M44 Double,
+  _invM   :: M44 Double,
+  _normM  :: M44 Double
 } deriving(Show)
 
 data Object = Object {
@@ -32,8 +27,8 @@ data Object = Object {
 } deriving(Show)
 
 data OModifier = OModifier {
-  _mSet    :: MatSet,
-  _texture :: Texture
+  _matrices :: Matrices,
+  _texture  :: Texture
 } deriving(Show)
 
 data Texture = Texture {
@@ -60,15 +55,8 @@ makeLenses ''OModifier
 makeLenses ''Texture
 makeLenses ''TProperty
 makeLenses ''Intersection
-makeLenses ''MatSet
-makeLenses ''Matrixes
+makeLenses ''Matrices
 
-instance Monoid MatSet where
-  mempty = MatSet (Matrixes (identity :: M44 Double) (identity :: M44 Double) 
-                            (identity :: M44 Double))
-  mappend m1 m2 = createMapSet (t1 !+! t2)
-    where t1 = m1 ^. tMat
-          t2 = m2 ^. tMat
 instance Monoid Texture where
   mempty = Texture (Colour 0 0 0) mempty
   mappend (Texture c1 f1) (Texture c2 f2) =
@@ -78,11 +66,6 @@ instance Monoid TProperty where
   mempty = TProperty 0 0 0 0
   mappend (TProperty a1 d1 s1 r1) (TProperty a2 d2 s2 r2) =
     TProperty (a1 + a2) (d1 + d2) (s1 + s2) (r1 + r2)
-
-instance Monoid OModifier where
-  mempty = OModifier mempty mempty
-  mappend (OModifier tr1 t1) (OModifier tr2 t2) = 
-   OModifier (mappend tr1 tr2) (mappend t1 t2)
 
 -------------------------------------------------------------------------------
 --
@@ -104,10 +87,11 @@ transformRay (Ray o d) trans =
 -- point of the intersection.
 rayObjectIntersection :: Ray -> Object -> Maybe Intersection
 rayObjectIntersection ray o@(Object p om) = do
-  res <- intersection (transformRay ray $ om ^. mSet . invTMat) p
-  return $ Intersection ray  o 
-           (normalVector (om ^. mSet) $ point $ getNormal p res) 
-           (om ^. mSet . tMat !* point res)
+  res <- intersection (transformRay ray $ om ^. matrices . invM) p
+  let norm = (normalVector (om ^. matrices) $ point $ getNormal p res)
+  let pos = (om ^. matrices . transM !* point res)
+  return $ Intersection ray o norm pos
+
 
 ------------------------------------------------------------------------------
 --
@@ -117,8 +101,8 @@ rayObjectIntersection ray o@(Object p om) = do
 
 rayPointDistance ray p = distance (getOrigin ray) (normalizePoint p)
 
-normalVector :: MatSet -> V4 Double -> V4 Double
-normalVector m p =  m ^. norMat !* p
+normalVector :: Matrices -> V4 Double -> V4 Double
+normalVector m p =  m ^. normM !* p
        
 -- TODO Test
 rot44 s t = r !*! s !*! s
@@ -151,10 +135,6 @@ oProp = oModifier . texture . property
 -- Control for MatSet data type
 -------------------------------------------------------------------------------
 
-tMat = matrixes . transformationM
-invTMat = matrixes . invertMatrix
-norMat = matrixes . normalTMatrix
+matricesOfM44 :: M44 Double -> Matrices
+matricesOfM44 m = Matrices m (inv44 m) (rot44 (invScale44 m) m)
 
-createMapSet :: M44 Double -> MatSet
-createMapSet m = MatSet (Matrixes m (inv44 m) (rot44 i m))
-  where i = invScale44 m

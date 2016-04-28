@@ -65,9 +65,9 @@ rayPrimSphere t = Object P.Sphere (trans t)
 trans :: T3 Double -> OModifier
 trans t = OModifier (getTransformation t) mempty
 
-getTransformation t = createMapSet $ (listToMatrix . matrixHomRep) t
+getTransformation = matricesOfM44 . listToMatrix . matrixHomRep
 
--- | Convert list to homogenious matrix.
+-- | Convert list to homogenous matrix.
 listToMatrix :: (Num a) => [[a]] -> M44 a
 listToMatrix (x:y:z:w:_) = transpose $ V4 (homVector x 0) (homVector y 0) 
                                           (homVector z 0) (homVector w 1)
@@ -101,7 +101,7 @@ setTexture sty =
   (setProperty sty)
 
 -- MF: This code is very hard to understand, especially the "over" operation.
--- In general, please avoid functions à la "set*", "add*".
+-- In general, please avoid functions à la "get*", "set*", "add*".
 setProperty sty =
   (over (len . tAmbient)   f1) . 
   (over (len . tDiffuse)   f2) .
