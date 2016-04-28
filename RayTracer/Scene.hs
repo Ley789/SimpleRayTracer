@@ -82,13 +82,11 @@ orthoTrans x c = Ray (pos c ^+^ forward c ^+^
 -- shading functions 
 -------------------------------------------------------------------------------
 filterColour :: SceneObject -> [Light] -> [[Maybe Intersection]] -> [[Colour]]
-filterColour s l i = (map.map) (intersectionColour s l) i 
+filterColour s l = (map . map) (maybe (Colour 0 0 0) (intersectionColour s l))
 
-intersectionColour :: SceneObject -> [Light] -> Maybe Intersection -> Colour
-intersectionColour s ls i = 
-  case i of
-    Nothing -> Colour 0 0 0
-    Just x  -> x ^. itTex . pigment * sum (mapMaybe (lightIntersectionColour x s) ls)
+intersectionColour :: SceneObject -> [Light] -> Intersection -> Colour
+intersectionColour s ls i =
+  i ^. itTex . pigment * sum (mapMaybe (lightIntersectionColour i s) ls)
 
 lightIntersectionColour :: Intersection -> SceneObject -> Light -> Maybe Colour
 lightIntersectionColour x s l
