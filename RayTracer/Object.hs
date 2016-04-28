@@ -143,7 +143,8 @@ dropTrans = (dropComp _x) . (dropComp _y) . (dropComp _z)
 getColour :: Object -> Colour
 getColour o = o ^. oModifier . texture . pigment
 
-getProperty o l = o ^. oModifier . texture . property . l
+oProp :: Lens' Object TProperty
+oProp = oModifier . texture . property
 
 
 -------------------------------------------------------------------------------

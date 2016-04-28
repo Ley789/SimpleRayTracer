@@ -28,9 +28,9 @@ combine c d = cmap (* d) c
 
 blinn_phong :: Light -> Intersection -> Colour
 blinn_phong li i = 
-    (ambient (getProperty ob tAmbient)
-    + diffuse lc (getProperty ob tDiffuse) l n
-    + specular lc (getProperty ob tSpecular) l n v (getProperty ob tRoughness)) 
+    (ambient (ob ^. oProp . tAmbient)
+    + diffuse lc (ob ^. oProp . tDiffuse) l n
+    + specular lc (ob ^. oProp . tSpecular) l n v (ob ^. oProp . tRoughness))
       where lc = li ^. lColour
             lp = li ^. lPosition
             ob = i ^. object
