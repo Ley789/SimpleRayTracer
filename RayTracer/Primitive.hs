@@ -175,7 +175,7 @@ boxIntersection r@(Ray origin direction)
 -- | Calculate the possible intersection point.
 sphereIntersection r@(Ray origin direction) 
   | toSquare < 0 = Nothing
-  | otherwise = nearestIntersection r x y
+  | otherwise = itPoint r <$> nearestPositive x y
                 where a = dot direction direction
                       b = 2 * (dot direction origin)
                       c = (dot origin origin) - 1
@@ -188,14 +188,6 @@ nearestPoint o p1 p2
   | otherwise = p2
     where f = distance o p1
           s = distance o p2
-
---There can be 2 intersections with a sphere and 
---this function returns the nearest one
-nearestIntersection r res1 res2
-  | res1 > 0 && res2 > 0   = Just $ itPoint r $ min res1 res2
-  | res1 > 0               = Just $ itPoint r res1
-  | res2 > 0               = Just $ itPoint r res2
-  | otherwise              = Nothing
 
 nearestPositive t1 t2
   | t1 > 0 && t2 > 0   = Just $ min t1 t2
