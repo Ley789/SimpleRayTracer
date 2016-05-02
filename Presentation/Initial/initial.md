@@ -9,7 +9,6 @@
 * Haskell is also pure, because it doesn't allow side effects.
 * In Haskell expressions are only evaluated when the result is needed for further
   evaluations, this is called lazy evaluation.
-* TODO: Shorten this.
 
 # Domain-Specific Language
 
@@ -17,13 +16,21 @@
   common requirements and terminology.
 * Domain-Specific Language (DSL) is a tool to simplify expressing and solving
   problems in a defined domain.
-* TODO: Example?
+
+# DSL
 
 ## Embedded DSL
 
 * A library implemented in the host language (normally a general-purpose language),
   providing greater abstractions related to the domain.
-* TODO: Example. Do students really know Embedded SQL in C/C++??
+
+### Example embedded SQL in Java
+
+~~~ java
+String query = "Select * From table";
+Statement s = connection.createStatement();
+ResultSet queryResult = s.executeQuery(query);
+~~~
 
 ## External DSL
 
@@ -37,7 +44,7 @@
 
 * Embedded DSL to describe 2D and 3D scenes
 * Allows defining readable scenes using Haskell
-* TODO: Explain backend??
+* Backend in Diagrams render image form the Diagrams scene
 
 ## 2D example
 
@@ -51,22 +58,30 @@ hilbert n = hilbert' (n-1) # reflectY <> vrule 1
     hilbert' m = hilbert m # rotateBy (1/4)
 ~~~
 
-
 # Output
 
-TODO!
-
+\centerline{\includegraphics[scale=0.25]{Hilbert.png}}
 
 # 3D Diagrams
 
 ## Example
 
-Code. Really simple. :)
+~~~ haskell
+cameraLight = mm50Camera # translate (V3 0 0 (5))
+              <> pointLight white
+                 # translate (V3 0 5 1)
 
-## Output
+shape = cube # sc blue  # ambient 0.1 # diffuse 0.8
+  # (transform . aboutX) (45 @@ deg)
+  # translateX (-0.5)
 
-Picture.
+example = shape <> cameraLight
 
+~~~
+
+# Output
+
+\centerline{\includegraphics[scale=0.25]{Cube.png}}
 
 # Ray tracing
 
@@ -78,25 +93,33 @@ Technique to render a image from a defined scene.
 * Intersect rays with geometry.
 * Calculate pixel color with the resulting values (shading).
 
-
 # POV-Ray
 
-Bild?
+* POV-Ray is a open source ray tracer which uses text-base scene
+  description to render images.
 
-Beispiels-Ausgabe.
+  \centerline{\includegraphics[scale=0.15]{POV.png}}
 
-Diagrams -> POV-Ray-Code -> Bild
+# Diagrams current state
 
-Status quo.
+* Render image form a 3D scene in Diagrams.
 
-Disadvantage: dependency on POV-Ray, no animations
+## Steps
 
+* Define scene in Diagrams.
+* Translate to POV-Ray text-base description
+* Execute POV- ray.
+
+##Disadvantage
+
+* Dependency on POV-Ray
+* Does not allow animations
 
 # My work
 
 ## Mission
 
-Vielleicht: current state vs. future state?
+Remove the dependency on POV-Ray.
 Implement ray tracer in Haskell that renders Diagrams 3D scenes.
 
 ## Steps
@@ -107,9 +130,13 @@ Implement ray tracer in Haskell that renders Diagrams 3D scenes.
 
 ## Supported features
 
-* Boxes, Cylinders, Cones, ...
-* Lights: Diffuse / ...
-* Cameras: ...
-* Materials: ...
-* Transformations: Rotation, translation, ...
+* Shapes: Boxes, Cylinders, Cones, Sphere, ...
+* Lights: Diffuse, Spectral, Ambient, ...
+* Projections: Perspective, Orthographic, ...
+* Materials: Texture, Light properties, ...
+* Transformations: Rotation, Translation, Scaling, ...
 * Animations
+
+# End
+
+* Thank you for your attention. Are there any questions?
