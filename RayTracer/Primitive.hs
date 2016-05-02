@@ -137,7 +137,7 @@ infinityConeIntersection r@(Ray o d) (Cone r1 r2) =
         b     = 2 * co * dot vd vdiff - 2 * si * (d ^._z) * (diff ^._z)
         c     = co * dot vdiff vdiff - si * (diff ^._z)**2
 
-
+-- TODO: Can you get rid of this function?
 lift _ Nothing m = m
 lift _ m Nothing = m
 lift f (Just m1) (Just m2) = Just (f m1 m2)
