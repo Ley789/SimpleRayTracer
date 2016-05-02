@@ -104,7 +104,7 @@ infiniteCylinderIntersection r@(Ray o d) rad =
           b    = 2 * dot tmp tmp2
           c    = (dot tmp2 tmp2) - rad**2 
           v i  = V3 (i ^._x) (i^._y) 0
-          res  = quadraticEquation a b c
+          res  = solveQuadratic a b c
 
 -- | Given the ray, origin of the cape and 
 --  radius of the plane it calculates the intersection point and 
@@ -143,7 +143,7 @@ infinityConeIntersection r@(Ray o d) (Cone r1 r2) =
         a     = co * dot tmp tmp - si * (d ^._z)**2
         b     = 2 * co * dot tmp (v diff) - 2 * si * (d ^._z) * (diff ^._z)
         c     = co * dot (v diff) (v diff) - si * (diff ^._z)**2
-        res   = quadraticEquation a b c
+        res   = solveQuadratic a b c
 
 
 lift _ Nothing m = m
@@ -155,7 +155,7 @@ lift f (Just m1) (Just m2) = Just (f m1 m2)
 planeIntersection r@(Ray o d) p n
   | t <= 0    = Nothing
   | otherwise = Just $ itPoint r t 
-     where t = (dot n $ p ^-^ o) / dot n d
+  where t = (dot n $ p ^-^ o) / dot n d
 
 -- | Calculate the intersection between the ray and the unit box aligned on the
 -- axes.
@@ -173,33 +173,29 @@ boxIntersection r@(Ray origin direction)
     tMax = minimum vMax
  
 -- | Calculate the possible intersection point.
-sphereIntersection r@(Ray origin direction) 
-  | toSquare < 0 = Nothing
-  | otherwise = itPoint r <$> nearestPositive x y
-                where a = dot direction direction
-                      b = 2 * (dot direction origin)
-                      c = (dot origin origin) - 1
-                      toSquare = b**2 - 4 * a * c
-                      x = ((-b) + sqrt toSquare) / (2 * a)
-                      y = ((-b) - sqrt toSquare)  / (2 * a)
+sphereIntersection r@(Ray origin direction) =
+  itPoint r <$> (uncurry nearestPositive =<< solveQuadratic a b c)
+  where
+    a = dot direction direction
+    b = 2 * dot direction origin
+    c = dot origin origin - 1
 
 nearestPoint o p1 p2
-  | f < s     = p1
+  | distance o p1 < distance o p2 = p1
   | otherwise = p2
-    where f = distance o p1
-          s = distance o p2
 
 nearestPositive t1 t2
-  | t1 > 0 && t2 > 0   = Just $ min t1 t2
-  | t1 > 0             = Just t1 
-  | t2 > 0             = Just t2
-  | otherwise          = Nothing
+  | t1 > 0 && t2 > 0 = Just $ min t1 t2
+  | t1 > 0           = Just t1
+  | t2 > 0           = Just t2
+  | otherwise        = Nothing
 
-quadraticEquation a b c
+solveQuadratic a b c
   | toSquare < 0 = Nothing
   | otherwise    = Just (t1, t2)
-    where toSquare = b**2 - 4 * a * c
-          t1 = ((-b) + sqrt toSquare) / (2 * a)
-          t2 = ((-b) - sqrt toSquare)  / (2 * a)
+  where
+    toSquare = b**2 - 4 * a * c
+    t1 = ((-b) + sqrt toSquare) / (2 * a)
+    t2 = ((-b) - sqrt toSquare) / (2 * a)
 
 itPoint (Ray origin direction) t = origin ^+^ (t *^ direction)
