@@ -150,15 +150,15 @@ lift _ Nothing m = m
 lift _ m Nothing = m
 lift f (Just m1) (Just m2) = Just (f m1 m2)
 
--- | Given a ray, point on the plane and the normal vector to the plane it returns 
--- the coefficient if the ray intersects the plane.
+-- | Given a ray, point on the plane and the normal vector to the plane
+-- return the coefficient if the ray intersects the plane.
 planeIntersection r@(Ray o d) p n
   | t <= 0    = Nothing
   | otherwise = Just $ itPoint r t 
      where t = (dot n $ p ^-^ o) / dot n d
 
 -- | Calculate the intersection between the ray and the unit box aligned on the
---   axes.
+-- axes.
 boxIntersection r@(Ray origin direction)
   | tMax < 0 || tMin > tMax = Nothing
   | tMin > 0                = Just $ itPoint r tMin
@@ -172,7 +172,7 @@ boxIntersection r@(Ray origin direction)
     tMin = maximum vMin
     tMax = minimum vMax
  
--- | Calculates the possible intersection point
+-- | Calculate the possible intersection point.
 sphereIntersection r@(Ray origin direction) 
   | toSquare < 0 = Nothing
   | otherwise = nearestIntersection r x y
