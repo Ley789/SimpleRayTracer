@@ -161,15 +161,13 @@ planeIntersection r@(Ray o d) p n
 -- | Calculate the intersection between the ray and the unit box aligned on the
 --   axes.
 boxIntersection r@(Ray origin direction)
-  | tMax < 0 || tMin > tMax         = Nothing
-  | tMin > 0                        = Just $ itPoint r tMin
-  | tMax > 0                        = Just $ itPoint r tMax
-  | otherwise                       = Nothing
+  | tMax < 0 || tMin > tMax = Nothing
+  | tMin > 0                = Just $ itPoint r tMin
+  | tMax > 0                = Just $ itPoint r tMax
+  | otherwise               = Nothing
   where
-    minB = 0
-    maxB = 1
     invDir = 1 / direction
-    si l = slabIntersection (minB, maxB) (origin ^. l) (invDir ^. l)
+    si l = slabIntersection (0, 1) (origin ^. l) (invDir ^. l)
     ts = map si [_x, _y, _z]
     tMin = maximum $ map fst ts
     tMax = minimum $ map snd ts
