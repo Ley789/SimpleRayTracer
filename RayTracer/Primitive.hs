@@ -157,7 +157,6 @@ planeIntersection r@(Ray o d) p n
   | otherwise = Just $ itPoint r t 
      where t = (dot n $ p ^-^ o) / dot n d
 
-
 -- | Calculate the intersection between the ray and the unit box aligned on the
 --   axes.
 boxIntersection r@(Ray origin direction)
@@ -166,20 +165,13 @@ boxIntersection r@(Ray origin direction)
   | tMax > 0                = Just $ itPoint r tMax
   | otherwise               = Nothing
   where
-    invDir = 1 / direction
-    si l = slabIntersection (0, 1) (origin ^. l) (invDir ^. l)
-    ts = map si [_x, _y, _z]
-    tMin = maximum $ map fst ts
-    tMax = minimum $ map snd ts
-
--- | Given (min,max) bound range of the axis, origin axis component and
---   inv direction axis component it calculates the (min,max) factor of a
---   ray that intersects the slab
-slabIntersection (minB,maxB) o invD = (min f s, max f s)
-  where calc b o d = (b - o) * invD
-        f          = calc minB o invD
-        s          = calc maxB o invD
-
+    (^/^) = liftU2 (/) -- pointwise division
+    slab b = (b - origin) ^/^ direction
+    s01 = over both slab (0, 1)
+    (vMin, vMax) = over both (\ m -> uncurry (liftU2 m) s01) (min, max)
+    tMin = maximum vMin
+    tMax = minimum vMax
+ 
 -- | Calculates the possible intersection point
 sphereIntersection r@(Ray origin direction) 
   | toSquare < 0 = Nothing
