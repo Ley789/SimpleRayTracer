@@ -26,11 +26,11 @@ type Intersection = V3 Double
            
 --Types that represent primitives
 data Primitive =
-    Sphere     --sphere of raidus 1 with center in the origin
+    Sphere     --sphere of radius 1 with center in the origin
   | Box        
   | Cone {            --Cone with defined base radius and cap radius.
     baseR :: Double,  --Base at origin, height 1 and aligned positive
-    capR  :: Double   --z achsis. Base radius > cap radius.
+    capR  :: Double   --z axis. Base radius > cap radius.
   }
   | Cylinder Double
      deriving(Show)
@@ -110,7 +110,7 @@ infiniteCylinderIntersection r@(Ray o d) rad =
 --  radius of the plane it calculates the intersection point and 
 --  returns it if it lies along the ray.
 --  Because of the constrains on the primitive the direction vector 
---  of the fustrum is (0,0,1).
+--  of the frustum is (0,0,1).
 capIntersection r@(Ray o d) p rad =
   case (planeIntersection r p n) of
     Just x -> capConstrain x p rad 
@@ -122,7 +122,7 @@ capConstrain q p rad
   | otherwise                                  = Nothing 
     where diff = q ^-^ p
 
-
+-- TODO: do not copy & paste with cylinderIntersection!!
 coneIntersection r@(Ray o d) c@(Cone r1 r2) = lift f (lift f iC bC) tC 
     where iC = infinityConeIntersection r c
           bC = capIntersection r (V3 0 0 0) r1
@@ -151,7 +151,7 @@ lift _ m Nothing = m
 lift f (Just m1) (Just m2) = Just (f m1 m2)
 
 -- | Given a ray, point on the plane and the normal vector to the plane it returns 
--- the coefficent if the ray intersects the plane.
+-- the coefficient if the ray intersects the plane.
 planeIntersection r@(Ray o d) p n
   | t <= 0    = Nothing
   | otherwise = Just $ itPoint r t 
@@ -165,24 +165,24 @@ boxIntersection r@(Ray origin direction)
   | tMin > 0                        = Just $ itPoint r tMin
   | tMax > 0                        = Just $ itPoint r tMax
   | otherwise                       = Nothing
-    where minB            = 0
-          maxB            = 1
-          invDir          = 1 / direction
-          (txMin, txMax)  = slabIntersection (minB,maxB) (origin ^._x) (invDir ^._x)
-          (tyMin, tyMax)  = slabIntersection (minB,maxB) (origin ^._y) (invDir ^._y)
-          (tzMin, tzMax)  = slabIntersection (minB,maxB) (origin ^._z) (invDir ^._z)
-          tMin            = max tzMin $ max txMin tyMin
-          tMax            = min tzMax $ min txMax tyMax
- 
--- | Given (min,max) bound range of the axis, origin axis component and 
---   inv direction axis component it calculates the (min,max) factor of a 
+  where
+    minB = 0
+    maxB = 1
+    invDir = 1 / direction
+    si l = slabIntersection (minB, maxB) (origin ^. l) (invDir ^. l)
+    ts = map si [_x, _y, _z]
+    tMin = maximum $ map fst ts
+    tMax = minimum $ map snd ts
+
+-- | Given (min,max) bound range of the axis, origin axis component and
+--   inv direction axis component it calculates the (min,max) factor of a
 --   ray that intersects the slab
 slabIntersection (minB,maxB) o invD = (min f s, max f s)
   where calc b o d = (b - o) * invD
         f          = calc minB o invD
         s          = calc maxB o invD
 
--- | calculates the possible intersectionpoint 
+-- | Calculates the possible intersection point
 sphereIntersection r@(Ray origin direction) 
   | toSquare < 0 = Nothing
   | otherwise = nearestIntersection r x y
