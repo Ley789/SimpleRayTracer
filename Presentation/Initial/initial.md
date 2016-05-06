@@ -4,9 +4,7 @@
 
 # Haskell
 
-* Haskell is a functional programming language.
-* In functional programming, programs are executed by evaluating expressions.
-* Haskell is also pure, because it doesn't allow side effects.
+* Haskell is a purely functional programming language.
 * In Haskell expressions are only evaluated when the result is needed for further
   evaluations, this is called lazy evaluation.
 
@@ -36,7 +34,6 @@ ResultSet queryResult = s.executeQuery(query);
 
 * An independent language with tools (parser, interpreters, ...)
 * Example: CSS
-
 
 # Diagrams
 
@@ -90,7 +87,7 @@ Technique to render a image from a defined scene.
 ## Idea
 
 * Generate rays, starting from the camera, a ray per pixel.
-* Intersect rays with geometry.
+* Intersect rays with scene objects.
 * Calculate pixel color with the resulting values (shading).
 
 # POV-Ray
@@ -108,7 +105,7 @@ Technique to render a image from a defined scene.
 
 * Define scene in Diagrams.
 * Translate to POV-Ray text-base description
-* Execute POV- ray.
+* Execute POV-Ray with translated scene.
 
 ##Disadvantage
 
