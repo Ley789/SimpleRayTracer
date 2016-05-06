@@ -11,7 +11,9 @@ module Primitive (
   )where
 
 import qualified Debug.Trace as T 
-import Linear
+import Linear     hiding (frustum)
+import Data.List
+import Data.Maybe (fromJust,catMaybes)
 import Control.Lens
 import Control.Monad
 import Control.Applicative
@@ -83,18 +85,39 @@ getNormal c@(Cylinder r) p
 intersection :: Ray -> Primitive -> Maybe Intersection
 intersection ray Sphere       = itPoint ray <$> sphereIntersection ray
 intersection ray Box          = itPoint ray <$> boxIntersection ray
-intersection ray c@(Cone _ _) = coneIntersection ray c
-intersection ray (Cylinder rad) = cylinderIntersection ray rad
+intersection ray (Cone rad1 rad2) = 
+  frustumIntersection ray (coneIntersection ray rad1 rad2) rad1 rad2
+intersection ray (Cylinder rad) = 
+  frustumIntersection ray (cylinderIntersection ray rad) rad rad
 
-cylinderIntersection r@(Ray o d) rad = lift f (lift f iC bC) tC 
-    where iC = itPoint r <$> infiniteCylinderIntersection r rad
-          bC = capIntersection r (V3 0 0 0) rad
-          tC = capIntersection r (V3 0 0 1) rad
-          f  = nearestPoint o
+frustumIntersection r@(Ray o d) it rad1 rad2
+  | l == []  = Nothing
+  | otherwise = Just $ foldl1' (nearestPoint o) l 
+    where f  = frustum r it
+          cB = capIntersection r (V3 0 0 0) rad1
+          cT = capIntersection r (V3 0 0 1) rad2
+          l  = catMaybes [f,cB,cT]
+
+frustum r it = frustumConstrain p
+  where p = itPoint r <$> it
+
+frustumConstrain p
+  | p == Nothing         = Nothing
+  | z >= 0.0 && z <= 1.0 = p
+  | otherwise            = Nothing
+  where z = (fromJust p) ^. _z 
+
+capIntersection :: Ray -> V3 Double -> Double -> Maybe Intersection
+capIntersection r o rad
+  | p == Nothing        = Nothing
+  | dot q q <= rad ** 2 = p
+  | otherwise           = Nothing 
+  where p = itPoint r <$> planeIntersection r o (V3 0 0 1)
+        q = set _z 0 (fromJust p)
 
 -- | Easier intersection function because of our cosntrains to the object
 --   Normalized direction vector of cylinder is (0,0,1)
-infiniteCylinderIntersection r@(Ray o d) rad =
+cylinderIntersection r@(Ray o d) rad =
   uncurry min <$> solveQuadratic a b c
   where
     vd = v d
@@ -104,26 +127,7 @@ infiniteCylinderIntersection r@(Ray o d) rad =
     c  = dot vo vo - rad**2
     v  = set _z 0
 
--- | Given the ray, origin of the cape and 
---  radius of the plane it calculates the intersection point and 
---  returns it if it lies along the ray.
---  Because of the constrains on the primitive the direction vector 
---  of the frustum is (0,0,1).
-capIntersection r@(Ray o d) p rad = do
-  q <- itPoint r <$> planeIntersection r p (V3 0 0 1)
-  let diff = q ^-^ p
-  -- TODO: never, ever compare a Double!
-  guard (diff ^._z == 0 && dot diff diff < rad ** 2)
-  return q
-
--- TODO: do not copy & paste with cylinderIntersection!!
-coneIntersection r@(Ray o d) c@(Cone r1 r2) = lift f (lift f iC bC) tC 
-    where iC = itPoint r <$> infinityConeIntersection r c
-          bC = capIntersection r (V3 0 0 0) r1
-          tC = capIntersection r (V3 0 0 1) r2
-          f  = nearestPoint o
-
-infinityConeIntersection r@(Ray o d) (Cone r1 r2) =
+coneIntersection r@(Ray o d) r1 r2 =
   uncurry min <$> solveQuadratic a b c
   where alpha = r1 - r2
         pa    = (V3 0 0 r1) ^/ alpha
@@ -136,11 +140,6 @@ infinityConeIntersection r@(Ray o d) (Cone r1 r2) =
         a     = co * dot vd vd - si * (d ^._z)**2
         b     = 2 * co * dot vd vdiff - 2 * si * (d ^._z) * (diff ^._z)
         c     = co * dot vdiff vdiff - si * (diff ^._z)**2
-
--- TODO: Can you get rid of this function?
-lift _ Nothing m = m
-lift _ m Nothing = m
-lift f (Just m1) (Just m2) = Just (f m1 m2)
 
 -- | Given a ray, point on the plane and the normal vector to the plane
 -- return the coefficient if the ray intersects the plane.
