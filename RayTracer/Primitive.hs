@@ -14,7 +14,7 @@ import qualified Debug.Trace as T
 import Linear
 import Control.Lens
 import Control.Monad
-
+import Control.Applicative
 --represents an Euclidean coordinate 
 type Center = V3 Double
 type Origin = V3 Double
@@ -151,6 +151,7 @@ planeIntersection r@(Ray o d) p n
 
 -- | Calculate the intersection between the ray and the unit box aligned on the
 -- axes.
+boxIntersection :: Ray -> Maybe Double
 boxIntersection r@(Ray origin direction)
   | tMax < 0    = Nothing
   | tMin > tMax = Nothing
@@ -158,13 +159,17 @@ boxIntersection r@(Ray origin direction)
   | tMax > 0    = Just tMax
   | otherwise   = Nothing
   where
-    (^/^) = liftU2 (/) -- pointwise division
-    slab b = (b - origin) ^/^ direction
-    s01 = over both slab (0, 1)
-    (vMin, vMax) = over both (\ m -> uncurry (liftU2 m) s01) (min, max)
-    tMin = maximum vMin
-    tMax = minimum vMax
- 
+    invD = fmap (1/) direction
+    ts = map (slabIntersection origin invD) [_x , _y, _z]
+    tMin = maximum $ map fst ts
+    tMax = minimum $ map snd ts
+
+slabIntersection o i l
+  | i ^. l >= 0 = over both slab (0,1)
+  | otherwise   = over both slab (1,0)
+  where
+    slab b = (b - (o ^. l)) * (i ^. l)
+    
 -- | Calculate the possible intersection point.
 sphereIntersection r@(Ray origin direction) =
   solveQuadratic a b c >>= uncurry nearestPositive
