@@ -56,7 +56,7 @@ ray o d = Ray o d
 getOrigin (Ray o _) = o
 getDirection (Ray _ r) = r
 
-getNormal Sphere p = 
+getNormal Sphere p =
   V3 (p ^._x) (p ^._y) (p ^._z)
 getNormal Box p
   | 0.5 - x < e  = V3 (signum x) 0 0
@@ -73,7 +73,7 @@ getNormal c@(Cone r1 r2) p
   | otherwise = V3 (v ^._x * alpha /r1) (v ^._y * alpha/r1) (r1 / alpha) 
     where alpha =  r1 - r2
           v = normalize $ V3 (p ^._x) (p ^._y) 0
-          z = p ^._z  
+          z = p ^._z
 
 getNormal c@(Cylinder r) p
   | z == 0    = V3 0 0 (-1)
@@ -85,9 +85,9 @@ getNormal c@(Cylinder r) p
 intersection :: Ray -> Primitive -> Maybe Intersection
 intersection ray Sphere       = itPoint ray <$> sphereIntersection ray
 intersection ray Box          = itPoint ray <$> boxIntersection ray
-intersection ray (Cone rad1 rad2) = 
+intersection ray (Cone rad1 rad2) =
   frustumIntersection ray (coneIntersection ray rad1 rad2) rad1 rad2
-intersection ray (Cylinder rad) = 
+intersection ray (Cylinder rad) =
   frustumIntersection ray (cylinderIntersection ray rad) rad rad
 
 frustumIntersection r@(Ray o d) it rad1 rad2
@@ -168,7 +168,7 @@ slabIntersection o i l
   | otherwise   = over both slab (1,0)
   where
     slab b = (b - (o ^. l)) * (i ^. l)
-    
+
 -- | Calculate the possible intersection point.
 sphereIntersection r@(Ray origin direction) =
   solveQuadratic a b c >>= uncurry nearestPositive
