@@ -1,3 +1,7 @@
+% Ray Tracing Backend for Diagrams
+% Alexander Lochmann
+
+
 \renewcommand{\vec}[1]{\mathbf{#1}}
 
 # 3D Scene
