@@ -63,4 +63,3 @@ and cylinder graphically?**
 This has the advantage that one can later see easier the differences
 with `diff`.**
 
-**MF: What about materials, cameras, lights, ...?**
