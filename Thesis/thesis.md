@@ -9,16 +9,97 @@
 In this section we will introduce definitions that we use to describe 3D scenes
 in our ray tracer.
 
+## Color
+
+Color will be represented with the RGB model. The RGB color model represents a
+color by adding red, green and blue lights together. The intensity of these lights
+are defined by values of the interval [0,1], where 0 stands for 0% and 1 for
+100% intensity. Each light value is called channel.
+E.g. Color 1 0 0 has a red channel of 100%, green channel of 0% and blue
+channel 0%.
+
+## Light
+
+A point light is defined by the location and the color. It sends light in
+all direction.
+
+## Homogeneous coordinates
+
+Homogeneous coordinates represent $n-dimensional$ coordinates with $n+1$ values.
+The $n+1$ value is conventionally denoted by $w$. The represented point can be
+calculated by dividing the n-values by $w$. For $w = 0$ the point lies at
+infinity. This allows to define all following transformation as matrices.
+
+## Scaling matrix
+
+The scaling matrix $S$ is defined as
+
+$$
+  S := \left(
+          \begin{array}{cccc}
+              s_x & 0   & 0   & 0 \\
+              0   & s_y & 0   & 0 \\
+              0   & 0   & s_z & 0 \\
+              0   & 0   &  0  & 1
+           \end{array}
+       \right)
+$$
+
+where the indices stands for the scaling in the corresponding axis.
+
+
+## Rotation matrix
+
+Reading Paper
+
+## Translation matrix
+
+The translation matrix is defined as
+
+$$
+T := \left(
+          \begin{array}{cccc}
+              0 & 0 & 0 & x \\
+              0 & 0 & 0 & y \\
+              0 & 0 & 0 & z \\
+              0 & 0 & 0 & 1
+           \end{array}
+       \right)
+$$
+
+## Transformation matrix
+
+Instead of scaling, rotating and then translate a given point $p$, we can use
+the associativity property of matrices. We can create a matrix that has the
+same result as the single transformations. This transformation matrix will
+be defined as
+$$
+  M := TRS
+$$
+
+with associativity we can verify that the matrix\  $M$ has the same effect
+
+$$
+  Mp = TRSp
+$$
+
+## Ray
+
+A ray can is defined as point $\vec{o}$ and a direction $\vec{d}$. Where
+$\vec{o}$ represents the origin of the ray and $\vec{d}$ the direction in
+which the ray travels. The ray travels through all points of the set
+$$
+ \{ o + t * d | x \in \mathbb{R}, x > 0 \}
+$$
+
+
 ## Primitives
 
-**MF: Your headline is "primitives", but you never use the word "primitive"
-in this section. Explain it!**
+We define a number of shapes, called primitives, that can be represented in
+the euclidean space. Every shape is considered hollow.
 
-We define a number of shapes that can be represented in the euclidean space.
-Every shape is considered hollow.
-
-* Sphere: A sphere, centered at the origin, can be represented by
-  radius $r \in \mathbb{R}$.
+* Sphere: The unit sphere, centered at the origin, can be represented by
+  radius $r = 1$.
   For all points $\vec{p}$ of the sphere follows $||\vec{p}|| = r$,
   where $||\cdot||$ is the Euclidean norm.
 
@@ -63,7 +144,8 @@ and the orthogonal vector to the origins $\vec{d} = (0 ,0 ,1)$.
 **MF: Could you make a page where you show the unit sphere, box, cone
 and cylinder graphically?**
 
+
+
 **MF: Please try to not make the text longer than 80 characters per line.
 This has the advantage that one can later see easier the differences
 with `diff`.**
-
