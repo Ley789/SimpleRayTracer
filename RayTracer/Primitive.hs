@@ -23,9 +23,7 @@ type Origin = V3 Double
 type Direction = V3 Double
 type Radius = Double 
 type Intersection = V3 Double
-
-
-           
+        
 --Types that represent primitives
 data Primitive =
     Sphere     --sphere of radius 1 with center in the origin
@@ -59,14 +57,14 @@ getDirection (Ray _ r) = r
 getNormal Sphere p =
   V3 (p ^._x) (p ^._y) (p ^._z)
 getNormal Box p
-  | 0.5 - x < e  = V3 (signum x) 0 0
-  | 0.5 - y < e  = V3 0 (signum y) 0
-  | otherwise    = V3 0 0 (signum z)
+  | 1 - x < e  = V3 1 0 0
+  | 1 - y < e  = V3 0 1 0
+  | otherwise  = V3 0 0 1
     where x = abs p ^._x
           y = abs p ^._y
           z = abs p ^._z
-          e = 0.000000001
-
+          e = 0.00000001
+-- TODO check
 getNormal c@(Cone r1 r2) p
   | z == 0    = V3 0 0 (-1)
   | z == 1    = V3 0 0 1

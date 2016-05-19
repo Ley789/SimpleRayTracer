@@ -4,7 +4,6 @@ pickled_dict
 *~
 *.ppm
 *.pov
-*.png
 Setup
 README.markdown
 LICENSE
@@ -16,5 +15,8 @@ pre.tex
 *.vrb
 *.nav
 *.pfd
+.directory
+pre.pdf
+thesis.pdf
 initial.pdf
 Test

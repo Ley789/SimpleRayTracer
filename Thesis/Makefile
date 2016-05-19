@@ -4,4 +4,4 @@ all: $(patsubst %.md, %.pdf, $(wildcard *.md))
 	pandoc --toc $< -o $@
 
 %.tex: %.md
-	pandoc --toc $< -o $@
+	pandoc --toc $< -o $@ --bibliography bib.bib
