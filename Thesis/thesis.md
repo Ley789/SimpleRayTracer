@@ -249,5 +249,7 @@ planes will not be considered a point of the cone or cylinder.
 * Give (mathematical) definitions
 * Use "follows" correctly
 * Use `git diff`!
-* Use uniform enumerations: e.g. "translating, rotating, and scaling"
-* Give full definitions if possible, i.e. do not "truncate" things afterwards.
+* Use uniform enumerations, e.g. "translating, rotating, and scaling"
+* Give full definitions if possible, i.e. do not "truncate" things afterwards
+* Refer to scientific papers
+* Use Markdown figures and refer to them in the text where appropriate
