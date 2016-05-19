@@ -1,18 +1,10 @@
----
-header-includes:
-    - \usepackage{wrapfig}
-    - \usepackage{caption}
-    - \usepackage{graphicx}
----
 % Ray Tracing Backend for Diagrams
 % Alexander Lochmann
 
-\renewcommand{\vec}[1]{\mathbf{#1}}
 
 # 3D Scene
 
-In this section we will introduce definitions that we use to describe 3D scenes
-in our ray tracer.
+In this section we will introduce definitions that we use to describe 3D scenes.
 
 ## Color
 
@@ -36,7 +28,7 @@ or we define transformations for the object, to represent the motion.
 The advantage of transformations is that the scene gets more dynamic.
 To define these transformations we first must introduce homogeneous coordinates.
 
-## Homogeneous coordinates
+### Homogeneous coordinates
 
 Homogeneous coordinates represent $n-dimensional$ coordinates with $n+1$ values.
 The $n+1$ value is conventionally denoted by $w$. The represented point can be
@@ -44,7 +36,7 @@ calculated by dividing the n-values by $w$. For $w = 0$ the point lies at
 infinity. This allows to define all following transformation as matrices.
 
 
-## Scaling matrix
+### Scaling matrix
 
 The scaling matrix $S$ changes the size of the object. It is defined as
 
@@ -64,7 +56,7 @@ E.g. if $\vec{p} = (1, 1, 1)$ and $s_x = 5, s_y = 1, s_z = 0$ of scaling
 matrix $S$ then $S\vec{p} = (5, 1, 0)$. If $s_x = s_y = s_z$ then the scaling
 is called uniform.
 
-## Rotation matrix
+### Rotation matrix
 
 To rotate a object in 3D space we need to define by which axis we want to
 rotate and the angle $\alpha$.
@@ -117,7 +109,7 @@ $$
   R = R_a^{-1}R_oR_a
 $$
 
-## Translation matrix
+### Translation matrix
 
 The translation matrix is defined as
 
@@ -134,9 +126,9 @@ $$
 
 where the indices describe the translation it the corresponding axis.
 
-## Transformation matrix
+### Transformation matrix
 
-Instead of scaling, rotating and then translate a given point $p$, we can use
+Instead of scaling, rotating and then translating a given point $p$, we can use
 the associativity property of matrices. We can create a matrix that has the
 same result as the single transformations. This transformation matrix will
 be defined as
@@ -165,12 +157,15 @@ $$
 We define a number of shapes, called primitives, that can be represented in
 the euclidean space. Every shape is considered hollow.
 
-* Sphere: The unit sphere, centered at the origin, can be represented by
-  radius $r = 1$.
-  For all points $\vec{p}$ of the sphere follows $||\vec{p}|| = r$,
-  where $||\cdot||$ is the Euclidean norm.
+### Sphere
 
-* Box: A box aligned with the axes can be defined with two vectors
+The unit sphere, centered at the origin, can be represented by
+radius $r = 1$.
+For all points $\vec{p}$ of the sphere follows $||\vec{p}|| = r$,
+where $||\cdot||$ is the Euclidean norm.
+
+### Box
+A box aligned with the axes can be defined with two vectors
   $$\vec{v_1} := \begin{pmatrix}
           x_{min}, & y_{min}, & z_{min}
        \end{pmatrix} \\
@@ -178,18 +173,24 @@ the euclidean space. Every shape is considered hollow.
            x_{max}, & y_{max}, & z_{max}
       \end{pmatrix}
   $$
-  where $v_1$ represents the starting interval of each axis and
-  $v_2$ the end of the interval. For all points $\vec{p} = (x, y, z)$ of the box
-  follows $x \ge x_{min}, x \le x_{max}, y \ge y_{min}, y \le y_{max},
-  z \ge z_{min}, z \le z_{max}$
+where $v_1$ represents the starting interval of each axis and
+$v_2$ the end of the interval. For all points $\vec{p} = (x, y, z)$ of the box
+follows $x \ge x_{min}, x \le x_{max}, y \ge y_{min}, y \le y_{max},
+z \ge z_{min}, z \le z_{max}$.
 
-* Cylinder: The infinity cylinder aligned at the z-axis can be represented with
-  radius $r \in \mathbb{R}$. For all points $\vec{p} = (x,y,z)$
-  follows $x^2 + y^2 = r^2$.
+### Cylinder
 
-\newpage
+The infinity cylinder aligned at the z-axis can be represented with
+radius $r \in \mathbb{R}$. For all points $\vec{p} = (x,y,z)$
+follows $x^2 + y^2 = r^2$. A render of a cylinder is illustrated in
+\autoref{fig:cylinder}.
 
-* Cone:
+![Cylinder.\label{fig:cylinder}](primCylinder.png)
+
+For image size, see: <http://www.imagemagick.org/discourse-server/viewtopic.php?t=21076>
+
+
+### Cone
 
   \begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule}
     \begin{wrapfigure}{L}{.2\textwidth}
@@ -209,13 +210,13 @@ the euclidean space. Every shape is considered hollow.
     $$\cos^2 \alpha * (x^2 + y^2) - \sin^2 \alpha * (z - r_1 / \alpha) = 0$$
   \end{minipage}
 
-We will truncate the cone and the cylinder, because of the infinity length by
+We truncate the cone and the cylinder because of the infinity length by
 the planes $p1$ and $p2$. The origin is a point of $p1$ and
 $\vec{o} = (0 ,0 ,1)$ is a point of $p2$. The vector $\vec{d} = (0 ,0 ,1)$
 is orthogonal to both planes. Every point that does not lies between these 2
-plains will not be considered a point of the cone or cylinder.
+planes will not be considered a point of the cone or cylinder.
 
-## Graphical representation of the primitives
+### Graphical representation
 
 * The unit sphere:\\
   \begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule}
@@ -241,3 +242,12 @@ plains will not be considered a point of the cone or cylinder.
     \includegraphics[scale=.4]{primCylinder.png}
   \end{minipage}
   \\
+
+
+# Comments
+
+* Give (mathematical) definitions
+* Use "follows" correctly
+* Use `git diff`!
+* Use uniform enumerations: e.g. "translating, rotating, and scaling"
+* Give full definitions if possible, i.e. do not "truncate" things afterwards.

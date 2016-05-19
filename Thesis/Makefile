@@ -1,7 +1,7 @@
 all: $(patsubst %.md, %.pdf, $(wildcard *.md))
 
 %.pdf: %.md
-	pandoc --toc $< -o $@
+	pandoc --toc -V documentclass:scrartcl -H header.tex $< -o $@
 
 %.tex: %.md
-	pandoc --toc $< -o $@ --bibliography bib.bib
+	pandoc --toc $< -o $@
