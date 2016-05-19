@@ -253,3 +253,4 @@ planes will not be considered a point of the cone or cylinder.
 * Give full definitions if possible, i.e. do not "truncate" things afterwards
 * Refer to scientific papers
 * Use Markdown figures and refer to them in the text where appropriate
+* Sketch out structure before writing and refine
