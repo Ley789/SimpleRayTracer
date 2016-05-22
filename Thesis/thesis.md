@@ -8,40 +8,42 @@ In this section we will introduce definitions that we use to describe 3D scenes.
 
 ## Color
 
-Color will be represented with the RGB model. The RGB color model represents a
-color by adding red, green and blue lights together. The intensity of these lights
-is defined by values in the interval [0,1], where 0 stands for 0% and 1 for
-100% intensity. Each light value is called channel.
-E.g. Color 1 0 0 has a red channel of 100%, green channel of 0% and blue
-channel 0%.
+A color is represented as vector $\vec{c} = (r,g,b)$, with values in
+range of [0,1]. The components are called channels, where each channel
+represents light intensity with, $r$ as the red, $g$ as the green and
+$b$ as the blue channel. We use the RGB color model to calculate the resulting
+color. E.g. $\vec{c} =(1, 0, 0)$ has a red channel of 100%, green channel of
+0% and blue channel 0%, so the resulting color is full intensity red.
 
 ## Light
 
-A point light is defined by the location and the color. It sends light in
-all direction.
+A light is a source that emits a color at a defined position in a defined
+direction with a defined decrease of illumination per distance.
+A point light sends light in all direction.
+Direction light is a point light with no decrease illumination.
 
 ## Transformations
 
-Imagine we want to describe a scene where a object changes its position
-in each frame. Now to define this scene we would either need different objects
-or we define transformations for the object, to represent the motion.
-The advantage of transformations is that the scene gets more dynamic.
-To define these transformations we first must introduce homogeneous coordinates.
+A transformation is a function that takes a vector $\vec{p} = (x_1,...,x_n)$
+and returns a $\vec{q} = (y_1,...,y_n)$. In the next chapters we will
+introduce homogeneous coordinates and then some important transformations.
 
 ### Homogeneous coordinates
 
-Homogeneous coordinates represent $n-dimensional$ coordinates with $n+1$ values.
-The $n+1$ value is conventionally denoted by $w$. The represented point can be
-calculated by dividing the n-values by $w$. For $w = 0$ the point lies at
-infinity. This allows to define all following transformation as matrices.
-
+Given a vector $\vec{p}=(x_1,...,x_n)$ the vector
+$\vec{q}=(x_1 * w, ..., x_n * w, w)$ with $w \ne 0$ is a homogeneous vector
+of the vector $\vec{p}$. We can see for every scalar $t \in \mathbb{R}$ and
+$t \ne 0$ holds that $t*\vec{q}$ is a homogeneous vector of $\vec{p}$.
+Representing coordinates of $\mathbb{R^3}$ as homogeneous vectors/coordinates
+yields to simplification of the transformations. In the section Transformations
+every point is considered a homogeneous point.
 
 ### Scaling matrix
 
-The scaling matrix $S$ changes the size of the object. It is defined as
+The scaling matrix $S$ is defined as
 
 $$
-  S := \left(
+  S(s_x,s_y,s_z):= \left(
           \begin{array}{cccc}
               s_x & 0   & 0   & 0 \\
               0   & s_y & 0   & 0 \\
@@ -52,8 +54,10 @@ $$
 $$
 
 where the indices stands for the scaling in the corresponding axis.
-E.g. if $\vec{p} = (1, 1, 1)$ and $s_x = 5, s_y = 1, s_z = 0$ of scaling
-matrix $S$ then $S\vec{p} = (5, 1, 0)$. If $s_x = s_y = s_z$ then the scaling
+Multiplying every point of a object with a scaling matrix will resize
+the object.
+E.g. if $\vec{p} = (1, 1, 1, 1)$ and $s_x = 5, s_y = 1, s_z = 0$ of scaling
+matrix $S$ then $S\vec{p} = (5, 1, 0, 1)$. If $s_x = s_y = s_z$ then the scaling
 is called uniform.
 
 ### Rotation matrix
@@ -61,10 +65,10 @@ is called uniform.
 To rotate a object in 3D space we need to define by which axis we want to
 rotate and the angle $\alpha$.
 
-A rotation around the x-axis is defined as:
+A rotation defined as:
 
 $$
-  R_x := \left(
+  R_x(\alpha) := \left(
           \begin{array}{cccc}
               1   & 0          & 0           & 0 \\
               0   & \cos \alpha & -\sin \alpha & 0 \\
@@ -74,10 +78,8 @@ $$
        \right)
 $$
 
-A rotation around the y-axis is defined as:
-
 $$
-  R_y := \left(
+  R_y(\alpha) := \left(
           \begin{array}{cccc}
               \cos \alpha  & 0 & \sin \alpha & 0\\
               0           & 1 & 0          & 0 \\
@@ -87,23 +89,27 @@ $$
        \right)
 $$
 
-A rotation around the z-axis is defined as:
-
 $$
-  R_z := \left(
-          \begin{array}{cccc}
-              \cos \alpha & -\sin \alpha & 0 & 0 \\
-              \sin \alpha & \cos \alpha  & 0 & 0 \\
-              0          & 0           & 1 & 0 \\
-              0          & 0           & 0 & 1
-           \end{array}
-       \right)
+  R_z(\alpha) := \left(
+                  \begin{array}{cccc}
+                      \cos \alpha & -\sin \alpha & 0 & 0 \\
+                      \sin \alpha & \cos \alpha  & 0 & 0 \\
+                      0          & 0           & 1 & 0 \\
+                      0          & 0           & 0 & 1
+                   \end{array}
+                  \right)
 $$
 
+where the indices indicate the axis by which we rotate. Every combination of
+rotation matrices is also called a rotation matrix.
 For the corresponding proof see \cite{kenn}.
-For a rotation $R_o$ around a arbitrary axis $\vec{a}$, we use the defined
-rotation matrices to align $\vec{a}$ with one of the axes, we denote
-the used rotation $R_a$. Then the resulting rotation matrix is:
+Multiplying every point of a object with a rotation matrix will rotate
+the object by \alpha.
+To rotate a object on a arbitrary axis $\vec{p}$ by the rotation $R_o$,
+we align $\vec{p}$ with one of the defined axes by using combinations
+of the defined rotation matrices. We denote the used rotation matrix with $R_a$.
+Afterwards we undo the rotation done to align the axis with $R_a^{-1}$.
+We combine these steps to one rotation matrix
 
 $$
   R = R_a^{-1}R_oR_a
@@ -114,14 +120,14 @@ $$
 The translation matrix is defined as
 
 $$
-T := \left(
-          \begin{array}{cccc}
-              0 & 0 & 0 & t_x \\
-              0 & 0 & 0 & t_y \\
-              0 & 0 & 0 & t_z \\
-              0 & 0 & 0 & 1
-           \end{array}
-       \right)
+  T(x,y,z):= \left(
+                \begin{array}{cccc}
+                  0 & 0 & 0 & t_x \\
+                  0 & 0 & 0 & t_y \\
+                  0 & 0 & 0 & t_z \\
+                  0 & 0 & 0 & 1
+                \end{array}
+              \right)
 $$
 
 where the indices describe the translation it the corresponding axis.
@@ -136,7 +142,7 @@ $$
   M := TRS
 $$
 
-with associativity we can verify that the matrix\  $M$ has the same effect
+with associativity we can verify that the matrix $M$ has the same effect
 
 $$
   M\vec{p} = TRS\vec{p}
@@ -144,45 +150,60 @@ $$
 
 ## Ray
 
-A ray can is defined as point $\vec{o}$ and a direction $\vec{d}$. Where
-$\vec{o}$ represents the origin of the ray and $\vec{d}$ the direction in
-which the ray travels. The ray travels through all points of the set
+A ray is defined as point $\vec{o}$ and a direction $\vec{d}$. Where
+$\vec{o}$ represents the origin of the ray and $\vec{d}$ the direction.
+The ray travels through all points of the set
+
 $$
- \{ o + t * d | x \in \mathbb{R}, x > 0 \}
+ \{ \vec{o} + t * \vec{d} | x \in \mathbb{R}, x > 0 \}
 $$
 
 
 ## Primitives
 
 We define a number of shapes, called primitives, that can be represented in
-the euclidean space. Every shape is considered hollow.
+the euclidean space. Every shape is defined by the set of the points of its
+surface.
 
 ### Sphere
 
-The unit sphere, centered at the origin, can be represented by
-radius $r = 1$.
-For all points $\vec{p}$ of the sphere follows $||\vec{p}|| = r$,
+The unit sphere, which is centered at the origin is defined by the set
+
+$$
+  \{p | p \in \mathbb{R^3}, ||p|| = 1 \}
+$$
+
 where $||\cdot||$ is the Euclidean norm.
 
 ### Box
-A box aligned with the axes can be defined with two vectors
-  $$\vec{v_1} := \begin{pmatrix}
-          x_{min}, & y_{min}, & z_{min}
-       \end{pmatrix} \\
-  \vec{v_2} := \begin{pmatrix}
-           x_{max}, & y_{max}, & z_{max}
-      \end{pmatrix}
-  $$
-where $v_1$ represents the starting interval of each axis and
-$v_2$ the end of the interval. For all points $\vec{p} = (x, y, z)$ of the box
-follows $x \ge x_{min}, x \le x_{max}, y \ge y_{min}, y \le y_{max},
-z \ge z_{min}, z \le z_{max}$.
+A box aligned with the axes and all four sides of length 1 is defined by the set
+
+$$
+  P_x(0) \cup P_x(1) \cup P_y(0) \cup P_y(1) \cup P_z(0) \cup P_z(1)
+$$
+
+where
+
+$$
+  P_x(v) := \{(x,y,v) | 0 \le x,y \le 1, x,y \in \mathbb{R}\}
+$$
+$$
+  P_y(v) := \{(v,y,z) | 0 \le y,z \le 1, y,z \in \mathbb{R}\}
+$$
+$$
+  P_z(v) := \{(x,v,z) | 0 \le x,z \le 1, x,z \in \mathbb{R}\}  
+$$
 
 ### Cylinder
 
-The infinity cylinder aligned at the z-axis can be represented with
-radius $r \in \mathbb{R}$. For all points $\vec{p} = (x,y,z)$
-follows $x^2 + y^2 = r^2$. A render of a cylinder is illustrated in
+The cylinder aligned at the z-axis, with length 1 and radius $r \in \mathbb{R}$
+is defined by the set
+
+$$
+  \{\vec{p}=(x,y,z)| p \in \mathbb{R^3}, x^2 + y^2 = r,1 \ge z \ge 0 \}
+$$
+
+A render of a cylinder is illustrated in
 \autoref{fig:cylinder}.
 
 ![Cylinder.\label{fig:cylinder}](primCylinder.png)
@@ -192,56 +213,22 @@ For image size, see: <http://www.imagemagick.org/discourse-server/viewtopic.php?
 
 ### Cone
 
-  \begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule}
-    \begin{wrapfigure}{L}{.2\textwidth}
-    \centering
-    \includegraphics[width=.2\textwidth,
-     height=.25\textwidth]{cone.png}
-    \end{wrapfigure}
-    A cone which length is infinite, for short infinity cone,
-    that is aligned at the z-axis can be defined by a base and a top cap, \\
-    where the center of the base cap is at the origin and the center of the
-    top cap at $\vec{p_2} = (0,0,1)$. We define the 2 radii, \\
-    $r_1 \in \mathbb{R}$ the radius of the base cap and \\
-    $r_2 \in \mathbb{R}$ the radius of the top cap. \\
-    With these we can calculate the half-angle $\alpha = r_1 - r_2$ and the
-    apex $\vec{p_a}= (0, 0, r_1 / \alpha)$. \\
-    For all points $\vec{q}=(x, y, z)$ of the cone follows
-    $$\cos^2 \alpha * (x^2 + y^2) - \sin^2 \alpha * (z - r_1 / \alpha) = 0$$
-  \end{minipage}
+A cone aligned at the z-axis, with length 1, base cap, centered at the origin,
+with radius $r_1 \in \mathbb{R}$, top cap, centered at $\vec{p_2} = (0,0,1)$,
+with radius $r_2 \in \mathbb{R}$ is defined by the set
 
-We truncate the cone and the cylinder because of the infinity length by
-the planes $p1$ and $p2$. The origin is a point of $p1$ and
-$\vec{o} = (0 ,0 ,1)$ is a point of $p2$. The vector $\vec{d} = (0 ,0 ,1)$
-is orthogonal to both planes. Every point that does not lies between these 2
-planes will not be considered a point of the cone or cylinder.
+$$
+  \{\vec{p}=(x,y,z)| p \in \mathbb{R^3},
+  \cos^2 \alpha * (x^2 + y^2) - \sin^2 \alpha * (z - r_1 / \alpha) = 0,
+  1 \ge z \ge 0\}
+$$
+
+where the half-angle $\alpha = r_1 - r_2$
 
 ### Graphical representation
 
-* The unit sphere:\\
-  \begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule}
-    \centering
-    \includegraphics[scale=.25]{primSphere.png}
-  \end{minipage}
-  \\
-* The unit box, rotated by 45 degree on the y-axis: \\
-  \begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule}
-    \centering
-    \includegraphics[scale=.25]{primBox.png}
-  \end{minipage}
-  \\
-* The cone:\\
-  \begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule}
-    \centering
-    \includegraphics[scale=.4]{primCone.png}
-  \end{minipage}
-  \\
-* The cylinder:\\
-  \begin{minipage}{\dimexpr\linewidth-2\fboxsep-2\fboxrule}
-    \centering
-    \includegraphics[scale=.4]{primCylinder.png}
-  \end{minipage}
-  \\
+
+SEE CYLINDER
 
 
 # Comments
