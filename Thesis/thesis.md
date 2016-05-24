@@ -10,20 +10,22 @@ In this chapter we will introduce definitions that we use to describe 3D scenes.
 
 A color is represented as vector $\vec{c} = (r,g,b)$, with values in
 range of [0,1]. The components are called channels, where each channel
-represents light intensity with, $r$ as the red, $g$ as the green and
+represents light intensity with $r$ as the red, $g$ as the green and
 $b$ as the blue channel. We use the RGB color model to calculate the resulting
 color.
 
 E.g. $\vec{c} =(1, 0, 0)$ has a red channel of 100%, green channel of
-0% and blue channel 0%, so the resulting color is full intensity red.
+0% and blue channel 0%, so the resulting color is red with full intensity.
 
 ## Light
+
+**Comment: Eliminate defined, eliminate or clarify "source".**
 
 A light is a source that emits a color at a defined position in a defined
 direction with a defined decrease of illumination per distance.
 
-A point light sends light in all direction.
-Direction light is a point light with no decrease illumination.
+A point light sends light in all directions.
+Direction light is a point light with no decrease illumination. **Redo.**
 
 ## Transformations
 
@@ -33,16 +35,23 @@ introduce homogeneous coordinates and then some important transformations.
 
 ### Homogeneous coordinates
 
-Given a vector $\vec{p}=(x_1,...,x_n)$ the vector
-$\vec{q}=(x_1 * w, ..., x_n * w, w)$ with $w \ne 0$ is a homogeneous vector
-of the vector $\vec{p}$. We can see for every scalar $t \in \mathbb{R}$ and
-$t \ne 0$ holds that $t*\vec{q}$ is a homogeneous vector of $\vec{p}$.
+**Comment: Write about notation, like scalar multiplication, in
+separate vector section.**
 
-Representing coordinates of $\mathbb{R^3}$ as homogeneous vectors/coordinates
-yields to simplification of the transformations. In the chapter Transformations
+Given a vector $\vec{p}=(x_1,...,x_n)$, the vector
+$\vec{q}=(x_1 * w, ..., x_n * w, w)$ with $w \ne 0$ is a homogeneous vector
+of the vector $\vec{p}$. It follows that for every scalar $t \in \mathbb{R}$ and
+$t \ne 0$, $t*\vec{q}$ is a homogeneous vector of $\vec{p}$.
+
+**Point -> Vector**
+
+Representing coordinates of $\mathbb{R}^3$ as homogeneous vectors/coordinates
+simplifies transformations. In \autoref{transformations}
 every point is considered a homogeneous point.
 
 ### Scaling matrix
+
+**S is a function, not a matrix**
 
 The scaling matrix $S$ is defined as
 
@@ -58,19 +67,21 @@ $$
 $$
 
 where the indices stands for the scaling in the corresponding axis.
-Multiplying every point of a object with a scaling matrix will resize
+Multiplying every point of an object with a scaling matrix resizes
 the object.
 
-E.g. if $\vec{p} = (1, 1, 1, 1)$ and $s_x = 5, s_y = 1, s_z = 0$ of scaling
+**Work.**
+
+For example, if $\vec{p} = (1, 1, 1, 1)$ and $s_x = 5, s_y = 1, s_z = 0$ of scaling
 matrix $S$ then $S\vec{p} = (5, 1, 0, 1)$. If $s_x = s_y = s_z$ then the scaling
 is called uniform.
 
 ### Rotation matrix
 
-To rotate a object in 3D space we need to define by which axis we want to
-rotate and the angle $\alpha$.
+To rotate an object in 3D space we need to define by which axis
+and which angle $\alpha$ to rotate.
 
-A rotation defined as:
+A rotation is defined as:
 
 $$
   R_x(\alpha) := \left(
@@ -105,13 +116,15 @@ $$
                   \right)
 $$
 
-where the indices indicate the axis by which we rotate. Every combination of
-rotation matrices is also called a rotation matrix.
+where the indices indicate the axis by which we rotate.
+Every **combination** of rotation matrices is also called a rotation matrix.
 For the corresponding proof see \cite{kenn}.
-Multiplying every point of a object with a rotation matrix will rotate
+Multiplying every point of an object with a rotation matrix will rotate
 the object by $\alpha$.
 
-To rotate a object on a arbitrary axis $\vec{p}$ by the rotation $R_o$,
+**Work.**
+
+To rotate an object on a arbitrary axis $\vec{p}$ by the rotation $R_o$,
 we align $\vec{p}$ with one of the defined axes by using combinations
 of the defined rotation matrices. We denote the used rotation matrix with $R_a$.
 Afterwards we undo the rotation done to align the axis with $R_a^{-1}$.
@@ -123,7 +136,9 @@ $$
 
 ### Translation matrix
 
-The translation matrix is defined as
+**Function.**
+
+A translation matrix is defined as
 
 $$
   T(x,y,z):= \left(
@@ -136,9 +151,12 @@ $$
               \right)
 $$
 
-where the indices describe the translation it the corresponding axis.
+where the indices describe the translation in the corresponding axes.
 
 ### Transformation matrix
+
+**All trans can be described by TRS.**
+**Clarify parentheses.**
 
 Instead of scaling, rotating and then translating a given point $p$, we can use
 the associativity property of matrices. We can create a matrix that has the
@@ -175,10 +193,10 @@ surface.
 
 ### Sphere
 
-The unit sphere, which is centered at the origin is defined by the set
+The unit sphere, which is centered at the origin, is defined by the set
 
 $$
-  \{p | p \in \mathbb{R^3}, ||p|| = 1 \}
+  \{p | p \in \mathbb{R^3}, ||p|| = 1 \},
 $$
 
 where $||\cdot||$ is the Euclidean norm.
@@ -231,7 +249,7 @@ $$
   1 \ge z \ge 0\}
 $$
 
-where the half-angle $\alpha = r_1 - r_2$
+where $\alpha = r_1 - r_2$. **Explain or change.**
 
 # Rendering
 
@@ -275,7 +293,7 @@ share the same basic algorithm.
 Some techniques for shading machine rederings of soilds is a paper of
 Arthur Appel published in 1968 \cite{appel} it is the first approach
 to ray tracing. He represented light rays as mathematical lines and checked
-if there is a intersection with a object. After a intersection the light rays
+if there is a intersection with an object. After a intersection the light rays
 aren't traced further, also known as Ray Casting. These process doesn't considered
 shadows or reflections.
 
@@ -286,7 +304,7 @@ generate 3 new rays, the shadow ray, reflection ray and refraction ray. These
 rays are called secondary rays. The starting point of a shadow ray is
 the intersection point and its direction leads to a light source. This is
 used to determine if the light source influences the object at the intersection
-point. For example if a object is in between the shadow ray and the light source
+point. For example if an object is in between the shadow ray and the light source
 the intersected point will not be illuminated and will be represented as shadow.
 Reflection and refraction rays are traced further, which makes the algorithm
 recursive.
@@ -315,7 +333,7 @@ and the maximum distance of a ray.
 At this level the algorithm can be split in 3 tasks.
 The most fundamental task is to find the closest intersection. The second task,
 also called visibility/occlusion test, is to check if there are any intersection
-of a ray with a object. The last task is find all intersections of a ray.
+of a ray with an object. The last task is find all intersections of a ray.
 To check for any intersections is slightly simpler as checking for the
 closest, so there are algorithms that are more efficient in this case. For
 example the occlusion test is used for shadow rays \cite{wald}.
