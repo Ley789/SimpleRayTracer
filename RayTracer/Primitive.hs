@@ -60,9 +60,7 @@ getNormal Box p
   | x > y && x > z  = V3 1 0 0
   | y > x && y > z  = V3 0 1 0
   | otherwise       = V3 0 0 1
-    where x = abs p ^._x
-          y = abs p ^._y
-          z = abs p ^._z
+  where V3 x y z = abs p
 
 -- TODO check
 getNormal c@(Cone r1 r2) p
