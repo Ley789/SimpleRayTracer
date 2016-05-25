@@ -56,6 +56,7 @@ getDirection (Ray _ r) = r
 
 getNormal Sphere p =
   V3 (p ^._x) (p ^._y) (p ^._z)
+-- TODO fix
 getNormal Box p
   | x > y && x > z  = V3 1 0 0
   | y > x && y > z  = V3 0 1 0
@@ -78,6 +79,7 @@ getNormal c@(Cylinder r) p
     where n = V3 (p ^._x) (p ^._y) 0
           z = p ^._z
 
+-- TODO: return normal vector
 intersection :: Ray -> Primitive -> Maybe Intersection
 intersection ray Sphere       = itPoint ray <$> sphereIntersection ray
 intersection ray Box          = itPoint ray <$> boxIntersection ray
@@ -89,21 +91,18 @@ intersection ray (Cylinder rad) =
 frustumIntersection r@(Ray o d) it rad1 rad2
   | l == []  = Nothing
   | otherwise = Just $ foldl1' (nearestPoint o) l 
-    where f  = frustum r it
+    where f  = frustumConstrain r it
           cB = capIntersection r (V3 0 0 0) rad1
           cT = capIntersection r (V3 0 0 1) rad2
           l  = catMaybes [f,cB,cT]
 
-frustum r it = frustumConstrain p
-  where p = itPoint r <$> it
-
 -- MF: TODO: do the same here as I did below for capIntersection
-frustumConstrain p =
-  | p == Nothing         = Nothing
-  | z >= 0.0 && z <= 1.0 = p
-  | otherwise            = Nothing
-  where z = (fromJust p) ^. _z 
-
+frustumConstrain r it = do
+  p <- itPoint r <$> it
+  let z = p ^. _z
+  guard(z >= 0.0 && z <= 1.0)
+  return p
+  
 capIntersection :: Ray -> V3 Double -> Double -> Maybe Intersection
 capIntersection r o rad = do
   p <- itPoint r <$> planeIntersection r o (V3 0 0 1)
