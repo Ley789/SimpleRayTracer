@@ -97,19 +97,19 @@ frustumIntersection r@(Ray o d) it rad1 rad2
 frustum r it = frustumConstrain p
   where p = itPoint r <$> it
 
-frustumConstrain p
+-- MF: TODO: do the same here as I did below for capIntersection
+frustumConstrain p =
   | p == Nothing         = Nothing
   | z >= 0.0 && z <= 1.0 = p
   | otherwise            = Nothing
   where z = (fromJust p) ^. _z 
 
 capIntersection :: Ray -> V3 Double -> Double -> Maybe Intersection
-capIntersection r o rad
-  | p == Nothing        = Nothing
-  | dot q q <= rad ** 2 = p
-  | otherwise           = Nothing 
-  where p = itPoint r <$> planeIntersection r o (V3 0 0 1)
-        q = set _z 0 (fromJust p)
+capIntersection r o rad = do
+  p <- itPoint r <$> planeIntersection r o (V3 0 0 1)
+  let q = set _z 0 p
+  guard (dot q q <= rad ** 2)
+  return p
 
 -- | Easier intersection function because of our cosntrains to the object
 --   Normalized direction vector of cylinder is (0,0,1)
