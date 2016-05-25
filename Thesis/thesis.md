@@ -341,7 +341,7 @@ In ray tracing only one condition for a primitive must apply, which is a
 be a function that can calculate a intersection between the primitive and a ray.
 That means primitives can be of various types, from simple geometric shapes like
 sphere, cubes, trianles,..., to complex parametric patches like the
-Bezier patches and other complex shapes as long as there exist a intersection
+Bézier patches and other complex shapes as long as there exist a intersection
 function. The flexibility of primitives allows to represent shapes with full
 accuracy. Although using multiple kinds of primitives does not limit the kinds
 of scenes that can be rendered. Like mentioned in the chapter [Rasterization][]
