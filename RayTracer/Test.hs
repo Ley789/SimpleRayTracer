@@ -22,4 +22,6 @@ example = sphere # sc blue  # ambient 0.2 # diffuse 0.8 # highlight (Specular 0.
 
 scene = example <> cameraLight
 
+-- MF: TODO: Compile with `ghc -Wall Test` and fix warnings.
+-- Also run `hlint *.hs` and fix warnings.
 main =  save_ppm "primSphere.ppm" $ S.simpleRayTracer (renderDia Ray RayOptions scene) (500, 500)
