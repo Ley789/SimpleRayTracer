@@ -14,6 +14,7 @@ import qualified Debug.Trace as T
 import Linear     hiding (frustum)
 import Data.List
 import Data.Maybe (fromJust,catMaybes)
+import Data.Ord (comparing)
 import Control.Lens
 import Control.Monad
 import Control.Applicative
@@ -90,17 +91,16 @@ intersection ray (Cylinder rad) =
 
 frustumIntersection r@(Ray o d) it rad1 rad2
   | l == []  = Nothing
-  | otherwise = Just $ foldl1' (nearestPoint o) l 
+  | otherwise = Just $ minimumBy (comparing $ distance o) l
     where f  = frustumConstrain r it
           cB = capIntersection r (V3 0 0 0) rad1
           cT = capIntersection r (V3 0 0 1) rad2
           l  = catMaybes [f,cB,cT]
 
--- MF: TODO: do the same here as I did below for capIntersection
 frustumConstrain r it = do
   p <- itPoint r <$> it
   let z = p ^. _z
-  guard(z >= 0.0 && z <= 1.0)
+  guard (z >= 0.0 && z <= 1.0)
   return p
   
 capIntersection :: Ray -> V3 Double -> Double -> Maybe Intersection
@@ -171,10 +171,6 @@ sphereIntersection r@(Ray origin direction) =
     a = dot direction direction
     b = 2 * dot direction origin
     c = dot origin origin - 1
-
-nearestPoint o p1 p2
-  | distance o p1 < distance o p2 = p1
-  | otherwise = p2
 
 nearestPositive t1 t2
   | t1 > 0 && t2 > 0 = Just $ min t1 t2

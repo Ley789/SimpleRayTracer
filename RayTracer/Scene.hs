@@ -49,6 +49,7 @@ simpleRayTracer s (m, n) =
           sO = s ^. sObjects
           sL = s ^. sLights
 
+-- MF: TODO: do the same here as I did in Primitive.hs for frustumIntersection
 -- TODO Change case [] represents no intersection
 -- | Extract nearest intersected primitive from list and return color.
 nearestIntersection l =
