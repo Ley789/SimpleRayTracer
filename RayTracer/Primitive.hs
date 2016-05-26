@@ -1,27 +1,23 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Primitive (
   Primitive(Sphere, Box, Cylinder, Cone),
   Radius,
   Ray(..),
-  origin,
-  direction,
-  getOrigin,
-  getDirection,
+  _o,
+  _d,
   getNormal,
   intersection,
   )where
 
-import qualified Debug.Trace as T 
 import Linear     hiding (frustum)
 import Data.List
-import Data.Maybe (fromJust,catMaybes)
+import Data.Maybe (catMaybes)
 import Data.Ord (comparing)
 import Control.Lens
 import Control.Monad
 import Control.Applicative
+
 --represents an Euclidean coordinate 
-type Center = V3 Double
-type Origin = V3 Double
-type Direction = V3 Double
 type Radius = Double 
 type Intersection = V3 Double
         
@@ -29,32 +25,25 @@ type Intersection = V3 Double
 data Primitive =
     Sphere     --sphere of radius 1 with center in the origin
   | Box        
-  | Cone {            --Cone with defined base radius and cap radius.
-    baseR :: Double,  --Base at origin, height 1 and aligned positive
-    capR  :: Double   --z axis. Base radius > cap radius.
-  }
+  | Cone Double Double --Cone with defined base radius and cap radius.
+                       --Base at origin, height 1 and aligned positiv
+                       --z axis. Base radius > cap radius.
   | Cylinder Double
      deriving(Show)
 
-data Ray = Ray Origin Direction
-           deriving Show
+data Ray = Ray {
+ _originR :: V3 Double,
+ _directionR :: V3 Double
+} deriving Show
 
-makeCone r1 r2
-  | r1 > r2   = Cone r1 r2
-  | otherwise = Cone r1 r1
+makeLenses ''Ray
 
-origin :: Double -> Double -> Double -> Origin
-origin x y z = V3 x y z
+_o :: Lens' Ray (V3 Double)
+_o = originR
+_d :: Lens' Ray (V3 Double)
+_d = directionR
 
-direction :: Double -> Double -> Double -> Direction
-direction x y z = V3 x y z
-
-ray :: Origin -> Direction -> Ray
-ray o d = Ray o d
-
-getOrigin (Ray o _) = o
-getDirection (Ray _ r) = r
-
+getNormal :: Primitive -> V3 Double -> V3 Double
 getNormal Sphere p =
   V3 (p ^._x) (p ^._y) (p ^._z)
 -- TODO fix
@@ -65,7 +54,7 @@ getNormal Box p
   where V3 x y z = abs p
 
 -- TODO check
-getNormal c@(Cone r1 r2) p
+getNormal (Cone r1 r2) p
   | z == 0    = V3 0 0 (-1)
   | z == 1    = V3 0 0 1
   | otherwise = V3 (v ^._x * alpha /r1) (v ^._y * alpha/r1) (r1 / alpha) 
@@ -73,7 +62,7 @@ getNormal c@(Cone r1 r2) p
           v = normalize $ V3 (p ^._x) (p ^._y) 0
           z = p ^._z
 
-getNormal c@(Cylinder r) p
+getNormal (Cylinder _) p
   | z == 0    = V3 0 0 (-1)
   | z == 1    = V3 0 0 1
   | otherwise = normalize n
@@ -89,14 +78,15 @@ intersection ray (Cone rad1 rad2) =
 intersection ray (Cylinder rad) =
   frustumIntersection ray (cylinderIntersection ray rad) rad rad
 
-frustumIntersection r@(Ray o d) it rad1 rad2
-  | l == []  = Nothing
+frustumIntersection :: Ray -> Maybe Double -> Double -> Double -> Maybe (V3 Double)
+frustumIntersection r@(Ray o _) t rad1 rad2
+  | null l    = Nothing
   | otherwise = Just $ minimumBy (comparing $ distance o) l
-    where f  = frustumConstrain r it
+    where f  = frustumConstrain r t
           cB = capIntersection r (V3 0 0 0) rad1
           cT = capIntersection r (V3 0 0 1) rad2
           l  = catMaybes [f,cB,cT]
-
+frustumConstrain :: Ray -> Maybe Double -> Maybe (V3 Double)
 frustumConstrain r it = do
   p <- itPoint r <$> it
   let z = p ^. _z
@@ -112,7 +102,8 @@ capIntersection r o rad = do
 
 -- | Easier intersection function because of our cosntrains to the object
 --   Normalized direction vector of cylinder is (0,0,1)
-cylinderIntersection r@(Ray o d) rad =
+cylinderIntersection :: Ray -> Double -> Maybe Double
+cylinderIntersection (Ray o d) rad =
   uncurry min <$> solveQuadratic a b c
   where
     vd = v d
@@ -121,11 +112,11 @@ cylinderIntersection r@(Ray o d) rad =
     b  = 2 * dot vd vo
     c  = dot vo vo - rad**2
     v  = set _z 0
-
-coneIntersection r@(Ray o d) r1 r2 =
+coneIntersection :: Ray -> Double -> Double -> Maybe Double
+coneIntersection (Ray o d) r1 r2 =
   uncurry min <$> solveQuadratic a b c
   where alpha = r1 - r2
-        pa    = (V3 0 0 r1) ^/ alpha
+        pa    = V3 0 0 (r1 / alpha)
         diff  = o ^-^ pa
         vd    = v d
         vdiff = v diff
@@ -138,15 +129,16 @@ coneIntersection r@(Ray o d) r1 r2 =
 
 -- | Given a ray, point on the plane and the normal vector to the plane
 -- return the coefficient if the ray intersects the plane.
-planeIntersection r@(Ray o d) p n
+planeIntersection :: Ray -> V3 Double -> V3 Double -> Maybe Double
+planeIntersection (Ray o d) p n
   | t <= 0    = Nothing
   | otherwise = Just t
-  where t = (dot n $ p ^-^ o) / dot n d
+  where t = dot n (p ^-^ o) / dot n d
 
 -- | Calculate the intersection between the ray and the unit box aligned on the
 -- axes.
 boxIntersection :: Ray -> Maybe Double
-boxIntersection r@(Ray origin direction)
+boxIntersection (Ray origin direction)
   | tMax < 0    = Nothing
   | tMin > tMax = Nothing
   | tMin > 0    = Just tMin
@@ -158,6 +150,7 @@ boxIntersection r@(Ray origin direction)
     tMin = maximum $ map fst ts
     tMax = minimum $ map snd ts
 
+slabIntersection :: (Num a, Ord a) => s -> s -> ((a -> Const a a) -> s -> Const a s) -> (a, a)
 slabIntersection o i l
   | i ^. l >= 0 = over both slab (0,1)
   | otherwise   = over both slab (1,0)
@@ -165,19 +158,22 @@ slabIntersection o i l
     slab b = (b - (o ^. l)) * (i ^. l)
 
 -- | Calculate the possible intersection point.
-sphereIntersection r@(Ray origin direction) =
+sphereIntersection :: Ray -> Maybe Double
+sphereIntersection (Ray origin direction) =
   solveQuadratic a b c >>= uncurry nearestPositive
   where
     a = dot direction direction
     b = 2 * dot direction origin
     c = dot origin origin - 1
 
+nearestPositive :: (Fractional a, Num a, Ord a) => a -> a -> Maybe a
 nearestPositive t1 t2
   | t1 > 0 && t2 > 0 = Just $ min t1 t2
   | t1 > 0           = Just t1
   | t2 > 0           = Just t2
   | otherwise        = Nothing
 
+solveQuadratic :: (Fractional a, Floating a, Ord a) => a -> a -> a -> Maybe (a, a)
 solveQuadratic a b c
   | toSquare < 0 = Nothing
   | otherwise    = Just (t1, t2)
@@ -186,4 +182,5 @@ solveQuadratic a b c
     t1 = ((-b) + sqrt toSquare) / (2 * a)
     t2 = ((-b) - sqrt toSquare) / (2 * a)
 
+itPoint :: Ray -> Double -> V3 Double
 itPoint (Ray origin direction) t = origin ^+^ (t *^ direction)
