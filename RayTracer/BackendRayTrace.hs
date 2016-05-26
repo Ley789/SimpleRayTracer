@@ -39,8 +39,8 @@ instance Backend Ray V3 Double where
    renderRTree _ _ = go where
      go :: RTree Ray V3 Double a -> Scene
      go (Node (RPrim p) _)   = unRay $ render Ray p
-     go (Node (RStyle s) ts) = foldl1' mappend $ map (addTexture s . go) ts
-     go (Node _ ts)          = foldl1' mappend $ map go ts
+     go (Node (RStyle s) ts) = mconcat $ map (addTexture s . go) ts
+     go (Node _ ts)          = mconcat $ map go ts
 
 
 unRay :: Render Ray V3 Double -> Scene
