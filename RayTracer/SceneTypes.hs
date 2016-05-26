@@ -1,10 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module SceneTypes where 
 
-import Data.List
 import Data.Monoid
 import Control.Lens
-import Primitive
 import Colour
 import Linear
 import Object
@@ -44,9 +42,11 @@ makeLenses ''Light
 -------------------------------------------------------------------------------
 -- Setter
 -------------------------------------------------------------------------------
-
+setObject :: [Object] -> Scene -> Scene
 setObject = set sObjects
 
+setCamera :: Last SCamera -> Scene -> Scene
 setCamera = set sCamera
 
+setLight :: [Light] -> Scene -> Scene
 setLight = set sLights

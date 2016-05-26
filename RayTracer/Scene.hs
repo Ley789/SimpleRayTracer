@@ -1,4 +1,3 @@
-{-# LANGUAGE TemplateHaskell #-}
 module Scene where 
 
 import qualified Debug.Trace as T
@@ -9,7 +8,6 @@ import Control.Lens
 import Primitive
 import Colour
 import Data.Function (on)
-import Fast_PPM
 import Linear
 import Object
 import SceneTypes
@@ -37,7 +35,7 @@ pixelCoordinates (m, n) =
 
 
 mapTracing :: Ray -> SceneObject -> [Intersection]
-mapTracing ray = mapMaybe (rayObjectIntersection ray)
+mapTracing r = mapMaybe (rayObjectIntersection r)
 
 -- | Create image from a scene with given pixel size.
 simpleRayTracer :: Scene  -> (Int, Int) -> [[Colour]]
@@ -52,6 +50,7 @@ simpleRayTracer s (m, n) =
 -- MF: TODO: do the same here as I did in Primitive.hs for frustumIntersection
 -- TODO Change case [] represents no intersection
 -- | Extract nearest intersected primitive from list and return color.
+nearestIntersection :: [Intersection] -> Maybe Intersection
 nearestIntersection l =
   case l of
     [] -> Nothing
@@ -61,6 +60,7 @@ nearestIntersection l =
               < rayPointDistance (s ^. ray) (s ^. itPoint) = f
             | otherwise = s
 
+generateRays :: SCamera -> (Int, Int) -> [[Ray]]
 generateRays c = (map.map) (`generateRay` c) . pixelCoordinates
 
 -- generate ray from camera and pixel coordinates                            
@@ -70,18 +70,21 @@ generateRay x c = -- T.trace ("\n" ++ show c) $
     Perspective -> perspecTrans x c
     Orthographic -> orthoTrans x c
 
+perspecTrans :: (Double, Double) -> SCamera -> Ray
 perspecTrans x c = Ray (pos c) 
-                    (normalize $ forward c ^+^ 
+                    (forward c ^+^ 
                     (fst x *^ right c) ^+^  
                     (snd x *^ up c))
 
+orthoTrans :: (Double, Double) -> SCamera -> Ray
 orthoTrans x c = Ray (pos c ^+^ forward c ^+^ 
                      (fst x *^ right c) ^+^ 
-                     (snd x *^ up c)) (normalize $ forward c) 
+                     (snd x *^ up c)) (forward c) 
 
 -------------------------------------------------------------------------------
 -- shading functions 
 -------------------------------------------------------------------------------
+
 filterColour :: SceneObject -> [Light] -> [[Maybe Intersection]] -> [[Colour]]
 filterColour s l = (map . map) (maybe (Colour 0 0 0) (intersectionColour s l))
 
@@ -91,19 +94,20 @@ intersectionColour s ls i =
 
 lightIntersectionColour :: Intersection -> SceneObject -> Light -> Maybe Colour
 lightIntersectionColour x s l
-  | hitLight l (rayToLight l x) s = Just $ blinn_phong l x
+  | hitLight l (rayToLight l x) s = Just $ blinnPhong l x
   | otherwise = Nothing
 
 rayToLight :: Light -> Intersection -> Ray
-rayToLight l i = Ray (origin ^+^ direction) (direction)
+rayToLight l i = Ray (origin ^+^ direction) direction
   where direction = l ^. lPosition ^-^ normalizePoint (i ^. itPoint)
         origin = normalizePoint $ i ^. itPoint
 
 hitLight :: Light -> Ray -> SceneObject -> Bool
-hitLight l r s = case filter (not . (filterIntersection distL r)) (mapTracing r s) of
+hitLight l r s = case filter (not . filterIntersection distL r) (mapTracing r s) of
   [] -> True
   _  -> False
-  where distL = distance (getOrigin r) $ l ^. lPosition 
+  where distL = distance (r ^. _o) $ l ^. lPosition 
 
+filterIntersection :: Double -> Ray -> Intersection -> Bool
 filterIntersection distL r i = 
-  (rayPointDistance r $ i ^. itPoint) > distL
+  rayPointDistance r (i ^. itPoint) > distL
