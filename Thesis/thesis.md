@@ -53,7 +53,7 @@ every point is considered a homogeneous point.
 
 **S is a function, not a matrix**
 
-The scaling matrix $S$ is defined as
+The scaling is defined as
 
 $$
   S(s_x,s_y,s_z):= \left(
@@ -66,7 +66,7 @@ $$
        \right)
 $$
 
-where the indices stands for the scaling in the corresponding axis.
+where the indices stands for the scaling in the corresponding axes.
 Multiplying every point of an object with a scaling matrix resizes
 the object.
 
@@ -116,8 +116,9 @@ $$
                   \right)
 $$
 
-where the indices indicate the axis by which we rotate.
-Every **combination** of rotation matrices is also called a rotation matrix.
+where the indices indicate the axis by which we rotate. A rotation matrix
+is a result of the rotation function defined above and multiplications of
+2 rotation matrix.
 For the corresponding proof see \cite{kenn}.
 Multiplying every point of an object with a rotation matrix will rotate
 the object by $\alpha$.
@@ -136,9 +137,7 @@ $$
 
 ### Translation matrix
 
-**Function.**
-
-A translation matrix is defined as
+A translation is defined as
 
 $$
   T(x,y,z):= \left(
@@ -155,22 +154,93 @@ where the indices describe the translation in the corresponding axes.
 
 ### Transformation matrix
 
-**All trans can be described by TRS.**
-**Clarify parentheses.**
-
-Instead of scaling, rotating and then translating a given point $p$, we can use
-the associativity property of matrices. We can create a matrix that has the
-same result as the single transformations. This transformation matrix will
-be defined as
-$$
-  M := TRS
-$$
-
-with associativity we can verify that the matrix $M$ has the same effect
+We define a transformation matrix $M$ as multiplications of a
+translation $T'$, rotation $R'$ and scaling matrix $S'$.
 
 $$
-  M\vec{p} = TRS\vec{p}
+  M := T'R'S'
 $$
+
+Every combination of translating, rotating and
+scaling matrices can be represented as transformation matrix.
+
+Proof: Given a matrix $L$ which is a result of multiplications
+of translating, rotation and scaling matrices, we extract
+3 matrices $T'$, $R'$ and $S'$ so that $T'R'S' = L$.
+
+The translation can be directly read from the last column
+of the matrix $L$.
+
+$$
+  T'= \left(
+                \begin{array}{cccc}
+                  0 & 0 & 0 & L_{1,4} \\
+                  0 & 0 & 0 & L_{2,4} \\
+                  0 & 0 & 0 & L_{3,4} \\
+                  0 & 0 & 0 & 1
+                \end{array}
+              \right)
+$$
+
+To extract the rotation matrix we first need to state a important property
+of these matrices.
+
+For all rotation matrices follows that the scalar product
+of each row and each column is $1$. This results from the definition in
+section \autoref{rotation-matrix}.
+
+We demonstrate with the matrix $L'$ how we extract the scaling components.
+For simplification we drop the last row and last column of rotation and
+scaling matrices.
+
+$$
+  L' = \left(
+                \begin{array}{cccc}
+                  r_{11} & r_{12} & r_{13} \\
+                  r_{21} & r_{22} & r_{23} \\
+                  r_{31} & r_{32} & r_{33}
+                \end{array}
+        \right)
+        *
+        \left(
+                \begin{array}{cccc}
+                s_x & 0   & 0 \\
+                0   & s_y & 0 \\
+                0   & 0   & s_z \\
+                \end{array}
+        \right)
+        =
+        \left(
+                \begin{array}{cccc}
+                    r_{11} * s_x & r_{12} * s_y & r_{13} * s_z \\
+                    r_{21} * s_x & r_{22} * s_y & r_{23} * s_z \\
+                    r_{31} * s_x & r_{32} * s_y & r_{33} * s_z
+                \end{array}
+        \right)
+$$
+$$
+\begin{split}
+  s_x = \sqrt{(r_{11} * s_x)^2 + (r_{21} * s_x)^2 + (r_{31} * s_x)^2} \\
+      = \sqrt{ r_{11}^2 * s_x^2 + r_{21}^2 * s_x^2 + r_{31}^2 * s_x^2} \\
+      = \sqrt{ s_x^2 * (r_{11}^2 + r_{21}^2 + r_{31}^2)} \\
+      = \sqrt{ s_x^2} * \sqrt{r_{11}^2 + r_{21}^2 + r_{31}^2} \\
+      = \sqrt{ s_x^2} = s_x
+\end{split}
+$$
+
+we know that $\sqrt{r_{11}^2 + r_{21}^2 + r_{31}^2} = 1$ because of the property
+of rotation matrices. The other components of the scaling matrix can be extracted
+analog. We now have the matrix $S'$.
+
+The remaining matrix $R'$ can be obtained by multiplying the inverse scaling
+matrix with $L''$, where $L''$ is the matrix $L$ but with the last column
+replaced by $\vec{v}=(0, 0, 0, 1)^T$
+
+$$
+  R' = L' * S'^{-1}
+$$
+\qedhere
+
 
 ## Ray
 
@@ -196,7 +266,7 @@ surface.
 The unit sphere, which is centered at the origin, is defined by the set
 
 $$
-  \{p | p \in \mathbb{R^3}, ||p|| = 1 \},
+  \{p | p \in \mathbb{R}^3, ||p|| = 1 \},
 $$
 
 where $||\cdot||$ is the Euclidean norm.
@@ -226,7 +296,7 @@ The cylinder aligned at the z-axis, with length 1 and radius $r \in \mathbb{R}$
 is defined by the set
 
 $$
-  \{\vec{p}=(x,y,z)| p \in \mathbb{R^3}, x^2 + y^2 = r,1 \ge z \ge 0 \}
+  \{\vec{p}=(x,y,z)| p \in \mathbb{R}^3, x^2 + y^2 = r,1 \ge z \ge 0 \}
 $$
 
 A render of a cylinder is illustrated in
@@ -244,7 +314,7 @@ with radius $r_1 \in \mathbb{R}$, top cap, centered at $\vec{p_2} = (0,0,1)$,
 with radius $r_2 \in \mathbb{R}$ is defined by the set
 
 $$
-  \{\vec{p}=(x,y,z)| p \in \mathbb{R^3},
+  \{\vec{p}=(x,y,z)| p \in \mathbb{R}^3,
   \cos^2 \alpha * (x^2 + y^2) - \sin^2 \alpha * (z - r_1 / \alpha) = 0,
   1 \ge z \ge 0\}
 $$
@@ -325,7 +395,7 @@ ray tracing, because it uses random samples to compute the image.
 
 The basic concept of a ray tracing algorithm is to find intersections of a ray
 with a scene consisting of a set of geometric primitives efficiently \cite{wald}.
-The ray, as defined in the chapter [Ray][], can have additional parameters
+The ray, as defined in the section \autoref{Ray}, can have additional parameters
 $t_{min}$ and $t_{max}$, which specifies the interval of $t$ used to define
 the set of all points of the ray. In other words it specifies the minimum
 and the maximum distance of a ray.
@@ -344,7 +414,7 @@ sphere, cubes, trianles,..., to complex parametric patches like the
 Bézier patches and other complex shapes as long as there exist a intersection
 function. The flexibility of primitives allows to represent shapes with full
 accuracy. Although using multiple kinds of primitives does not limit the kinds
-of scenes that can be rendered. Like mentioned in the chapter [Rasterization][]
+of scenes that can be rendered. Like mentioned in the chapter \autoref{Rasterization}
 most real time applications uses rasterization techniques to render a image and
 most of them only uses triangles as primitives.
 
@@ -420,6 +490,47 @@ criteria rasterization may not simulation certain effects correctly.
 Ray tracing can use approximations to save computation time but it is nor
 required. Whereas rasterization must use them for certain effects.
 
+# DSL
+
+## Diagrams
+
+Why using diagrams instead of pov ray?
+
+## POV-Ray
+
+# Implementation
+
+## Intersection functions
+
+## Ray transformations
+
+## Normal vector transformation
+
+## Generate rays
+
+### Perspective
+
+### Orthographic
+
+### Shadow rays
+
+## Blinn-Phong shading model
+
+
+
+# Integration
+
+## Diagrams Backend
+
+
+## Diagrams command line Backend
+
+**TODO implemnt**
+
+# Related Work
+
+where is ray tracing used, some other techniques
+acceleration data structures...
 
 # Comments
 
