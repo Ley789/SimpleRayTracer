@@ -112,20 +112,18 @@ cylinderIntersection (Ray o d) rad =
     b  = 2 * dot vd vo
     c  = dot vo vo - rad**2
     v  = set _z 0
+
 coneIntersection :: Ray -> Double -> Double -> Maybe Double
 coneIntersection (Ray o d) r1 r2 =
   uncurry min <$> solveQuadratic a b c
-  where alpha = r1 - r2
-        pa    = V3 0 0 (r1 / alpha)
-        diff  = o ^-^ pa
-        vd    = v d
-        vdiff = v diff
-        v     = set _z 0
-        si    = sin alpha ** 2
-        co    = cos alpha ** 2
-        a     = co * dot vd vd - si * (d ^._z)**2
-        b     = 2 * co * dot vd vdiff - 2 * si * (d ^._z) * (diff ^._z)
-        c     = co * dot vdiff vdiff - si * (diff ^._z)**2
+    where alpha = atan $ r1 - r2
+          si = (sin alpha) ** 2
+          co = (cos alpha) ** 2
+          a = co * (xd ** 2 + yd ** 2) - si * zd ** 2
+          b = 2 * co * (xd * xo + yd * yo) - 2 * si * (zo - zd) 
+          c = co * (xo ** 2 + yo **2) - si * (zo ** 2 - 2 * zo + 1)
+          V3 xo yo zo = o
+          V3 xd yd zd = d
 
 -- | Given a ray, point on the plane and the normal vector to the plane
 -- return the coefficient if the ray intersects the plane.
