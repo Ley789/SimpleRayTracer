@@ -17,6 +17,8 @@ color.
 E.g. $\vec{c} =(1, 0, 0)$ has a red channel of 100%, green channel of
 0% and blue channel 0%, so the resulting color is red with full intensity.
 
+**Add camera and visual plane**
+
 ## Light
 
 **Comment: Eliminate defined, eliminate or clarify "source".**
@@ -43,7 +45,10 @@ $\vec{q}=(x_1 * w, ..., x_n * w, w)$ with $w \ne 0$ is a homogeneous vector
 of the vector $\vec{p}$. It follows that for every scalar $t \in \mathbb{R}$ and
 $t \ne 0$, $t*\vec{q}$ is a homogeneous vector of $\vec{p}$.
 
-**Point -> Vector**
+**Point -> Vector, define point and directions
+scalarproduct <q> = <q,q>
+
+**
 
 Representing coordinates of $\mathbb{R}^3$ as homogeneous vectors/coordinates
 simplifies transformations. In \autoref{transformations}
@@ -142,9 +147,9 @@ A translation is defined as
 $$
   T(x,y,z):= \left(
                 \begin{array}{cccc}
-                  0 & 0 & 0 & t_x \\
-                  0 & 0 & 0 & t_y \\
-                  0 & 0 & 0 & t_z \\
+                  1 & 0 & 0 & t_x \\
+                  0 & 1 & 0 & t_y \\
+                  0 & 0 & 1 & t_z \\
                   0 & 0 & 0 & 1
                 \end{array}
               \right)
@@ -174,9 +179,9 @@ of the matrix $L$.
 $$
   T'= \left(
                 \begin{array}{cccc}
-                  0 & 0 & 0 & L_{1,4} \\
-                  0 & 0 & 0 & L_{2,4} \\
-                  0 & 0 & 0 & L_{3,4} \\
+                  1 & 0 & 0 & L_{1,4} \\
+                  0 & 1 & 0 & L_{2,4} \\
+                  0 & 0 & 1 & L_{3,4} \\
                   0 & 0 & 0 & 1
                 \end{array}
               \right)
@@ -220,11 +225,11 @@ $$
 $$
 $$
 \begin{split}
-  s_x = \sqrt{(r_{11} * s_x)^2 + (r_{21} * s_x)^2 + (r_{31} * s_x)^2} \\
-      = \sqrt{ r_{11}^2 * s_x^2 + r_{21}^2 * s_x^2 + r_{31}^2 * s_x^2} \\
-      = \sqrt{ s_x^2 * (r_{11}^2 + r_{21}^2 + r_{31}^2)} \\
-      = \sqrt{ s_x^2} * \sqrt{r_{11}^2 + r_{21}^2 + r_{31}^2} \\
-      = \sqrt{ s_x^2} = s_x
+  s_x &= \sqrt{(r_{11} * s_x)^2 + (r_{21} * s_x)^2 + (r_{31} * s_x)^2} \\
+      &= \sqrt{ r_{11}^2 * s_x^2 + r_{21}^2 * s_x^2 + r_{31}^2 * s_x^2} \\
+      &= \sqrt{ s_x^2 * (r_{11}^2 + r_{21}^2 + r_{31}^2)} \\
+      &= \sqrt{ s_x^2} * \sqrt{r_{11}^2 + r_{21}^2 + r_{31}^2} \\
+      &= \sqrt{ s_x^2} = s_x
 \end{split}
 $$
 
@@ -243,6 +248,8 @@ $$
 
 
 ## Ray
+
+**Represented in homogeneous coordinates**
 
 A ray is defined as point $\vec{o}$ and a direction $\vec{d}$. Where
 $\vec{o}$ represents the origin of the ray and $\vec{d}$ the direction.
@@ -309,9 +316,9 @@ For image size, see: <http://www.imagemagick.org/discourse-server/viewtopic.php?
 
 ### Cone
 
-A cone aligned at the z-axis, with length 1, base cap, centered at the origin,
-with radius $r_1 \in \mathbb{R}$, top cap, centered at $\vec{p_2} = (0,0,1)$,
-with radius $r_2 \in \mathbb{R}$ is defined by the set
+A cone aligned at the z-axis, with length 1, base cap $\vec{p_1}$, centered at
+the origin, with radius $r_1 \in \mathbb{R}$, top cap, centered at
+$\vec{p_2} = (0,0,1)$, with radius $r_2 \in \mathbb{R}$ is defined by the set
 
 $$
   \{\vec{p}=(x,y,z)| p \in \mathbb{R}^3,
@@ -319,8 +326,7 @@ $$
   1 \ge z \ge 0\}
 $$
 
-where $\alpha = r_1 - r_2$. **Explain or change.**
-
+where $\tan \alpha = r_1 - r_2 / ||\vec{p_2} - \vec{p_1}|| = r_1 - r_2$.
 # Rendering
 
 In the field of 3D computer graphics the process of generation a image from
@@ -494,17 +500,166 @@ required. Whereas rasterization must use them for certain effects.
 
 ## Diagrams
 
-Why using diagrams instead of pov ray?
+**Why using diagrams instead of pov ray?**
 
 ## POV-Ray
 
+
+
+
 # Implementation
+
+In this chapter we introduce fundamental elements that are needed to implement
+the basic ray tracing algorithm. First we discuss the intersection functions
+for the defined primitives in section \autoref{primitives}. After that we will
+show a method to keep the intersection functions simple even with
+transformations. We will describe how transformations influence normal
+vectors. Next we describe the generation of primary and how they lead to
+different projections. At the end we introduce a well known shading
+algorithm to approximate light behavior.
 
 ## Intersection functions
 
+The intersection functions are based on euclidean space. So we first need to
+convert a ray to euclidean coordinates. Given a ray $R$ with origin at point
+$\vec{o} = (o_x,o_y,o_z,w)$ and direction $\vec{d} = (d_x, d_y, d_z, 0)$, then
+the ray with the origin $\vec{o'}= (o_x / w, o_y / w, o_z / w)$ and the direction
+$\vec{d'}= (d_x, d_y, d_z)$ represents $R$ in euclidean space.
+
+In the following subsections we denote $\vec{o}=(x_o, y_o, z_o)$ as origin and
+$\vec{d} = (x_d, y_d, z_d)$ as direction of a ray and for all points and
+directions follows that they are denoted in euclidean space.
+
+### Sphere intersection
+
+We see from the definition of the sphere \autoref{sphere} that we have to solve
+the equation:
+
+$$
+  <\vec{o} + t*\vec{d}, \vec{o} + t*\vec{d}> = 1
+$$
+
+$\implies$
+
+$$
+  <\vec{o},\vec{o}> + t * 2 * <\vec{o}, \vec{d}> + t^2 * <\vec{d}, \vec{d}> - 1 = 0
+$$
+
+This leads to following quadratic equation:
+
+$$
+  t = \frac{-b \pm \sqrt{b^2 - 4 * a* c}}{2 * a}
+$$
+
+where $a = <\vec{d},\vec{d}>$, $b=2*<\vec{o},\vec{d}>$ and $c=<\vec{o},\vec{o}>$.
+
+### Box intersection
+
+To get the intersection between a ray and a box we check the boundaries. We
+will show this for the x-component, for the other components it works analog.
+
+$$
+  \begin{split}
+  tmin_x = (0 - x_o) * (1 / d_x ) \\
+  tmax_x = (1 - x_o) * (1 / d_x )
+  \end{split}
+$$
+
+Now we have the minimum for the x-component. After calculating the minimum and
+the maximum values for the other components we take the maximum of all minimums,
+$tmin = max(tmin_x, tmin_y, tmin_z)$, and the minimum of all maximums,
+$tmax = max(tmax_x, tmax_y, tmax_z)$. If $tmin > tmax$ or $tmin <= tmax <0$ then
+there is no intersection. If $tmin < 0$ and $tmax > 0$ then $tmax$ leads to the
+nearest intersection. For further details see \cite{will}.
+
+### Plane intersection
+
+A plane is defined by a point $\vec{p}$ that lies on the plane and a normal vector
+$\vec{n}$ of the plane. To get the intersection between a ray and a plane we need
+to solve the equation:
+
+$$
+  \vec{n} * (\vec{o} + t * \vec{d} - \vec{p}) = 0
+$$
+
+We need to check if the displacement between the ray and $\vec{p}$ is in the
+same plane. This leads to the equation:
+
+$$
+  t = \frac{<\vec{n}, \vec{p} - \vec{o}>}{<\vec{n}, \vec{d}>}  
+$$
+
+### Cylinder intersection
+
+For a cylinder aligned on a arbitrary line $\vec{p_a} + \vec{v_a} * t$, a
+point on the cylinder $\vec{q}$ and radius $r$ holds
+$<\vec{q} - \vec{p_a} - <\vec{v_a},\vec{q} - \vec{p_a}> * \vec{v_a}> - r^2 = 0$.
+
+The definition of cylinder in section \autoref{cylinder} allows us to simplify
+the equation. We substitute the point on the cylinder $\vec{q}$ with the ray:
+
+$$
+  <\vec{o} + t * \vec{d} - (0,0, z_o + t * z_d)> - r^2 = 0
+$$
+
+$\implies$
+
+$$
+  (x_o + t * x_d)^2 + (y_o + t * y_d)^2 - r^2 = 0
+$$
+
+This leads to following quadratic equation:
+
+$$
+  t^2 * (y_d^2 + x_d^2) + t * 2 * (x_o * x_d + y_o * y_d) + x_o^2 + y_o^2 - r^2 = 0
+$$
+
+where $a = y_d^2 + x_d^2$, $b = 2 * (x_o * x_d + y_o * y_d)$ and
+$c = x_o^2 + y_o^2 - r^2$.
+
+To get the intersection of a cylinder first solve the quadratic equation of
+the cylinder and also intersect with the planes $p'$, which includes
+the base cap, and $p''$, which includes of the top cap. After we
+check that $1 \ge z \ge 0$ holds for the point $\vec{q} = (x,y,z)$ which is the
+result of the cylinder equation. Next we check that the plane intersections
+are in the range of the caps by verifying $||\vec{q_1}|| \le r^2$ and $||\vec{q_2}|| \le r^2$, where $\vec{q_1}$ is the intersection of the ray with
+plane $p'$ and $\vec{q_2}$ the intersection with the plane $p''$.
+
+### Cone intersection
+
+For a cone aligned on a arbitrary line $\vec{p_a} + \vec{v_a} * t$ with apex
+$\vec{p_a}$, center of the base cap at $\vec{p_1}$, center of the top cap at
+$\vec{p_2}$, a point on the cone $\vec{q}$ and half-angle $\alpha$ holds
+$\cos^2 \alpha <\vec{q} - \vec{p_a} - <\vec{v_a},<\vec{q} - \vec{p_a},\vec{v_a}>>
+ - \sin^2 \alpha <\vec{v_a},\vec{q} - \vec{p_a}> = 0$,
+
+where $\vec{p_a} = \vec{p_1} + r_1 * (\vec{p_2} - \vec{p_1})/(r_1 - r_2)$.
+
+Same as for the cylinder, substitute the ray with $\vec{q}$ and solve the
+equation for $t$. The definition of cone in section \autoref{cone} allows us to simplify the resulting components for the quadratic equation.
+
+$$
+  \begin{split}
+    a &= \cos^2 \alpha * (x_d^2 + y_d^2) - \sin^2 \alpha * z_d^2 \\
+    b &= 2* \cos^2 \alpha * (x_d * x_o + y_d * y_o) - 2 * sin^2 \alpha * (z_o - z_d) \\
+    c &= cos^2 \alpha * (x_o^2 + y_o^2) - sin^2 \alpha * (z_o - 1)^2,
+  \end{split}
+$$
+
+To get the intersection of a cone first solve the quadratic equation of
+the cone and also intersect with the plane $p'$ which includes the
+base cap. After we check that $1 \ge z \ge 0$ holds for the point
+$\vec{q} = (x,y,z)$ that is the result of the cone equation. Next we
+check that the plane intersection is in the range of the cap by verifying
+$||\vec{q_1}|| \le r^2$, where $\vec{q_1}$ is the intersection of the ray with
+plane $p'$.
+
 ## Ray transformations
 
-## Normal vector transformation
+
+## Normal vectors
+
+### Normal vector transformation
 
 ## Generate rays
 
@@ -515,6 +670,14 @@ Why using diagrams instead of pov ray?
 ### Shadow rays
 
 ## Blinn-Phong shading model
+
+### Ambient light
+
+### Diffuse light
+
+### Specular light
+
+### Multiple lights and final results
 
 
 
