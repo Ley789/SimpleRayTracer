@@ -20,7 +20,7 @@ import Control.Applicative
 --represents an Euclidean coordinate 
 type Radius = Double 
 type Intersection = V3 Double
-        
+
 --Types that represent primitives
 data Primitive =
     Sphere     --sphere of radius 1 with center in the origin

@@ -5,7 +5,6 @@ module Object where
 import Linear
 import Primitive
 import Colour
-import Data.Maybe
 import Data.Monoid
 import Control.Lens
 
@@ -86,11 +85,11 @@ transformRay (Ray o d) trans =
 -- | Intersect ray with object and return ray, object, normal vector and
 -- point of the intersection.
 rayObjectIntersection :: Ray -> Object -> Maybe Intersection
-rayObjectIntersection ray o@(Object p om) = do
-  res <- intersection (transformRay ray $ om ^. matrices . invM) p
-  let norm = (normalVector (om ^. matrices) $ point $ getNormal p res)
-  let pos = (om ^. matrices . transM !* point res)
-  return $ Intersection ray (o ^. oModifier . texture) norm pos
+rayObjectIntersection r o@(Object p om) = do
+  res <- intersection (transformRay r $ om ^. matrices . invM) p
+  let n = normalVector (om ^. matrices) $ point $ getNormal p res
+  let pos = om ^. matrices . transM !* point res
+  return $ Intersection r (o ^. oModifier . texture) n pos
 
 
 ------------------------------------------------------------------------------
@@ -99,12 +98,14 @@ rayObjectIntersection ray o@(Object p om) = do
 --
 ------------------------------------------------------------------------------
 
-rayPointDistance ray p = distance (getOrigin ray) (normalizePoint p)
+rayPointDistance :: Ray -> V4 Double -> Double
+rayPointDistance r p = distance (r ^._o) (normalizePoint p)
 
 normalVector :: Matrices -> V4 Double -> V4 Double
 normalVector m p =  m ^. normM !* p
 
 -- TODO Test
+rot44 :: M44 Double -> M44 Double -> M44 Double
 rot44 s t = r !*! s !*! s
   where r = dropTrans t
 
@@ -116,7 +117,8 @@ invScale44 t =
      (V4 0 0 (1 / scale tr _z) 0) 
      (V4 0 0 0 1)
    where tr = dropTrans t
-  
+
+scale :: (Floating a, Metric f) => s -> ((f a -> Const (f a) (f a)) -> s -> Const (f a) s) -> a
 scale tr l = sqrt $ dot c c 
   where c = tr ^. l
 
