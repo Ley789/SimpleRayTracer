@@ -10,8 +10,8 @@ module BackendRayTrace where
 import           Control.Lens                   (view)
 import           Data.Monoid                    (Last (..))
 import           Data.Tree
+import           Data.Maybe                     (fromMaybe)
 import           Data.Typeable
-import           Data.List                      (last, foldl1')
 import           Diagrams.Core.Transform
 import           Diagrams.Core.Types
 import           Diagrams.Prelude              as D hiding (Last (..), view)
@@ -60,19 +60,24 @@ instance ToObject (Frustum Double) where
     | r0 == r1  = Object (P.Cylinder r0) (trans t) 
     | otherwise = Object (P.Cone r0 r1) (trans t) 
 
+rayPrimSphere :: T3 Double -> Object
 rayPrimSphere t = Object P.Sphere (trans t)
 
 trans :: T3 Double -> OModifier
 trans t = OModifier (getTransformation t) mempty
 
+getTransformation :: Transformation V3 Double -> Matrices
 getTransformation = matricesOfM44 . listToMatrix . matrixHomRep
 
 -- | Convert list to homogenous matrix.
 listToMatrix :: (Num a) => [[a]] -> M44 a
 listToMatrix (x:y:z:w:_) = transpose $ V4 (homVector x 0) (homVector y 0) 
                                           (homVector z 0) (homVector w 1)
+listToMatrix _ = error "wrong input"
 
+homVector :: [a] -> a -> V4 a
 homVector (x:y:z:_) = V4 x y z
+homVector _         = error "needs list with minimum 3 elements"
 
 instance Renderable (Ellipsoid Double) Ray where
       render _ = wrapSolid . toObject
@@ -96,45 +101,45 @@ addTexture st s = setObject (map (setTexture st) $ s ^. sObjects) s
 convertColor :: Color c => c -> C.Colour
 convertColor (colorToSRGBA -> (r,g,b,_)) = C.Colour r g b
 
+setTexture :: Style V3 Double -> Object -> Object
 setTexture sty = 
-  (over (oModifier . texture . pigment) (mkPigment sty)) .
-  (setProperty sty)
+  over (oModifier . texture . pigment) (mkPigment sty) .
+   setProperty sty
 
--- MF: This code is very hard to understand, especially the "over" operation.
--- In general, please avoid functions à la "get*", "set*", "add*".
+setProperty :: Style V3 Double -> Object -> Object
 setProperty sty =
-  (over (len . tAmbient)   f1) . 
-  (over (len . tDiffuse)   f2) .
-  (over (len . tSpecular)  f3) .
-  (over (len . tRoughness) f4)
+  over (len . tAmbient)   f1 . 
+  over (len . tDiffuse)   f2 .
+  over (len . tSpecular)  f3 .
+  over (len . tRoughness) f4
      where len = oModifier . texture . property
            (f1,f2,f3,f4) = mkFinish sty
 
 mkPigment :: Style V3 Double -> C.Colour -> C.Colour
 mkPigment sty = combine (fmap convertColor (view _sc sty))
 
-mkFinish sty = ((combine $ sty ^. _ambient),
-               (combine $ sty ^. _diffuse),
-               (combine $ hl  ^? _Just . specularIntensity),
-               (combine $ hl  ^? _Just . specularSize))
+mkFinish :: Style v n -> (Double -> Double, Double -> Double, Double -> Double, Double -> Double)
+mkFinish sty = (combine $ sty ^. _ambient,
+                combine $ sty ^. _diffuse,
+                combine $ hl  ^? _Just . specularIntensity,
+                combine $ hl  ^? _Just . specularSize)
   where hl = sty ^. _highlight
 
--- MF: this is just "flip fromMaybe"!
-combine Nothing a = a
-combine (Just b) a = b
+combine :: Maybe c -> c -> c
+combine = flip fromMaybe
 
 --------------------------------------------------------------------
 -- Renderable Light
 --------------------------------------------------------------------
 instance Renderable (ParallelLight Double) Ray where
   render _ (ParallelLight v c)
-    = MRay $ setLight [(Light p c')] mempty
+    = MRay $ setLight [Light p c'] mempty
       where p = negated (1000 *^ v)
             c' = convertColor c
 
 instance Renderable (PointLight Double) Ray where
   render _ (PointLight (P p) (convertColor -> c))
-    = MRay $ setLight [(Light p c)] mempty
+    = MRay $ setLight [Light p c] mempty
 
 --------------------------------------------------------------------
 -- Renderable Camera
