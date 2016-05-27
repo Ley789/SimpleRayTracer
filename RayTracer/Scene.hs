@@ -25,9 +25,9 @@ divNum :: (Num a, Fractional a) => Int -> Int -> a
 divNum = (/) `on` fromIntegral
 
 
---TODO check m n positive
---we are mapping the pixel size to the interval [-1, 1] e.g. left upper corner
---of the picture is (-1, 1), center (0,0) etc.
+--TODO check m n positive test change
+--we are mapping the pixel size to the interval [-0.5, 0.5] e.g. left upper corner
+-- | Generates pixel coordinates with m rows and n columns.
 pixelCoordinates :: (Int, Int) -> [[(Double, Double)]]
 pixelCoordinates (m, n) =
   [[(f x m, negate $ f y n) | x <- [0 .. m]] | y <- [0 .. n]]
@@ -73,13 +73,13 @@ generateRay x c = -- T.trace ("\n" ++ show c) $
 perspecTrans :: (Double, Double) -> SCamera -> Ray
 perspecTrans x c = Ray (pos c) 
                     (forward c ^+^ 
-                    (fst x *^ right c) ^+^  
-                    (snd x *^ up c))
+                    (snd x *^ right c) ^+^  
+                    (fst x *^ up c))
 
 orthoTrans :: (Double, Double) -> SCamera -> Ray
 orthoTrans x c = Ray (pos c ^+^ forward c ^+^ 
-                     (fst x *^ right c) ^+^ 
-                     (snd x *^ up c)) (forward c) 
+                     (snd x *^ right c) ^+^ 
+                     (fst x *^ up c)) (forward c) 
 
 -------------------------------------------------------------------------------
 -- shading functions 
