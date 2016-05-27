@@ -123,8 +123,8 @@ coneIntersection :: Ray -> Double -> Double -> Maybe Double
 coneIntersection (Ray o d) r1 r2 =
   uncurry min <$> solveQuadratic a b c
     where alpha = atan $ r1 - r2
-          si = (sin alpha) ** 2
-          co = (cos alpha) ** 2
+          si = sin alpha ** 2
+          co = cos alpha ** 2
           a = co * (xd ** 2 + yd ** 2) - si * zd ** 2
           b = 2 * co * (xd * xo + yd * yo) - 2 * si * (zo - zd) 
           c = co * (xo ** 2 + yo **2) - si * (zo ** 2 - 2 * zo + 1)
