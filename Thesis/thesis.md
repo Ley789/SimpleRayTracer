@@ -46,17 +46,13 @@ of the vector $\vec{p}$. It follows that for every scalar $t \in \mathbb{R}$ and
 $t \ne 0$, $t*\vec{q}$ is a homogeneous vector of $\vec{p}$.
 
 **Point -> Vector, define point and directions
-scalarproduct <q> = <q,q>
-
-**
+scalarproduct <q> = <q,q>**
 
 Representing coordinates of $\mathbb{R}^3$ as homogeneous vectors/coordinates
 simplifies transformations. In \autoref{transformations}
 every point is considered a homogeneous point.
 
 ### Scaling matrix
-
-**S is a function, not a matrix**
 
 The scaling is defined as
 
@@ -251,8 +247,8 @@ $$
 
 **Represented in homogeneous coordinates**
 
-A ray is defined as point $\vec{o}$ and a direction $\vec{d}$. Where
-$\vec{o}$ represents the origin of the ray and $\vec{d}$ the direction.
+A ray is defined as point, conventionally denoted as $\vec{o}$, and a direction,
+conventionally denoted as $\vec{d}$.
 The ray travels through all points of the set
 
 $$
@@ -505,8 +501,6 @@ required. Whereas rasterization must use them for certain effects.
 ## POV-Ray
 
 
-
-
 # Implementation
 
 In this chapter we introduce fundamental elements that are needed to implement
@@ -533,7 +527,7 @@ directions follows that they are denoted in euclidean space.
 ### Sphere intersection
 
 We see from the definition of the sphere \autoref{sphere} that we have to solve
-the equation:
+the equation
 
 $$
   <\vec{o} + t*\vec{d}, \vec{o} + t*\vec{d}> = 1
@@ -548,7 +542,7 @@ $$
 This leads to following quadratic equation:
 
 $$
-  t = \frac{-b \pm \sqrt{b^2 - 4 * a* c}}{2 * a}
+  t = \frac{-b \pm \sqrt{b^2 - 4 * a* c}}{2 * a},
 $$
 
 where $a = <\vec{d},\vec{d}>$, $b=2*<\vec{o},\vec{d}>$ and $c=<\vec{o},\vec{o}>$.
@@ -576,14 +570,14 @@ nearest intersection. For further details see \cite{will}.
 
 A plane is defined by a point $\vec{p}$ that lies on the plane and a normal vector
 $\vec{n}$ of the plane. To get the intersection between a ray and a plane we need
-to solve the equation:
+to solve the equation
 
 $$
   \vec{n} * (\vec{o} + t * \vec{d} - \vec{p}) = 0
 $$
 
 We need to check if the displacement between the ray and $\vec{p}$ is in the
-same plane. This leads to the equation:
+same plane. This leads to the equation
 
 $$
   t = \frac{<\vec{n}, \vec{p} - \vec{o}>}{<\vec{n}, \vec{d}>}  
@@ -596,7 +590,7 @@ point on the cylinder $\vec{q}$ and radius $r$ holds
 $<\vec{q} - \vec{p_a} - <\vec{v_a},\vec{q} - \vec{p_a}> * \vec{v_a}> - r^2 = 0$.
 
 The definition of cylinder in section \autoref{cylinder} allows us to simplify
-the equation. We substitute the point on the cylinder $\vec{q}$ with the ray:
+the equation. We substitute the point on the cylinder $\vec{q}$ with the ray
 
 $$
   <\vec{o} + t * \vec{d} - (0,0, z_o + t * z_d)> - r^2 = 0
@@ -608,10 +602,16 @@ $$
   (x_o + t * x_d)^2 + (y_o + t * y_d)^2 - r^2 = 0
 $$
 
-This leads to following quadratic equation:
+$\implies$
 
 $$
   t^2 * (y_d^2 + x_d^2) + t * 2 * (x_o * x_d + y_o * y_d) + x_o^2 + y_o^2 - r^2 = 0
+$$
+
+This leads to following quadratic equation
+
+$$
+  t = \frac{-b \pm \sqrt{b^2 - 4 * a* c}}{2 * a},
 $$
 
 where $a = y_d^2 + x_d^2$, $b = 2 * (x_o * x_d + y_o * y_d)$ and
@@ -622,7 +622,8 @@ the cylinder and also intersect with the planes $p'$, which includes
 the base cap, and $p''$, which includes of the top cap. After we
 check that $1 \ge z \ge 0$ holds for the point $\vec{q} = (x,y,z)$ which is the
 result of the cylinder equation. Next we check that the plane intersections
-are in the range of the caps by verifying $||\vec{q_1}|| \le r^2$ and $||\vec{q_2}|| \le r^2$, where $\vec{q_1}$ is the intersection of the ray with
+are in the range of the caps by verifying $||\vec{q_1}|| \le r^2$ and
+$||\vec{q_2}|| \le r^2$, where $\vec{q_1}$ is the intersection of the ray with
 plane $p'$ and $\vec{q_2}$ the intersection with the plane $p''$.
 
 ### Cone intersection
@@ -636,7 +637,14 @@ $\cos^2 \alpha <\vec{q} - \vec{p_a} - <\vec{v_a},<\vec{q} - \vec{p_a},\vec{v_a}>
 where $\vec{p_a} = \vec{p_1} + r_1 * (\vec{p_2} - \vec{p_1})/(r_1 - r_2)$.
 
 Same as for the cylinder, substitute the ray with $\vec{q}$ and solve the
-equation for $t$. The definition of cone in section \autoref{cone} allows us to simplify the resulting components for the quadratic equation.
+equation for $t$. The definition of cone in section \autoref{cone} allows us
+to simplify the resulting components for the quadratic equation
+
+$$
+  t = \frac{-b \pm \sqrt{b^2 - 4 * a* c}}{2 * a}
+$$
+
+with
 
 $$
   \begin{split}
@@ -656,30 +664,179 @@ plane $p'$.
 
 ## Ray transformations
 
+To keep our intersection functions simple, we transform the ray instead
+of the primitives. Given a ray $r = \vec{o} + t * \vec{d}$, a transformation
+matrix $M = TRS$ and a point $\vec{p}$, we see that
+
+$$
+  r = M\vec{p}
+$$
+
+$\implies$
+
+$$
+  M^{-1}r = M^{-1}M\vec{p} = I\vec{p} = \vec{p}
+$$
+
+Now we simplify the expression because a translation does not affect
+a direction
+
+$$
+  M^{-1}(\vec(o) + t * vec{d}) = M^{-1}\vec{o} + S^{-1}R^{-1}\vec{d} * t
+$$
+
+Note that $T^{-1}\vec{d} =\vec{d}$ holds for all directions $\vec{d}$.
+We see that we get the same result as applying the transformation on a point.
 
 ## Normal vectors
 
+Normal vectors are unit vectors which are orthogonal to given surface at a given
+point. In this subsection we show how to calculate normal vectors for the
+primitives.
+
+### Sphere normal
+
+From the sphere definition in section \autoref{sphere} follows that for all
+points $\vec{p}$ of the sphere holds that $p$ is the normal vector of the
+surface at position $\vec{p}$.
+
+### Plane normal
+
+For each point on the surface holds that they have the same normal vector, which
+is already defined in the plane definition in \autoref{plane-intersection}.
+With the plane normal we can calculate the normal of the primitive box.
+
+### Cylinder normal
+
+Given a point $\vec{p}=(x,y,z)$ on the surface of a cylinder then the normal
+vector is $\vec{n} = (x /m, y /m, 0)$, where $m = \sqrt{x^2 + y^2}$.
+
+### Cone normal
+
+Given a point $\vec{p}=(x,y,z)$ on the surface of a cone, with radius $r$ and
+apex $\vec{p_a}$, then the normal vector is
+$\vec{n} = (x / m , y / m , r / c * m)$, where the hypotenuse
+$c = \sqrt{||\vec{p_a}||^2 + r^2}$ and $m = \sqrt{x^2 + y^2 + (r/c)^2}$.
+
+
 ### Normal vector transformation
+
+Generally by applying a transformation $M$ to a point $\vec{p}$ with normal
+$\vec{n}$ doesn't follow that the normal vector is transformed properly. For
+example if we apply a non uniform scaling. So we need to find a transformation
+that transforms our normal vector correctly. First we transform the normal vector
+to a homogeneous direction. After we see that
+
+$$
+  <\vec{n}, \vec{p}> = \vec{n}^{\tr}\vec{p} = 0
+$$
+
+$\implies$
+
+$$
+  \vec{n}^{\tr} I \vec{p} = \vec{n}^{\tr} M^{-1} M\vec{p} = 0,
+$$
+
+where $M\vec{p}$ is our transformed point. So the normal vector of the
+transformed point is
+
+$$
+  \vec{n'}^{\tr} = \vec{n}^{\tr} M^{-1}
+$$
+
+$\implies$
+
+$$
+  \vec{n'} = (\vec{n}^{\tr} M^{-1})^{\tr} = (M^{-1})^{\tr} \vec{n}
+$$
+
+with $M = TRS$ follows
+
+$$
+  \begin{split}
+  (M^{-1})^{\tr} \vec{n} &= (S^{-1}R^{-1}T^{-1})^T \vec{n} \\
+                   &= (T^{-1})^{\tr} (R^{-1})^{\tr} (S^{-1})^{\tr} \vec{n} \\
+                   &= R S^{-1}\vec{n}
+  \end{split}
+$$
+
+So the equation for the transformed normal vector is
+$\vec{n'} = R S^{-1}\vec{n}$.
+
+
+We used the property of rotation matrices that for every rotation matrix
+$R$ follows that $(R^{-1})^{\tr} = R$.
 
 ## Generate rays
 
+In the context of computer graphics, a projection transforms points in 3D
+onto the view plane \cite{kevi}. The way we generate the rays determines the
+kind of projection.
+
 ### Perspective
+
+In a perspective projection each line is centered at the camera position \cite{kevi}.
+Given a camera $c=(\vec{p},\vec{f},\vec{u},\vec{r})$ and a viewing plane with $n$ rows
+and $m$ columns, we define the set of rays that represents a perspective projection
+as
+
+$$
+  \{\vec{o} + t * \vec{d} | \vec{o} = \vec{p},
+         \vec{d}= \vec{f} + y * \vec{r} + x * \vec{u},
+        0 \le x \le n, 0 \le y \le m\, x,y \in \mathbb{N} \}
+$$
 
 ### Orthographic
 
-### Shadow rays
+In a orthographic projection every ray is parallel to each other and has its
+center in the view plane. Given a camera $c=(p,f,u,r)$ and a viewing plane
+with $n$ rows and $m$ columns, we define the set of rays that represents a
+orthographic projection as
 
-## Blinn-Phong shading model
+$$
+  \{\vec{o} + t * \vec{d} | \vec{o} = \vec{f} + y * \vec{r} + x * \vec{u},
+        \vec{d} = \vec{f}, 0 \le x \le n, 0 \le y \le m\, x,y \in \mathbb{N} \}
+$$To
+
+## Shading model
+
+We use the shading model described in the book \cite{kevi}. This shading model
+is also knows as Blinn-Phong shading model. Shading defines the calculation of
+the output color for each pixel.
 
 ### Ambient light
 
-### Diffuse light
+Simulating indirect illumination is very computation depending, a common
+practice is to assume that illumination is constant throughout the scene.
+This is called ambient illumination and it's not a good approximation, but it
+provides some illumination for the parts that do not receive direct illumination
+\cite{kevi}.
 
-### Specular light
+We calculate the ambient color of a object $O$ by its ambient attribute value
+multiplied by its color and we denote it $O_{ca}$.
+
+### Diffuse light
+**Todo from here on**
+
+Diffuse light simulates direct illumination. We calculate the diffuse color
+
+
+### Specular reflection
+
+To simulate smooth, shinny objects we allow them to reflect light that's
+concentrated around the direction of mirror-reflection \cite{kevi}.
+
+We calculate the specular reflection color
+
 
 ### Multiple lights and final results
 
+Given the number of lights $I$, object $O$
+We calculate the final color $\vec{c}_f$ by
 
+$$
+  \vec{c}_f = O_{ca} + \sum{i=0}{I}
+$$
 
 # Integration
 
