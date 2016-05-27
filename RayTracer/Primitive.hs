@@ -46,30 +46,35 @@ _d = directionR
 getNormal :: Primitive -> V3 Double -> V3 Double
 getNormal Sphere p =
   V3 (p ^._x) (p ^._y) (p ^._z)
--- TODO fix
-getNormal Box p
-  | x > y && x > z  = V3 1 0 0
-  | y > x && y > z  = V3 0 1 0
-  | otherwise       = V3 0 0 1
-  where V3 x y z = abs p
 
--- TODO check
+-- Epsilon is neede because double cannot represent all real numbers
+-- It could be changed if the intersection functons return the normal
+-- and the box intersection is changed to intersect between planes
+getNormal Box p
+  | x > 0 && y > 0 && z <= 0 + e = V3 0 0 1
+  | x > 0 && y > 0 && z <= 1 - e = V3 0 0 (-1)
+  | y > 0 && z > 0 && x <= 0 + e = V3 (-1) 0 0
+  | y > 0 && z > 0 && x <= 1 - e = V3 1 0 0
+  | x > 0 && z > 0 && y <= 0 + e = V3 0 (-1) 0
+  | otherwise = V3 0 0 1
+  where V3 x y z = p
+        e = 0.0001
+
 getNormal (Cone r1 r2) p
-  | z == 0    = V3 0 0 (-1)
-  | z == 1    = V3 0 0 1
-  | otherwise = V3 (v ^._x * alpha /r1) (v ^._y * alpha/r1) (r1 / alpha) 
-    where alpha =  r1 - r2
-          v = normalize $ V3 (p ^._x) (p ^._y) 0
-          z = p ^._z
+  | pointInPlane p (V3 0 0 0) n  = V3 0 0 (-1)
+  | pointInPlane p (V3 0 0 1) n  = V3 0 0 1
+  | otherwise = V3 (p ^._x) (p ^._y) (r1 / c) 
+    where h =  r1 / (r1 - r2)
+          c = sqrt $ h ** 2 + r1 ** 2
+          n = V3 0 0 1
 
 getNormal (Cylinder _) p
-  | z == 0    = V3 0 0 (-1)
-  | z == 1    = V3 0 0 1
-  | otherwise = normalize n
-    where n = V3 (p ^._x) (p ^._y) 0
-          z = p ^._z
+  | pointInPlane p (V3 0 0 0) n  = V3 0 0 (-1)
+  | pointInPlane p (V3 0 0 1) n  = V3 0 0 1
+  | otherwise =  V3 (p ^._x) (p ^._y) 0
+    where n  = V3 0 0 1
 
--- TODO: return normal vector
+
 intersection :: Ray -> Primitive -> Maybe Intersection
 intersection ray Sphere       = itPoint ray <$> sphereIntersection ray
 intersection ray Box          = itPoint ray <$> boxIntersection ray
@@ -78,7 +83,7 @@ intersection ray (Cone rad1 rad2) =
 intersection ray (Cylinder rad) =
   frustumIntersection ray (cylinderIntersection ray rad) rad rad
 
-frustumIntersection :: Ray -> Maybe Double -> Double -> Double -> Maybe (V3 Double)
+frustumIntersection :: Ray -> Maybe Double -> Double -> Double -> Maybe Intersection
 frustumIntersection r@(Ray o _) t rad1 rad2
   | null l    = Nothing
   | otherwise = Just $ minimumBy (comparing $ distance o) l
@@ -86,7 +91,8 @@ frustumIntersection r@(Ray o _) t rad1 rad2
           cB = capIntersection r (V3 0 0 0) rad1
           cT = capIntersection r (V3 0 0 1) rad2
           l  = catMaybes [f,cB,cT]
-frustumConstrain :: Ray -> Maybe Double -> Maybe (V3 Double)
+
+frustumConstrain :: Ray -> Maybe Double -> Maybe Intersection
 frustumConstrain r it = do
   p <- itPoint r <$> it
   let z = p ^. _z
@@ -182,3 +188,11 @@ solveQuadratic a b c
 
 itPoint :: Ray -> Double -> V3 Double
 itPoint (Ray origin direction) t = origin ^+^ (t *^ direction)
+
+-- shares the same problem as getNormal of box
+-- | Given a point p, a point on the plane q and the normal vector to 
+-- the plane n, returns true if p lies in the plane 
+pointInPlane :: V3 Double -> V3 Double -> V3 Double -> Bool
+pointInPlane q p n = r <= e && r >= (-e)  
+                 where r = dot (q - p) n
+                       e = 0.000001
