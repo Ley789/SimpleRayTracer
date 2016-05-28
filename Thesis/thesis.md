@@ -367,7 +367,7 @@ coefficient.
 
 ## Object
 
-A object is a 4 tuple $(pr,M ,\vec{c}, vec{p})$, where $pr$ is a primitive,
+A object is a 4 tuple $(pr, M ,\vec{c}, \vec{p})$, where $pr$ is a primitive,
 $M$ is a transformation matrix, $\vec{c}$ is a color and $\vec{p}$ is a
 material property.
 
@@ -764,10 +764,22 @@ vector is $\vec{n} = (x /m, y /m, 0)$, where $m = \sqrt{x^2 + y^2}$.
 
 Given a point $\vec{p}=(x,y,z)$ on the surface of a cone, the radius $r_1$ of the
 base cap and radius $r_2$ of the top cap, then the apex is
-$\vec{p_a} = (0 ,0 , r_1 / (r_1 - r_2))$, then the normal vector is
-$\vec{n} = (x / m , y / m , r / c * m)$, where the hypotenuse
-$c = \sqrt{(r_1 / (r_1 - r_2))^2 + r_1^2}$ and $m = \sqrt{x^2 + y^2 + (r_1/c)^2}$.
+$\vec{p_a} = (0 ,0 , r_1 / (r_1 - r_2))$.
 
+We first calculate the direction
+of the normal on the $x/y$ plane which is the vector $\vec{n_{xy}}=(x,y,0)$. After
+we calculate the normal direction on the $z$ plane. From trigonometry follows
+that the height of the cone is $||\vec{p_a}|| = h$ and the hypotenuse
+$c = \sqrt{r_1^2 + h^2}$. Now we can calculate the norm of the $z$ and $x/y$
+plane component of the normal vector, which is $r/c$ for the $z$ plane and
+$h/c$ for the $x/y$ plane. Now we combine these results
+
+$$
+  \vec{n} = ( \frac{x}{(x^2 + y^2)} * \frac{h}{c},
+              \frac{y}{(x^2 + y^2)} * \frac{h}{c}, r/c),
+$$
+
+where $\vec{n}$ is the normal vector of the cone at point $\vec{p}$.
 
 ### Normal vector transformation
 
@@ -860,6 +872,8 @@ primitive and we consider only the closest intersection. If there is no
 intersection, then the resulting color will be black. If we find
 a intersection, we will use the following defined shading method.
 
+**TODO insert pictures that demonstrate the effect of the coefficients**
+
 
 ### Ambient light
 
@@ -913,7 +927,7 @@ where $n$ is the normal vector of the surface at position $\vec{p}$, $s$ is the
 diffuse coefficient, $r$ is the rough coefficient of the objects
 material property, $\vec{c}$ the color of the light,
 $\vec{l_d}$ is the normalized vector $\vec{d} = \vec{l_p} - \vec{p}$ and $\vec{v}$
-is the negated direction of the ray that intersected the object.
+is the negated normalized direction of the ray that intersected the object.
 
 
 ### Multiple lights and final results
