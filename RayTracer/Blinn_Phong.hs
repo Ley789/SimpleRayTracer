@@ -33,8 +33,7 @@ combine c d = cmap (* d) c
 
 blinnPhong :: Light -> Intersection -> Colour
 blinnPhong li i = 
-    ambient (prop ^. tAmbient)
-  + diffuse lc (prop ^. tDiffuse) l n
+    diffuse lc (prop ^. tDiffuse) l n
   + specular lc (prop ^. tSpecular) l n v (prop ^. tRoughness)
   where
     lc = li ^. lColour
