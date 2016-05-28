@@ -30,7 +30,7 @@ divNum = (/) `on` fromIntegral
 -- | Generates pixel coordinates with m rows and n columns.
 pixelCoordinates :: (Int, Int) -> [[(Double, Double)]]
 pixelCoordinates (m, n) =
-  [[(f x m, negate $ f y n) | x <- [0 .. m]] | y <- [0 .. n]]
+  [[(negate $ f x (m - 1),  f y (n - 1)) | y <- [0 .. n - 1]] | x <- [0 .. m - 1]]
   where f x a = x `divNum` a - 0.5
 
 
@@ -42,7 +42,7 @@ simpleRayTracer :: Scene  -> (Int, Int) -> [[Colour]]
 simpleRayTracer s (m, n) = 
   case mC of 
     Nothing -> replicate n (replicate m (Colour 0 0 0)) 
-    Just c  -> T.trace ("Objects: " ++ show (s ^. sObjects)) $ filterColour sO sL $ (map.map) (nearestIntersection . (`mapTracing` sO)) $ generateRays c (m, n)
+    Just c  -> T.trace ("number of rays: " ++ show (sum . map length $ pixelCoordinates (m,n))) $ filterColour sO sL $ (map.map) (nearestIntersection . (`mapTracing` sO)) $ generateRays c (m, n)
     where mC = getLast $ s ^. sCamera
           sO = s ^. sObjects
           sL = s ^. sLights
@@ -90,7 +90,8 @@ filterColour s l = (map . map) (maybe (Colour 0 0 0) (intersectionColour s l))
 
 intersectionColour :: SceneObject -> [Light] -> Intersection -> Colour
 intersectionColour s ls i =
-  i ^. itTex . pigment * sum (mapMaybe (lightIntersectionColour i s) ls)
+  i ^. itTex . pigment * (ac + sum (mapMaybe (lightIntersectionColour i s) ls))
+  where ac = ambient $ i ^. itTex. property . tAmbient
 
 lightIntersectionColour :: Intersection -> SceneObject -> Light -> Maybe Colour
 lightIntersectionColour x s l
