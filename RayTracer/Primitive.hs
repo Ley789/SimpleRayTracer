@@ -63,10 +63,14 @@ getNormal Box p
 getNormal (Cone r1 r2) p
   | pointInPlane p (V3 0 0 0) n  = V3 0 0 (-1)
   | pointInPlane p (V3 0 0 1) n  = V3 0 0 1
-  | otherwise = V3 (p ^._x) (p ^._y) (r1 / c) 
+  | otherwise = V3 xn yn (r1 / c) 
     where h =  r1 / (r1 - r2)
           c = sqrt $ h ** 2 + r1 ** 2
           n = V3 0 0 1
+          V3 x y z = p
+          m = sqrt $ x**2 + y**2
+          xn = x * h / (m * c)
+          yn = y * h / (m * c) 
 
 getNormal (Cylinder _) p
   | pointInPlane p (V3 0 0 0) n  = V3 0 0 (-1)
