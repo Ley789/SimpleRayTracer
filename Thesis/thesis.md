@@ -6,6 +6,34 @@
 
 In this chapter we will introduce definitions that we use to describe 3D scenes.
 
+## Vector notation
+
+We will introduce notation conventions which we use in this thesis.
+The multiplication of a vector $\vec{v}$ with a scalar $t$ is denoted as
+$\vec{p} * t = t * \vec{p}$.
+
+The standard scalar product of vectors $\vec{p}$ and $\vec{q}$ is denoted as
+$<\vec{p},\vec{q}>$, where $<\vec{q}> = <\vec{q},\vec{q}>$.
+
+The euclidean norm of a vector $\vec{q}$ is denoted as $||\vec{q}||$.
+
+
+## Homogeneous coordinates
+
+Given a vector $\vec{p}=(x_1,...,x_n)$, the vector
+$\vec{q}=(x_1 * w, ..., x_n * w, w)$ with $w \ne 0$ is a homogeneous vector
+of the vector $\vec{p}$. It follows that for every scalar $t \in \mathbb{R}$ and
+$t \ne 0$, $t*\vec{q}$ is a homogeneous vector of $\vec{p}$. A homogeneous
+vector is called a point if and only if $w \ne 0$. A homogeneous vector is called
+a direction if and only if $w = 0$.
+
+Representing coordinates of $\mathbb{R}^3$ as homogeneous vectors
+simplifies transformations because points and directions have different
+properties. In this thesis every point/direction is considered a homogeneous
+point/direction except for the definitions in section \autoref{primitives} and
+if not stated different.
+
+
 ## Color
 
 A color is represented as vector $\vec{c} = (r,g,b)$, with values in
@@ -17,40 +45,122 @@ color.
 E.g. $\vec{c} =(1, 0, 0)$ has a red channel of 100%, green channel of
 0% and blue channel 0%, so the resulting color is red with full intensity.
 
-**Add camera and visual plane**
+
+## Camera
+
+A camera is defined by 4 vectors.
+The position of the camera $\vec{p}$, where $\vec{p}$ is a point.
+The forward vector $\vec{f}$, where $\vec{f}$ is a direction.
+The right vector $\vec{r}$, where $\vec{r}$ is a direction.
+The up vector $\vec{u}$, where $\vec{u}$ is a direction.
+
+To get a better understand of these vector see section \autoref{projection}.
+
+## Viewing plane
+
+The viewing plane matrix with $n$ rows and $m$ columns is defined as
+
+$$
+  V_{ij} = (-f(i,n), f(j,m))  
+$$
+
+where $1 \le i \le n$, $1 \le j \le m$ and $f(x,y)= ((x - 1)/ (y - 1)) - 0.5$.
+The rows and columns of the viewing plane define the resolution.
 
 ## Light
 
-**Comment: Eliminate defined, eliminate or clarify "source".**
+A light is defined by a position and color c.
 
-A light is a source that emits a color at a defined position in a defined
-direction with a defined decrease of illumination per distance.
+We assume that the light sends light of the specified color uniformly in all
+directions.
 
-A point light sends light in all directions.
-Direction light is a point light with no decrease illumination. **Redo.**
+
+## Ray
+
+A ray is defined as a tuple $(\vec{o}, \vec{d})$, where $\vec{o}$ is called
+the position and $\vec{d}$ the direction of the ray.
+The ray travels through all points of the set
+
+$$
+ \{ \vec{o} + t * \vec{d} | t \in \mathbb{R}, t > 0 \}
+$$
+
+
+## Primitives
+
+We define a number of shapes, called primitives, that can be represented in
+the euclidean space. Every shape is defined by the set of the points of its
+surface.
+
+**TODO: create pictures of primitives in coordinate system and include them**
+
+### Sphere
+
+The unit sphere, which is centered at the origin, is defined by the set
+
+$$
+  \{p | p \in \mathbb{R}^3, ||p|| = 1 \},
+$$
+
+where $||\cdot||$ is the Euclidean norm.
+
+### Box
+
+A box aligned with the axes and all four sides of length 1 is defined by the set
+
+$$
+  P_x(0) \cup P_x(1) \cup P_y(0) \cup P_y(1) \cup P_z(0) \cup P_z(1)
+$$
+
+where
+
+$$
+  P_x(v) := \{(x,y,v) | 0 \le x,y \le 1, x,y \in \mathbb{R}\}
+$$
+$$
+  P_y(v) := \{(v,y,z) | 0 \le y,z \le 1, y,z \in \mathbb{R}\}
+$$
+$$
+  P_z(v) := \{(x,v,z) | 0 \le x,z \le 1, x,z \in \mathbb{R}\}  
+$$
+
+### Cylinder
+
+The cylinder aligned at the z-axis, with length 1 and radius $r \in \mathbb{R}$
+is defined by the set
+
+$$
+  \{\vec{p}=(x,y,z)| p \in \mathbb{R}^3, x^2 + y^2 = r,1 \ge z \ge 0 \}
+$$
+
+A render of a cylinder is illustrated in
+\autoref{fig:cylinder}.
+
+![Cylinder.\label{fig:cylinder}](primCylinder.png)
+
+For image size, see: <http://www.imagemagick.org/discourse-server/viewtopic.php?t=21076>
+
+
+### Cone
+
+A cone aligned at the z-axis, with length 1, base cap $\vec{p_1}$, centered at
+the origin, with radius $r_1 \in \mathbb{R}$, top cap, centered at
+$\vec{p_2} = (0,0,1)$, with radius $r_2 \in \mathbb{R}$ is defined by the set
+
+$$
+  \{\vec{p}=(x,y,z)| p \in \mathbb{R}^3,
+  \cos^2 \alpha * (x^2 + y^2) - \sin^2 \alpha * (z - r_1 / \alpha) = 0,
+  1 \ge z \ge 0\}
+$$
+
+where $\tan \alpha = r_1 - r_2 / ||\vec{p_2} - \vec{p_1}|| = r_1 - r_2$.
 
 ## Transformations
 
 A transformation is a function that takes a vector $\vec{p} = (x_1,...,x_n)$
 and returns a $\vec{q} = (y_1,...,y_n)$. In the next sections we will
-introduce homogeneous coordinates and then some important transformations.
+introduce a group of transformations.
 
-### Homogeneous coordinates
-
-**Comment: Write about notation, like scalar multiplication, in
-separate vector section.**
-
-Given a vector $\vec{p}=(x_1,...,x_n)$, the vector
-$\vec{q}=(x_1 * w, ..., x_n * w, w)$ with $w \ne 0$ is a homogeneous vector
-of the vector $\vec{p}$. It follows that for every scalar $t \in \mathbb{R}$ and
-$t \ne 0$, $t*\vec{q}$ is a homogeneous vector of $\vec{p}$.
-
-**Point -> Vector, define point and directions
-scalarproduct <q> = <q,q>**
-
-Representing coordinates of $\mathbb{R}^3$ as homogeneous vectors/coordinates
-simplifies transformations. In \autoref{transformations}
-every point is considered a homogeneous point.
 
 ### Scaling matrix
 
@@ -68,18 +178,18 @@ $$
 $$
 
 where the indices stands for the scaling in the corresponding axes.
-Multiplying every point of an object with a scaling matrix resizes
-the object.
+A scaling matrix is a result of the scaling function defined above and
+multiplications of 2 scaling matrices.
+If $s_x = s_y = s_z$ then the scaling is called uniform.
+Multiplying every point of a primitive with a scaling matrix resizes
+the primitive.
 
-**Work.**
-
-For example, if $\vec{p} = (1, 1, 1, 1)$ and $s_x = 5, s_y = 1, s_z = 0$ of scaling
-matrix $S$ then $S\vec{p} = (5, 1, 0, 1)$. If $s_x = s_y = s_z$ then the scaling
-is called uniform.
+For example, given $\vec{p} = (1, 1, 1, 1)$ and a scaling matrix
+$S(5, 1, 0) = S'$, then $S'\vec{p} = (5, 1, 0, 1)$.
 
 ### Rotation matrix
 
-To rotate an object in 3D space we need to define by which axis
+To rotate a primitive in 3D space we need to define by which axis
 and which angle $\alpha$ to rotate.
 
 A rotation is defined as:
@@ -117,23 +227,23 @@ $$
                   \right)
 $$
 
-where the indices indicate the axis by which we rotate. A rotation matrix
-is a result of the rotation function defined above and multiplications of
-2 rotation matrix.
-For the corresponding proof see \cite{kenn}.
-Multiplying every point of an object with a rotation matrix will rotate
-the object by $\alpha$.
+where the indices indicate the axis by which we rotate and $\alpha$ the angle.
+A rotation matrix is a result of the rotation function defined above and
+multiplications of 2 rotation matrices.
+For a corresponding proof see \cite{kenn}.
+Multiplying every point of a primitive with a rotation matrix will rotate
+the primitive.
 
-**Work.**
-
-To rotate an object on a arbitrary axis $\vec{p}$ by the rotation $R_o$,
-we align $\vec{p}$ with one of the defined axes by using combinations
-of the defined rotation matrices. We denote the used rotation matrix with $R_a$.
-Afterwards we undo the rotation done to align the axis with $R_a^{-1}$.
-We combine these steps to one rotation matrix
+To rotate a point $\vec{p}$ on a arbitrary axis $\vec{a}$ by the angle $\alpha$,
+we first find a rotation matrix $R_a$ which aligns the axis $\vec{a}$ with one
+of the defined axes (x-,y- or z-axis). Next we apply the rotation
+$R_o(\alpha)R_a\vec{p} = \vec{p'}$, where $R_o$ is the defined rotation matrix
+of the aligned axis. Afterwards we undo the rotation done to align the axis
+with $R_a^{-1}$. This leads to the rotated point $\vec{p''} = R_a^{-1}\vec{p'}$.
+We can combine these steps to one rotation matrix
 
 $$
-  R = R_a^{-1}R_oR_a
+  R = R_a^{-1}R_o(\alpha)R_a
 $$
 
 ### Translation matrix
@@ -152,6 +262,8 @@ $$
 $$
 
 where the indices describe the translation in the corresponding axes.
+A translation matrix is a result of the translation function defined above
+and multiplications of 2 translation matrices.
 
 ### Transformation matrix
 
@@ -219,6 +331,7 @@ $$
                 \end{array}
         \right)
 $$
+
 $$
 \begin{split}
   s_x &= \sqrt{(r_{11} * s_x)^2 + (r_{21} * s_x)^2 + (r_{31} * s_x)^2} \\
@@ -231,98 +344,34 @@ $$
 
 we know that $\sqrt{r_{11}^2 + r_{21}^2 + r_{31}^2} = 1$ because of the property
 of rotation matrices. The other components of the scaling matrix can be extracted
-analog. We now have the matrix $S'$.
+analog. Now we can create the scaling matrix $S'$.
+
+We also see that we can extract the scaling components for the matrix $S'$
+form arbitrary ordered multiplications of scaling and rotation matrices.
 
 The remaining matrix $R'$ can be obtained by multiplying the inverse scaling
 matrix with $L''$, where $L''$ is the matrix $L$ but with the last column
 replaced by $\vec{v}=(0, 0, 0, 1)^T$
 
 $$
-  R' = L' * S'^{-1}
+  R' = L'' * S'^{-1}
 $$
 \qedhere
 
+## Material property
 
-## Ray
+A material property is a vector $\vec{p} = (a, d, s, r)$ which values are in
+the interval $[0,1]$. The components are called coefficients whit $a$ as the
+ambient, $d$ as the diffuse, $s$ as the specular and $r$ as the rough
+coefficient.
 
-**Represented in homogeneous coordinates**
+## Object
 
-A ray is defined as point, conventionally denoted as $\vec{o}$, and a direction,
-conventionally denoted as $\vec{d}$.
-The ray travels through all points of the set
-
-$$
- \{ \vec{o} + t * \vec{d} | t \in \mathbb{R}, t > 0 \}
-$$
-
-
-## Primitives
-
-We define a number of shapes, called primitives, that can be represented in
-the euclidean space. Every shape is defined by the set of the points of its
-surface.
-
-**TODO: create pictures of primitives in coordinate system and include them**
-
-### Sphere
-
-The unit sphere, which is centered at the origin, is defined by the set
-
-$$
-  \{p | p \in \mathbb{R}^3, ||p|| = 1 \},
-$$
-
-where $||\cdot||$ is the Euclidean norm.
-
-### Box
-A box aligned with the axes and all four sides of length 1 is defined by the set
-
-$$
-  P_x(0) \cup P_x(1) \cup P_y(0) \cup P_y(1) \cup P_z(0) \cup P_z(1)
-$$
-
-where
-
-$$
-  P_x(v) := \{(x,y,v) | 0 \le x,y \le 1, x,y \in \mathbb{R}\}
-$$
-$$
-  P_y(v) := \{(v,y,z) | 0 \le y,z \le 1, y,z \in \mathbb{R}\}
-$$
-$$
-  P_z(v) := \{(x,v,z) | 0 \le x,z \le 1, x,z \in \mathbb{R}\}  
-$$
-
-### Cylinder
-
-The cylinder aligned at the z-axis, with length 1 and radius $r \in \mathbb{R}$
-is defined by the set
-
-$$
-  \{\vec{p}=(x,y,z)| p \in \mathbb{R}^3, x^2 + y^2 = r,1 \ge z \ge 0 \}
-$$
-
-A render of a cylinder is illustrated in
-\autoref{fig:cylinder}.
-
-![Cylinder.\label{fig:cylinder}](primCylinder.png)
-
-For image size, see: <http://www.imagemagick.org/discourse-server/viewtopic.php?t=21076>
+A object is a 4 tuple $(pr,M ,\vec{c}, vec{p})$, where $pr$ is a primitive,
+$M$ is a transformation matrix, $\vec{c}$ is a color and $\vec{p}$ is a
+material property.
 
 
-### Cone
-
-A cone aligned at the z-axis, with length 1, base cap $\vec{p_1}$, centered at
-the origin, with radius $r_1 \in \mathbb{R}$, top cap, centered at
-$\vec{p_2} = (0,0,1)$, with radius $r_2 \in \mathbb{R}$ is defined by the set
-
-$$
-  \{\vec{p}=(x,y,z)| p \in \mathbb{R}^3,
-  \cos^2 \alpha * (x^2 + y^2) - \sin^2 \alpha * (z - r_1 / \alpha) = 0,
-  1 \ge z \ge 0\}
-$$
-
-where $\tan \alpha = r_1 - r_2 / ||\vec{p_2} - \vec{p_1}|| = r_1 - r_2$.
 # Rendering
 
 In the field of 3D computer graphics the process of generation a image from
@@ -713,10 +762,11 @@ vector is $\vec{n} = (x /m, y /m, 0)$, where $m = \sqrt{x^2 + y^2}$.
 
 ### Cone normal
 
-Given a point $\vec{p}=(x,y,z)$ on the surface of a cone, with radius $r$ and
-apex $\vec{p_a}$, then the normal vector is
+Given a point $\vec{p}=(x,y,z)$ on the surface of a cone, the radius $r_1$ of the
+base cap and radius $r_2$ of the top cap, then the apex is
+$\vec{p_a} = (0 ,0 , r_1 / (r_1 - r_2))$, then the normal vector is
 $\vec{n} = (x / m , y / m , r / c * m)$, where the hypotenuse
-$c = \sqrt{||\vec{p_a}||^2 + r^2}$ and $m = \sqrt{x^2 + y^2 + (r/c)^2}$.
+$c = \sqrt{(r_1 / (r_1 - r_2))^2 + r_1^2}$ and $m = \sqrt{x^2 + y^2 + (r_1/c)^2}$.
 
 
 ### Normal vector transformation
@@ -767,42 +817,49 @@ $\vec{n'} = R S^{-1}\vec{n}$.
 We used the property of rotation matrices that for every rotation matrix
 $R$ follows that $(R^{-1})^{\tr} = R$.
 
-## Generate rays
+## Projection
 
 In the context of computer graphics, a projection transforms points in 3D
-onto the view plane \cite{kevi}. The way we generate the rays determines the
-kind of projection.
+onto a plane with finite many points\cite{kevi}.
+The way we generate the rays determines the kind of projection.
 
 ### Perspective
 
 In a perspective projection each line is centered at the camera position \cite{kevi}.
-Given a camera $c=(\vec{p},\vec{f},\vec{u},\vec{r})$ and a viewing plane with $n$ rows
-and $m$ columns, we define the set of rays that represents a perspective projection
-as
+Given a camera $c=(\vec{p},\vec{f},\vec{u},\vec{r})$ and a viewing plane $V$,
+we define the matrix of rays that represents a perspective projection as
 
 $$
-  \{\vec{o} + t * \vec{d} | \vec{o} = \vec{p},
-         \vec{d}= \vec{f} + y * \vec{r} + x * \vec{u},
-        0 \le x \le n, 0 \le y \le m\, x,y \in \mathbb{N} \}
+    P_{ij} :=  (\vec{p}, \vec{f} + snd(V_{ij}) * \vec{r} + fst(V_{ij}) * \vec{u})
 $$
+
+where $snd((x,y)) = y$ and $fst((x,y)) = y$. The indices of the matrix
+determine the position of the pixels in the resulting image.
 
 ### Orthographic
 
 In a orthographic projection every ray is parallel to each other and has its
-center in the view plane. Given a camera $c=(p,f,u,r)$ and a viewing plane
-with $n$ rows and $m$ columns, we define the set of rays that represents a
-orthographic projection as
+center in the view plane. Given a camera $c=(p,f,u,r)$ and a viewing plane $V$,
+we define the matrix of rays that represents a orthographic projection as
 
 $$
-  \{\vec{o} + t * \vec{d} | \vec{o} = \vec{f} + y * \vec{r} + x * \vec{u},
-        \vec{d} = \vec{f}, 0 \le x \le n, 0 \le y \le m\, x,y \in \mathbb{N} \}
-$$To
+    O_{ij} :=  (\vec{f} + snd(V_{ij}) * \vec{r} + fst(V_{ij}), \vec{f})
+$$
+
+where $snd((x,y)) = y$ and $fst((x,y)) = y$. The indices of the matrix
+determine the position of the pixels in the resulting image.
 
 ## Shading model
 
-We use the shading model described in the book \cite{kevi}. This shading model
-is also knows as Blinn-Phong shading model. Shading defines the calculation of
-the output color for each pixel.
+Shading defines the calculation of the output color for each pixel.
+We use a slightly different shading model that is described in the book
+\cite{kevi}, which is also known as Blinn-Phong shading model.
+
+After generating the projection we intersect each ray with each objects
+primitive and we consider only the closest intersection. If there is no
+intersection, then the resulting color will be black. If we find
+a intersection, we will use the following defined shading method.
+
 
 ### Ambient light
 
@@ -812,31 +869,58 @@ This is called ambient illumination and it's not a good approximation, but it
 provides some illumination for the parts that do not receive direct illumination
 \cite{kevi}.
 
-We calculate the ambient color of a object $O$ by its ambient attribute value
-multiplied by its color and we denote it $O_{ca}$.
+We calculate the ambient color of a object with the ambient coefficient $a$ of
+the objects material property multiplied by the color $\vec{c_a} = (1, 1, 1)$.
 
 ### Diffuse light
-**Todo from here on**
 
-Diffuse light simulates direct illumination. We calculate the diffuse color
+To simulate direct illumination we first need to check if there is no object
+between the intersection point and the light.
 
+We do this by generating a ray $S$
+with position $\vec{p}$ and direction $\vec{d} = \vec{l_p} - \vec{p}$,
+where $\vec{p}$ is the intersection point and $\vec{l_p}$ is the position of the light.
+Then we try to intersect $S$ with every object. If there is no intersection
+or the nearest intersection is further away as $\vec{l_p}$, then the light
+illuminates the object and we calculate the diffuse color with following
+equation
+
+$$
+  \vec{c_d} = \vec{c} * d * \max (0, <\vec{l_d}, \vec{n}>),
+$$
+
+
+where $n$ is the normal vector of the surface at position $\vec{p}$, $d$ is the
+diffuse coefficient of the objects material property, $\vec{c}$ the color of
+the light and $\vec{l_d}$ is the normalized vector $\vec{d}$.
 
 ### Specular reflection
 
 To simulate smooth, shinny objects we allow them to reflect light that's
 concentrated around the direction of mirror-reflection \cite{kevi}.
 
-We calculate the specular reflection color
+For specular reflection we also need to check if there is no object between
+the intersection point and the light. We assume that there in between, then
+we calculate the specular reflection color with following equation
+
+
+$$
+  \vec{c_d} = \vec{c} * s * \max (0, <\frac{\vec{v} + \vec{l_d}}{||\vec{v} + \vec{l_d}||},
+     \vec{n}>)^r,
+$$
+
+where $n$ is the normal vector of the surface at position $\vec{p}$, $s$ is the
+diffuse coefficient, $r$ is the rough coefficient of the objects
+material property, $\vec{c}$ the color of the light,
+$\vec{l_d}$ is the normalized vector $\vec{d} = \vec{l_p} - \vec{p}$ and $\vec{v}$
+is the negated direction of the ray that intersected the object.
 
 
 ### Multiple lights and final results
 
-Given the number of lights $I$, object $O$
-We calculate the final color $\vec{c}_f$ by
-
-$$
-  \vec{c}_f = O_{ca} + \sum{i=0}{I}
-$$
+We get the final color by calculating the diffuse color and the specular
+reflection color for each light, add them together, then add the
+ambient color and finally multiply with the objects color.
 
 # Integration
 
