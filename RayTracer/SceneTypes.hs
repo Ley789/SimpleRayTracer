@@ -11,16 +11,16 @@ data CameraType = Perspective | Orthographic
   deriving (Show)
 
 data Light = Light {
-  _lPosition :: V3 Double,
+  _lPosition :: V4 Double,
   _lColour   :: Colour
 } deriving(Show)
 
 data SCamera = SCamera {
   cType :: CameraType,
-  pos :: V3 Double,
-  forward :: V3 Double,
-  right :: V3 Double,
-  up :: V3 Double
+  pos :: V4 Double,
+  forward :: V4 Double,
+  right :: V4 Double,
+  up :: V4 Double
 } deriving (Show)
 
 data Scene = Scene {
