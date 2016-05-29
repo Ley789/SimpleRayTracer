@@ -13,7 +13,8 @@ The multiplication of a vector $\vec{v}$ with a scalar $t$ is denoted as
 $\vec{p} * t = t * \vec{p}$.
 
 The standard scalar product of vectors $\vec{p}$ and $\vec{q}$ is denoted as
-$<\vec{p},\vec{q}>$, where $<\vec{q}> = <\vec{q},\vec{q}>$.
+$<\vec{p},\vec{q}>$,
+where $<\vec{q}> = <\vec{q},\vec{q}>$.
 
 The euclidean norm of a vector $\vec{q}$ is denoted as $||\vec{q}||$.
 
@@ -29,9 +30,9 @@ a direction if and only if $w = 0$.
 
 Representing coordinates of $\mathbb{R}^3$ as homogeneous vectors
 simplifies transformations because points and directions have different
-properties. In this thesis every point/direction is considered a homogeneous
-point/direction except for the definitions in section \autoref{primitives} and
-if not stated different.
+properties. If not stated different, then in every point/direction is considered
+a homogeneous point/direction except for the definitions in
+section \autoref{primitives}.
 
 
 ## Color
@@ -48,7 +49,7 @@ E.g. $\vec{c} =(1, 0, 0)$ has a red channel of 100%, green channel of
 
 ## Camera
 
-A camera is defined by 4 vectors.
+A camera is defined as 4-tuple $(\vec{p},\vec{f},\vec{r},\vec{u})$ of vectors.
 The position of the camera $\vec{p}$, where $\vec{p}$ is a point.
 The forward vector $\vec{f}$, where $\vec{f}$ is a direction.
 The right vector $\vec{r}$, where $\vec{r}$ is a direction.
@@ -65,14 +66,14 @@ $$
 $$
 
 where $1 \le i \le n$, $1 \le j \le m$ and $f(x,y)= ((x - 1)/ (y - 1)) - 0.5$.
-The rows and columns of the viewing plane define the resolution.
+The rows and columns of the viewing plane determine the resolution.
 
 ## Light
 
-A light is defined by a position and color c.
+A light is defined by a position and color.
 
-We assume that the light sends light of the specified color uniformly in all
-directions.
+We assume that the light illuminates objects with the specified color uniformly
+in all directions.
 
 
 ## Ray
@@ -99,14 +100,13 @@ surface.
 The unit sphere, which is centered at the origin, is defined by the set
 
 $$
-  \{p | p \in \mathbb{R}^3, ||p|| = 1 \},
+  \{p | p \in \mathbb{R}^3, ||p|| = 1 \}
 $$
 
-where $||\cdot||$ is the Euclidean norm.
 
 ### Box
 
-A box aligned with the axes and all four sides of length 1 is defined by the set
+The box aligned with the axes and all four sides of length 1 is defined by the set
 
 $$
   P_x(0) \cup P_x(1) \cup P_y(0) \cup P_y(1) \cup P_z(0) \cup P_z(1)
@@ -126,7 +126,7 @@ $$
 
 ### Cylinder
 
-The cylinder aligned at the z-axis, with length 1 and radius $r \in \mathbb{R}$
+A cylinder aligned at the z-axis, with length 1 and radius $r \in \mathbb{R}$
 is defined by the set
 
 $$
@@ -143,9 +143,7 @@ For image size, see: <http://www.imagemagick.org/discourse-server/viewtopic.php?
 
 ### Cone
 
-A cone aligned at the z-axis, with length 1, base cap $\vec{p_1}$, centered at
-the origin, with radius $r_1 \in \mathbb{R}$, top cap, centered at
-$\vec{p_2} = (0,0,1)$, with radius $r_2 \in \mathbb{R}$ is defined by the set
+A cone of length 1 which is aligned at the z-axis is defined by the set
 
 $$
   \{\vec{p}=(x,y,z)| p \in \mathbb{R}^3,
@@ -153,12 +151,15 @@ $$
   1 \ge z \ge 0\}
 $$
 
-where $\tan \alpha = r_1 - r_2 / ||\vec{p_2} - \vec{p_1}|| = r_1 - r_2$.
+where the base cap is centered at the origin $\vec{p_1}$ with radius
+$r_1 \in \mathbb{R}$, the top cap is centered at $\vec{p_2} = (0,0,1)$ with
+radius $r_2 \in \mathbb{R}$ and the tangent of the half-angle is
+$\tan \alpha = r_1 - r_2 / ||\vec{p_2} - \vec{p_1}|| = r_1 - r_2$.
 
 ## Transformations
 
 A transformation is a function that takes a vector $\vec{p} = (x_1,...,x_n)$
-and returns a $\vec{q} = (y_1,...,y_n)$. In the next sections we will
+and returns a vector $\vec{q} = (y_1,...,y_n)$. In the next sections we will
 introduce a group of transformations.
 
 
@@ -234,16 +235,16 @@ For a corresponding proof see \cite{kenn}.
 Multiplying every point of a primitive with a rotation matrix will rotate
 the primitive.
 
-To rotate a point $\vec{p}$ on a arbitrary axis $\vec{a}$ by the angle $\alpha$,
+To rotate a point $\vec{p}$ on an arbitrary axis $\vec{a}$ by the angle $\alpha$,
 we first find a rotation matrix $R_a$ which aligns the axis $\vec{a}$ with one
 of the defined axes (x-,y- or z-axis). Next we apply the rotation
-$R_o(\alpha)R_a\vec{p} = \vec{p'}$, where $R_o$ is the defined rotation matrix
+$R_s(\alpha)R_a\vec{p} = \vec{p'}$, where $R_s$ is the defined rotation matrix
 of the aligned axis. Afterwards we undo the rotation done to align the axis
 with $R_a^{-1}$. This leads to the rotated point $\vec{p''} = R_a^{-1}\vec{p'}$.
 We can combine these steps to one rotation matrix
 
 $$
-  R = R_a^{-1}R_o(\alpha)R_a
+  R = R_a^{-1}R_s(\alpha)R_a
 $$
 
 ### Translation matrix
@@ -295,7 +296,7 @@ $$
               \right)
 $$
 
-To extract the rotation matrix we first need to state a important property
+To extract the rotation matrix we first need to state an important property
 of these matrices.
 
 For all rotation matrices follows that the scalar product
@@ -361,7 +362,7 @@ $$
 ## Material property
 
 A material property is a vector $\vec{p} = (a, d, s, r)$ which values are in
-the interval $[0,1]$. The components are called coefficients whit $a$ as the
+the interval $[0,1]$. The components are called coefficients with $a$ as the
 ambient, $d$ as the diffuse, $s$ as the specular and $r$ as the rough
 coefficient.
 
@@ -374,24 +375,25 @@ material property.
 
 # Rendering
 
-In the field of 3D computer graphics the process of generation a image from
+In the field of 3D computer graphics the process of generating an image from
 a defined scene description is called rendering. Also the result of this process
 is a rendering.
 
-In this chapter we shortly introduce rasterization, because
-its the most used method for real time applications. After that we introduce
+In this chapter we shortly introduce rasterization. After that we introduce
 ray tracing and at the end of the chapter we will compare both methods.
 
 ## Rasterization
 
-To render a scene with rasterization, we execute following steps:
+Rasterization is the most used rendering technique for real time applications.
+We display some steps that are needed to render a scene with rasterization,
+which should give a short approach to this topic:
 
 * Calculate the position, color and various attributes of the primitives.
 * Convert the primitives into fragments, which are stored in a raster image.
   This raster image stores location, color, depth and other informations.
 * Calculate the final color of each pixel based on the raster image.
 
-For a introduction on this topic see
+For a further introduction on this topic see
 **TODO add cite to the book:
 
 https://www.ics.uci.edu/~gopi/CS211B/opengl_programming_guide_8th_edition.pdf**
@@ -399,11 +401,11 @@ https://www.ics.uci.edu/~gopi/CS211B/opengl_programming_guide_8th_edition.pdf**
 ## Ray Tracing
 
 Ray tracing is a rendering technique, which idea is to trace the path of rays
-emitted from a camera that travel through pixels of a image. By intersecting the
+emitted from a camera that travel through a pixel grid. By intersecting the
 rays with each object of a scene we can determine the visible object for
 each ray. The visible object is the one with the closest intersection.
 
-For each pixel corresponding to the ray we can calculated the color with the
+For each pixel corresponding to the ray we can calculate the color with the
 properties(location, material, ...) of the closest object and the scene.
 These can implicate the generation of new rays to simulate effects like
 reflection and refractions. There are several ray tracing techniques that
@@ -414,18 +416,18 @@ share the same basic algorithm.
 Some techniques for shading machine rederings of soilds is a paper of
 Arthur Appel published in 1968 \cite{appel} it is the first approach
 to ray tracing. He represented light rays as mathematical lines and checked
-if there is a intersection with an object. After a intersection the light rays
-aren't traced further, also known as Ray Casting. These process doesn't considered
-shadows or reflections.
+if there is an intersection with an object. After an intersection the light rays
+aren't traced further, which is also known as Ray Casting.
+This process doesn't considered shadows or reflections.
 
-Ray tracing is a extension of Appels algorithm that was introduced by Whitted
-in 1980 \cite{whitt}. This extension considers shadow and reflections by
-tracing rays/lines after the intersection. After a intersection a ray can
-generate 3 new rays, the shadow ray, reflection ray and refraction ray. These
-rays are called secondary rays. The starting point of a shadow ray is
+The first ray tracing technique was introduced by Whitted
+in 1980 \cite{whitt}, which is an extension of Appels algorithm.
+After an intersection the ray can generate generate 3 new rays, the shadow ray,
+reflection ray and refraction ray.
+These rays are called secondary rays. The starting point of a shadow ray is
 the intersection point and its direction leads to a light source. This is
 used to determine if the light source influences the object at the intersection
-point. For example if an object is in between the shadow ray and the light source
+point. For example if an object is between the shadow ray and the light source
 the intersected point will not be illuminated and will be represented as shadow.
 Reflection and refraction rays are traced further, which makes the algorithm
 recursive.
@@ -438,65 +440,64 @@ soft shadows.
 
 Path tracing was introduces by Kajiya in 1986 \cite{kaji}. Applying
 distributing rays not only to specific effects like shadows, but for the shading
-of all diffuse surfaces. With these the illumination of the lights with all
-object can be simulated correctly. This method is also called monte carlo
+of all diffuse surfaces. Thereby indirect illumination of lights with
+objects can be simulated. This method is also called monte carlo
 ray tracing, because it uses random samples to compute the image.
 
 ### Basic Algorithm
 
-The basic concept of a ray tracing algorithm is to find intersections of a ray
-with a scene consisting of a set of geometric primitives efficiently \cite{wald}.
-The ray, as defined in the section \autoref{Ray}, can have additional parameters
-$t_{min}$ and $t_{max}$, which specifies the interval of $t$ used to define
-the set of all points of the ray. In other words it specifies the minimum
+The basic concept of ray tracing algorithms is to efficiently find intersections
+between a ray and a scene that consists a set of geometric primitives \cite{wald}.
+The ray, as defined in the section \autoref{ray}, can have additional parameters
+$t_{min}$ and $t_{max}$, which specifies the interval of $t$ used for
+the definition. In other words it specifies the minimum
 and the maximum distance of a ray.
 
 At this level the algorithm can be split in 3 tasks.
 The most fundamental task is to find the closest intersection. The second task,
-also called visibility/occlusion test, is to check if there are any intersection
-of a ray with an object. The last task is find all intersections of a ray.
-To check for any intersections is slightly simpler as checking for the
+also called visibility/occlusion test, is to check if there are any intersections.
+The last task is to find all intersections.
+Checking for any intersections is slightly simpler than checking for the
 closest, so there are algorithms that are more efficient in this case. For
 example the occlusion test is used for shadow rays \cite{wald}.
-In ray tracing only one condition for a primitive must apply, which is a
-be a function that can calculate a intersection between the primitive and a ray.
+In ray tracing only one condition must apply for a primitive, which is that there
+must be a function that can calculate an intersection between the primitive and a ray.
 That means primitives can be of various types, from simple geometric shapes like
 sphere, cubes, trianles,..., to complex parametric patches like the
-Bézier patches and other complex shapes as long as there exist a intersection
+Bézier patches and other complex shapes as long as there exist an intersection
 function. The flexibility of primitives allows to represent shapes with full
 accuracy. Although using multiple kinds of primitives does not limit the kinds
 of scenes that can be rendered. Like mentioned in the chapter \autoref{Rasterization}
-most real time applications uses rasterization techniques to render a image and
+most real time applications uses rasterization techniques to render an image and
 most of them only uses triangles as primitives.
 
-Testing every primitive in the scene for a intersection with a ray produce
+Testing every primitive in the scene for an intersection with a ray produces
 the correct result, but the computation time extends with each ray and each
-primitives. For complex scenes it is necessary reduce the set of primitives
-that the ray could intersect. To preserve consistency its common to use
-acceleration data structures, e.g. grids and kd-trees \cite{copy}.
+primitive. For complex scenes it is necessary to reduce the set of primitives
+that the ray could intersect. It is common to use acceleration data structures
+to preserve consistency, e.g. grids and kd-trees \cite{copy}.
 
 
 ### Performance
 
-At the beginning of modern computer graphics only simple scenes were used and
-interactive graphic applications weren't established. The scenes didn't
-aim to be realistic. Ray tracing is computational intents that aims to
-simulate realistic behavior. These are part of the reasons why rasterization is
-the well-established rendering technique for interactive applications and ray
-tracing is still seldom in this field.
+At the beginning of modern computer graphics only scenes, whit a small number of
+primitives, were used and interactive graphic applications weren't established.
+Ray tracing is computational intense that aims to simulate physical realistic
+behavior. These are part of the reasons why rasterization is
+the well-established rendering technique for interactive applications at the moment
+and ray tracing is still seldom in this field.
 
-However the demand of more detailed scenes, larger scenes and more realism
+However the demand of more detailed scenes, larger scenes and physical realism
 leads to the argument that ray tracing will outperform rasterization at some
 point because of the logarithmic scene complexity \cite{wald}.
 
 Ray tracing is usually used for offline rendering due to the fact that it
-is computational intents. The crucial factors for the ray tracing algorithm
+is computational intense. The crucial factors for the ray tracing algorithm
 are:
 
-* The amount of rays. Consider a image with a resolution of 800 x 800 and
-  without counting the secondary rays. This results in a total amount of
-  640.000 rays. Considering the secondary rays the total number of rays
-  would increase even further. Depending on the scene complexity the set
+* The amount of rays. Consider an image with a resolution of 800 x 800,
+  without counting the secondary rays, this lead to a total amount of
+  640.000 rays. Depending on the scene complexity the set
   of primary rays may only be small part compared to the set of all rays.
 
 * Scene complexity. Reducing the set of primitives for a ray with acceleration
@@ -505,27 +506,25 @@ are:
 
 
 The common crucial factors lead to common optimizations. For the first fact,
-the amount of rays, its sufficed to reduce the number of rays to reduce
-the computation time. This can be archived by reducing the primary rays(smaller
+the amount of rays, it is sufficed to reduce the number of rays to reduce
+the computation time. This can be achieved by reducing the primary rays(smaller
 resolution) or reducing the secondary rays. The second fact, the scene complexity,
 can be optimized by using the mentioned acceleration data structures. Also
 using optimized intersection functions leads to reduced computation time. \\
-Ray tracing is knows as embarrassing parallel problem. That means to execute the
-algorithm in parallel is trivial because the result for each ray can be calculated
-independently. The optimization of ray tracing is a topic of interest since the
+Ray tracing is known as an embarrassingly parallel problem,
+because the result of each ray can be calculated independently.
+The optimization of ray tracing is a topic of interest since the
 invention of the algorithm \cite{copy}.
-
 
 ## Ray Tracing compared with rasterization
 
 Advantages of ray tracing:
 
-  * Ray tracing in known for the realistic images in high quality.
-  * The algorithm is embarrassing parallelism.
+  * Ray tracing in known for physically realistic images in high quality.
+  * The algorithm is an embarrassingly parallel problem.
   * The algorithm scales logarithmic with the scene complexity.
   * Complex effects like shadows, reflection and refractions can be simulated
-    and represented correctly (no approximations).
-  * Allows physically correct representations.
+    and represented correctly.
 
 Advantages of rasterization:
 
@@ -533,13 +532,13 @@ Advantages of rasterization:
   * Part of the rasterization algorithm is already executed by the hardware.
   * In general fast computation time.
 
+Rasterization based rendering needs a number of approximations
+for specific effects, e.g. shadow maps to approximate shadows. Without specific
+criteria rasterization may not be able to simulation or approximate
+certain effects.
 
-Rasterization based rendering needs to use  a number of approximations
-for specific effects, e.g. shadow maps to simulate shadows. Without specific
-criteria rasterization may not simulation certain effects correctly.
-
-Ray tracing can use approximations to save computation time but it is nor
-required. Whereas rasterization must use them for certain effects.
+Ray tracing can use approximations to save computation time but it isn't
+required. Whereas rasterization needs them for certain effects.
 
 # DSL
 
@@ -595,11 +594,13 @@ $$
 $$
 
 where $a = <\vec{d},\vec{d}>$, $b=2*<\vec{o},\vec{d}>$ and $c=<\vec{o},\vec{o}>$.
+The smallest positive result of the quadratic equation leads to the nearest
+intersection.
 
 ### Box intersection
 
-To get the intersection between a ray and a box we check the boundaries. We
-will show this for the x-component, for the other components it works analog.
+To get the nearest intersection between a ray and a box we check the boundaries.
+We will show this for the x-component, for the other components it works analog.
 
 $$
   \begin{split}
@@ -634,7 +635,7 @@ $$
 
 ### Cylinder intersection
 
-For a cylinder aligned on a arbitrary line $\vec{p_a} + \vec{v_a} * t$, a
+A cylinder aligned on an arbitrary line $\vec{p_a} + \vec{v_a} * t$, a
 point on the cylinder $\vec{q}$ and radius $r$ holds
 $<\vec{q} - \vec{p_a} - <\vec{v_a},\vec{q} - \vec{p_a}> * \vec{v_a}> - r^2 = 0$.
 
@@ -662,22 +663,26 @@ This leads to following quadratic equation
 $$
   t = \frac{-b \pm \sqrt{b^2 - 4 * a* c}}{2 * a},
 $$
-
+**wrong, did not consider p_a!!!!**
 where $a = y_d^2 + x_d^2$, $b = 2 * (x_o * x_d + y_o * y_d)$ and
 $c = x_o^2 + y_o^2 - r^2$.
 
-To get the intersection of a cylinder first solve the quadratic equation of
-the cylinder and also intersect with the planes $p'$, which includes
-the base cap, and $p''$, which includes of the top cap. After we
-check that $1 \ge z \ge 0$ holds for the point $\vec{q} = (x,y,z)$ which is the
-result of the cylinder equation. Next we check that the plane intersections
-are in the range of the caps by verifying $||\vec{q_1}|| \le r^2$ and
-$||\vec{q_2}|| \le r^2$, where $\vec{q_1}$ is the intersection of the ray with
-plane $p'$ and $\vec{q_2}$ the intersection with the plane $p''$.
+To get the nearest intersection of a cylinder preform following steps:
+
+* Solve the quadratic equation.
+* Intersect with the planes $p'$, which includes
+  the base cap, and $p''$, which includes the top cap.
+* Check that $1 \ge z \ge 0$ holds for the point $\vec{q} = (x,y,z)$ which is the
+  result of using the smallest positive $t$.
+* Check that the plane intersections are in the range of the caps by
+  verifying $||\vec{q_1}|| \le r^2$ and $||\vec{q_2}|| \le r^2$, where $\vec{q_1}$
+  is the intersection of the ray with plane $p'$ and $\vec{q_2}$ the intersection
+  with the plane $p''$.
+* Take the nearest intersection.
 
 ### Cone intersection
 
-For a cone aligned on a arbitrary line $\vec{p_a} + \vec{v_a} * t$ with apex
+For a cone aligned on an arbitrary line $\vec{p_a} + \vec{v_a} * t$ with apex
 $\vec{p_a}$, center of the base cap at $\vec{p_1}$, center of the top cap at
 $\vec{p_2}$, a point on the cone $\vec{q}$ and half-angle $\alpha$ holds
 $\cos^2 \alpha <\vec{q} - \vec{p_a} - <\vec{v_a},<\vec{q} - \vec{p_a},\vec{v_a}>>
@@ -703,13 +708,19 @@ $$
   \end{split}
 $$
 
-To get the intersection of a cone first solve the quadratic equation of
-the cone and also intersect with the plane $p'$ which includes the
-base cap. After we check that $1 \ge z \ge 0$ holds for the point
-$\vec{q} = (x,y,z)$ that is the result of the cone equation. Next we
-check that the plane intersection is in the range of the cap by verifying
-$||\vec{q_1}|| \le r^2$, where $\vec{q_1}$ is the intersection of the ray with
-plane $p'$.
+To get the nearest intersection of a cone preform following steps:
+
+* Solve the quadratic equation.
+* Intersect with the planes $p'$, which includes
+  the base cap, and $p''$, which includes the top cap.
+* Check that $1 \ge z \ge 0$ holds for the point $\vec{q} = (x,y,z)$ which is the
+  result of using the smallest positive $t$.
+* Check that the plane intersections are in the range of the caps by
+  verifying $||\vec{q_1}|| \le r_1^2$ and $||\vec{q_2}|| \le r_2^2$, where $\vec{q_1}$
+  is the intersection of the ray with plane $p'$ and $\vec{q_2}$ the intersection
+  with the plane $p''$.
+* Take the nearest intersection.
+
 
 ## Ray transformations
 
@@ -731,7 +742,7 @@ Now we simplify the expression because a translation does not affect
 a direction
 
 $$
-  M^{-1}(\vec(o) + t * vec{d}) = M^{-1}\vec{o} + S^{-1}R^{-1}\vec{d} * t
+  M^{-1}(\vec(o) + t * \vec{d}) = M^{-1}\vec{o} + S^{-1}R^{-1}\vec{d} * t
 $$
 
 Note that $T^{-1}\vec{d} =\vec{d}$ holds for all directions $\vec{d}$.
@@ -739,7 +750,7 @@ We see that we get the same result as applying the transformation on a point.
 
 ## Normal vectors
 
-Normal vectors are unit vectors which are orthogonal to given surface at a given
+Normal vectors are unit vectors which are orthogonal to a given surface at a given
 point. In this subsection we show how to calculate normal vectors for the
 primitives.
 
@@ -770,13 +781,13 @@ We first calculate the direction
 of the normal on the $x/y$ plane which is the vector $\vec{n_{xy}}=(x,y,0)$. After
 we calculate the normal direction on the $z$ plane. From trigonometry follows
 that the height of the cone is $||\vec{p_a}|| = h$ and the hypotenuse
-$c = \sqrt{r_1^2 + h^2}$. Now we can calculate the norm of the $z$ and $x/y$
-plane component of the normal vector, which is $r/c$ for the $z$ plane and
-$h/c$ for the $x/y$ plane. Now we combine these results
+$c = \sqrt{r_1^2 + h^2}$. Now we can calculate the euclidean norm for the $z$
+and $x/y$ plane component of the normal vector, which is $r_1/c$ for the $z$
+plane and $h/c$ for the $x/y$ plane. Now we combine these results
 
 $$
   \vec{n} = ( \frac{x}{(x^2 + y^2)} * \frac{h}{c},
-              \frac{y}{(x^2 + y^2)} * \frac{h}{c}, r/c),
+              \frac{y}{(x^2 + y^2)} * \frac{h}{c}, r_1/c),
 $$
 
 where $\vec{n}$ is the normal vector of the cone at point $\vec{p}$.
@@ -850,9 +861,9 @@ determine the position of the pixels in the resulting image.
 
 ### Orthographic
 
-In a orthographic projection every ray is parallel to each other and has its
+In an orthographic projection every ray is parallel to each other and has its
 center in the view plane. Given a camera $c=(p,f,u,r)$ and a viewing plane $V$,
-we define the matrix of rays that represents a orthographic projection as
+we define the matrix of rays that represents an orthographic projection as
 
 $$
     O_{ij} :=  (\vec{f} + snd(V_{ij}) * \vec{r} + fst(V_{ij}), \vec{f})
@@ -883,7 +894,7 @@ This is called ambient illumination and it's not a good approximation, but it
 provides some illumination for the parts that do not receive direct illumination
 \cite{kevi}.
 
-We calculate the ambient color of a object with the ambient coefficient $a$ of
+We calculate the ambient color of an object with the ambient coefficient $a$ of
 the objects material property multiplied by the color $\vec{c_a} = (1, 1, 1)$.
 
 ### Diffuse light
@@ -895,7 +906,7 @@ We do this by generating a ray $S$
 with position $\vec{p}$ and direction $\vec{d} = \vec{l_p} - \vec{p}$,
 where $\vec{p}$ is the intersection point and $\vec{l_p}$ is the position of the light.
 Then we try to intersect $S$ with every object. If there is no intersection
-or the nearest intersection is further away as $\vec{l_p}$, then the light
+or the nearest intersection is further away than $\vec{l_p}$, then the light
 illuminates the object and we calculate the diffuse color with following
 equation
 
