@@ -80,7 +80,7 @@ getNormal (Cone r1 r2) p
 getNormal (Cylinder _) p
   | pointInPlane p (V3 0 0 0) n  = V4 0 0 (-1) 0
   | pointInPlane p (V3 0 0 1) n  = V4 0 0 1 0
-  | otherwise =  V4 (p ^._x) (p ^._y) 0 0
+  | otherwise =  normalize $  V4 (p ^._x) (p ^._y) 0 0
     where n  = V3 0 0 1
 
 
@@ -122,7 +122,7 @@ capIntersection r o rad = do
 --   Normalized direction vector of cylinder is (0,0,1)
 cylinderIntersection :: EuclideanRay -> Double -> Maybe Double
 cylinderIntersection (EuclideanRay o d) rad =
-  uncurry min <$> solveQuadratic a b c
+  solveQuadratic a b c >>= uncurry nearestPositive
   where
     vd = v d
     vo = v o
@@ -138,12 +138,12 @@ coneIntersection (EuclideanRay o d) r1 r2 =
           si = sin alpha ** 2
           co = cos alpha ** 2
           va = V3 0 0 1
-          deltaP = o ^-^va
-          tmpA = d - (dot d va) *^va
-          tmpC = deltaP - (dot deltaP va) *^va
-          a = co * (dot tmpA tmpA) - si * (dot d va) ** 2
-          b = 2 * co * (dot tmpA (deltaP - (dot deltaP va) *^ va)) - 2 * si * (dot d va) * (dot deltaP va)
-          c = co * (dot tmpC tmpC) - si * (dot deltaP va)
+          deltaP = o ^-^ va
+          tmpA = d ^-^ (dot d va) *^va
+          tmpC = deltaP ^-^ ((dot deltaP va) *^va)
+          a = co * (dot tmpA tmpA) - si * ((dot d va) ** 2)
+          b = 2 * co * (dot tmpA (deltaP ^-^ (dot deltaP va) *^ va)) - 2 * si * (dot d va) * (dot deltaP va)
+          c = co * (dot tmpC tmpC) - si * (dot deltaP va) ** 2
          --  a = co * (xd ** 2 + yd ** 2) - si * zd ** 2
          -- b = 2 * co * (xd * xo + yd * yo) - 2 * si * (zo - zd) 
          --  c = co * (xo ** 2 + yo **2) - si * (zo ** 2 - 1) ** 2
