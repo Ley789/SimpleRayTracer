@@ -42,7 +42,8 @@ simpleRayTracer :: Scene  -> (Int, Int) -> [[Colour]]
 simpleRayTracer s (m, n) = 
   case mC of 
     Nothing -> replicate n (replicate m (Colour 0 0 0)) 
-    Just c  -> T.trace ("number of rays: " ++ show (sum . map length $ pixelCoordinates (m,n))) $ filterColour sO sL $ (map.map) (nearestIntersection . (`mapTracing` sO)) $ generateRays c (m, n)
+    Just c  -> 
+       filterColour sO sL $ (map.map) (nearestIntersection . (`mapTracing` sO)) $ generateRays c (m, n)
     where mC = getLast $ s ^. sCamera
           sO = s ^. sObjects
           sL = s ^. sLights
@@ -99,15 +100,16 @@ lightIntersectionColour x s l
   | otherwise = Nothing
 
 rayToLight :: Light -> Intersection -> Ray
-rayToLight l i = Ray (origin ^+^ direction) direction
-  where direction = l ^. lPosition ^-^ normalizePoint (i ^. itPoint)
-        origin = normalizePoint $ i ^. itPoint
+rayToLight l i = Ray (origin ^+^ e *^direction)  direction
+  where direction = (l ^. lPosition) ^-^ origin
+        origin = i ^. itPoint
+        e      = 0.00001
 
 hitLight :: Light -> Ray -> SceneObject -> Bool
 hitLight l r s = case filter (not . filterIntersection distL r) (mapTracing r s) of
   [] -> True
   _  -> False
-  where distL = distance (r ^. _o) $ l ^. lPosition 
+  where distL = distance (r ^. _o . _xyz) (l ^. lPosition . _xyz)
 
 filterIntersection :: Double -> Ray -> Intersection -> Bool
 filterIntersection distL r i = 
