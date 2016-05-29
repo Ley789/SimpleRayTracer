@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
-
+{-# LANGUAGE RankNTypes #-}
 module Object where
 
 import Linear
@@ -76,10 +76,9 @@ instance Monoid TProperty where
 -- primitive. So some intersection functions stay simple.
 transformRay :: Ray -> M44 Double -> Ray
 transformRay (Ray o d) trans =
-  Ray (newOrigin ^* normO) newDirection
-  where newOrigin    = trans !* o
+  Ray newOrigin newDirection
+  where newOrigin    = normalizeHom $ trans !* o
         newDirection = trans !* d
-        normO        = 1 / (newOrigin ^._w)
 
 -- TODO Check functionality with translaten in the matrix!!
 -- | Intersect ray with object and return ray, object, normal vector and
@@ -106,7 +105,6 @@ rayPointDistance r p = distance (r ^._o . _xyz) (p ^._xyz)
 normalVector :: Matrices -> V4 Double -> V4 Double
 normalVector m p =  normalize $ m ^. normM !* p
 
--- TODO Test
 rot44 :: M44 Double -> M44 Double -> M44 Double
 rot44 s t = r !*! s !*! s
   where r = dropTrans t
@@ -118,13 +116,20 @@ invScale44 t =
      (V4 0 0 (1 / scale t _z) 0)
      (V4 0 0 0 1)
 
-
+scale :: M44 Double -> Lens' (V4 Double) Double -> Double
 scale tr l = dot c c
   where c  = fmap (view l) (view _xyz tr)
 
 -- | Set translation to (0, 0, 0).
 dropTrans :: M44 Double -> M44 Double
 dropTrans = over _xyz (fmap (set _w 0))
+
+normalizeHom :: V4 Double -> V4 Double
+normalizeHom v
+  | w == 0 || w == 1 = v
+  | otherwise        = v ^* w
+  where norm = 1 / w
+        w = v ^._w
 
 oProp :: Lens' Object TProperty
 oProp = oModifier . texture . property
@@ -136,4 +141,3 @@ oProp = oModifier . texture . property
 
 matricesOfM44 :: M44 Double -> Matrices
 matricesOfM44 m = Matrices m (inv44 m) (rot44 (invScale44 m) m)
-
