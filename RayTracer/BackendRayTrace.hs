@@ -15,7 +15,9 @@ import           Data.Typeable
 import           Diagrams.Core.Transform
 import           Diagrams.Core.Types
 import           Diagrams.Prelude              as D hiding (Last (..), view)
+import           Fast_PPM
 import           SceneTypes
+import           Scene
 import qualified Primitive                     as P
 import           Object                        as O
 import qualified Colour                        as C
@@ -24,8 +26,9 @@ import           Linear
 data Ray = Ray
      deriving (Eq,Ord,Read,Show,Typeable)
 
-type instance V Ray = V3
-type instance N Ray = Double
+type B = Ray
+type instance V B = V3
+type instance N B = Double
 
 instance Monoid (Render Ray V3 Double) where
    mempty = MRay mempty
@@ -70,12 +73,12 @@ getTransformation :: Transformation V3 Double -> Matrices
 getTransformation = matricesOfM44 . listToMatrix . matrixHomRep
 
 -- | Convert list to homogenous matrix.
-listToMatrix :: (Num a) => [[a]] -> M44 a
-listToMatrix (x:y:z:w:_) = transpose $ V4 (homVector x 0) (homVector y 0) 
-                                          (homVector z 0) (homVector w 1)
+listToMatrix :: [[Double]] -> M44 Double
+listToMatrix (x:y:z:w:_) = transpose $  V4 (homVector x 0) (homVector y 0) 
+                              (homVector z 0) (homVector w 1)
 listToMatrix _ = error "wrong input"
 
-homVector :: [a] -> a -> V4 a
+homVector :: [Double] -> Double -> V4 Double
 homVector (x:y:z:_) = V4 x y z
 homVector _         = error "needs list with minimum 3 elements"
 
@@ -134,12 +137,12 @@ combine = flip fromMaybe
 instance Renderable (ParallelLight Double) Ray where
   render _ (ParallelLight v c)
     = MRay $ setLight [Light p c'] mempty
-      where p = negated (1000 *^ v)
+      where p = point $  negated (1000 *^ v)
             c' = convertColor c
 
 instance Renderable (PointLight Double) Ray where
   render _ (PointLight (P p) (convertColor -> c))
-    = MRay $ setLight [Light p c] mempty
+    = MRay $ setLight [Light (point p) c] mempty
 
 --------------------------------------------------------------------
 -- Renderable Camera
@@ -149,10 +152,10 @@ instance Renderable (PointLight Double) Ray where
 instance Renderable (Camera PerspectiveLens Double) Ray where
   render _ c = MRay $ setCamera (Last . Just $ SCamera {
     cType   = t,
-    pos     = l,
-    forward = forLen *^ forUnit,
-    right   = rightLen *^ rightUnit,
-    up      = upUnit
+    pos     = point $ l,
+    forward = vector $ forLen *^ forUnit,
+    right   = vector $ rightLen *^ rightUnit,
+    up      = vector $ upUnit
     }) mempty
     where
       l         = camLoc c .-. origin
@@ -167,10 +170,10 @@ instance Renderable (Camera PerspectiveLens Double) Ray where
 instance Renderable (Camera OrthoLens Double) Ray where
   render _ c = MRay $ setCamera (Last . Just $ SCamera {
     cType   = t, 
-    pos     = l,
-    forward = forUnit,
-    right   = h *^ rightUnit,
-    up      = v *^ upUnit
+    pos     = point $ l,
+    forward = vector $ forUnit,
+    right   = vector $ h *^ rightUnit,
+    up      = vector $ v *^ upUnit
     }) mempty
     where
       l               = camLoc c .-. origin
@@ -179,3 +182,10 @@ instance Renderable (Camera OrthoLens Double) Ray where
       upUnit          = fromDirection . camUp $ c
       rightUnit       = fromDirection . camRight $ c
       t               = Orthographic
+
+
+
+--------------------------------------------------------------------------------
+renderScene :: (Monoid m, Semigroup m) => FilePath -> Int -> Int -> QDiagram Ray V3 Double m -> IO ()
+renderScene out w h s = 
+  save_ppm out $ simpleRayTracer (renderDia Ray RayOptions s) (w, h)
