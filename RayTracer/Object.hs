@@ -7,7 +7,6 @@ import Primitive
 import Colour
 import Data.Monoid
 import Control.Lens
-
 -------------------------------------------------------------------------------
 --
 --                      Types representing a scene object
@@ -77,18 +76,20 @@ instance Monoid TProperty where
 -- primitive. So some intersection functions stay simple.
 transformRay :: Ray -> M44 Double -> Ray
 transformRay (Ray o d) trans =
-  Ray newOrigin newDirection
-  where newOrigin    = (trans !* point o) ^._xyz
-        newDirection = (trans !* vector d) ^._xyz
+  Ray (newOrigin ^* normO) newDirection
+  where newOrigin    = trans !* o
+        newDirection = trans !* d
+        normO        = 1 / (newOrigin ^._w)
 
 -- TODO Check functionality with translaten in the matrix!!
 -- | Intersect ray with object and return ray, object, normal vector and
 -- point of the intersection.
 rayObjectIntersection :: Ray -> Object -> Maybe Intersection
 rayObjectIntersection r o@(Object p om) = do
-  res <- intersection (transformRay r $ om ^. matrices . invM) p
-  let n = normalVector (om ^. matrices) $ point $ getNormal p res
-  let pos = om ^. matrices . transM !* point res
+  let nr = transformRay r $ om ^. matrices . invM
+  res <- intersection nr p
+  let n = normalVector (om ^. matrices) $ getNormal p (normalizePoint res)
+  let pos = om ^. matrices . transM !* res
   return $ Intersection r (o ^. oModifier . texture) n pos
 
 
@@ -98,29 +99,28 @@ rayObjectIntersection r o@(Object p om) = do
 --
 ------------------------------------------------------------------------------
 
+-- Convention of ray is w =1 so we only need to drop components
 rayPointDistance :: Ray -> V4 Double -> Double
-rayPointDistance r p = distance (r ^._o) (normalizePoint p)
+rayPointDistance r p = distance (r ^._o . _xyz) (p ^._xyz)
 
 normalVector :: Matrices -> V4 Double -> V4 Double
-normalVector m p =  m ^. normM !* p
+normalVector m p =  normalize $ m ^. normM !* p
 
 -- TODO Test
 rot44 :: M44 Double -> M44 Double -> M44 Double
 rot44 s t = r !*! s !*! s
   where r = dropTrans t
 
--- TODO Test
 invScale44 :: M44 Double -> M44 Double
-invScale44 t = 
-  V4 (V4 (1 / scale tr _x) 0 0 0) 
-     (V4 0 (1 / scale tr _y) 0 0)
-     (V4 0 0 (1 / scale tr _z) 0) 
+invScale44 t =
+  V4 (V4 (1 / scale t _x) 0 0 0)
+     (V4 0 (1 / scale t _y) 0 0)
+     (V4 0 0 (1 / scale t _z) 0)
      (V4 0 0 0 1)
-   where tr = dropTrans t
 
-scale :: (Floating a, Metric f) => s -> ((f a -> Const (f a) (f a)) -> s -> Const (f a) s) -> a
-scale tr l = sqrt $ dot c c 
-  where c = tr ^. l
+
+scale tr l = dot c c
+  where c  = fmap (view l) (view _xyz tr)
 
 -- | Set translation to (0, 0, 0).
 dropTrans :: M44 Double -> M44 Double
