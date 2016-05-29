@@ -1,6 +1,16 @@
-% Ray Tracing Backend for Diagrams
-% Alexander Lochmann
 
+---
+title: Ray Tracing Backend for Diagrams
+author: Alexander Lochmann
+bibliography: bib.bib
+---
+
+
+# Introduction
+
+
+**test cite**
+[@kenn].  [@appel]
 
 # 3D Scene
 
@@ -232,6 +242,9 @@ where the indices indicate the axis by which we rotate and $\alpha$ the angle.
 A rotation matrix is a result of the rotation function defined above and
 multiplications of 2 rotation matrices.
 For a corresponding proof see \cite{kenn}.
+
+
+
 Multiplying every point of a primitive with a rotation matrix will rotate
 the primitive.
 
@@ -542,12 +555,24 @@ required. Whereas rasterization needs them for certain effects.
 
 # DSL
 
+short introduction to DSL
+
+embedded vs external
+
 ## Diagrams
 
+embedded DSL
+haskell  host language
+scene description
+haskell abstraction
+
+
+### 3D backend
+POV-Ray
+only 3d Backend
+textbase description language
+
 **Why using diagrams instead of pov ray?**
-
-## POV-Ray
-
 
 # Implementation
 
@@ -770,7 +795,7 @@ With the plane normal we can calculate the normal of the primitive box.
 
 Given a point $\vec{p}=(x,y,z)$ on the surface of a cylinder then the normal
 vector is $\vec{n} = (x /m, y /m, 0)$, where $m = \sqrt{x^2 + y^2}$.
-
+ot consider p_a!!
 ### Cone normal
 
 Given a point $\vec{p}=(x,y,z)$ on the surface of a cone, the radius $r_1$ of the
@@ -840,6 +865,8 @@ $\vec{n'} = R S^{-1}\vec{n}$.
 We used the property of rotation matrices that for every rotation matrix
 $R$ follows that $(R^{-1})^{\tr} = R$.
 
+
+**check and maybe rewrite**
 ## Projection
 
 In the context of computer graphics, a projection transforms points in 3D
@@ -927,7 +954,7 @@ concentrated around the direction of mirror-reflection \cite{kevi}.
 For specular reflection we also need to check if there is no object between
 the intersection point and the light. We assume that there in between, then
 we calculate the specular reflection color with following equation
-
+ot consider p_a!!
 
 $$
   \vec{c_d} = \vec{c} * s * \max (0, <\frac{\vec{v} + \vec{l_d}}{||\vec{v} + \vec{l_d}||},
@@ -949,17 +976,27 @@ ambient color and finally multiply with the objects color.
 
 # Integration
 
+on the surface description
+
 ## Diagrams Backend
 
+data family
+interface Diagrams.Backend
+function render
+type classes e.g. Rendering
 
 ## Diagrams command line Backend
 
-**TODO implemnt**
+type classes, abstraction
+multiMain, defaultMain...
+define scene components per command line
 
 # Related Work
 
 where is ray tracing used, some other techniques
 acceleration data structures...
+
+# Further work and conclusion
 
 # Comments
 
@@ -972,4 +1009,4 @@ acceleration data structures...
 * Use Markdown figures and refer to them in the text where appropriate
 * Sketch out structure before writing and refine
 
-# Bibliography
+# References
