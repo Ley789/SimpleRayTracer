@@ -108,7 +108,7 @@ frustumConstrain :: EuclideanRay -> Maybe Double -> Maybe (V3 Double)
 frustumConstrain r it = do
   p <- itPoint r <$> it
   let z = p ^. _z
-  guard (z >= 0.0 && z <= 1.0)
+  guard (z >= 0 && z <= 1)
   return p
   
 capIntersection :: EuclideanRay -> V3 Double -> Double -> Maybe (V3 Double)
