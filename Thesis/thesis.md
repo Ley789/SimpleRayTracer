@@ -26,7 +26,7 @@ The standard scalar product of vectors $\vec{p}$ and $\vec{q}$ is denoted as
 $<\vec{p},\vec{q}>$,
 where $<\vec{q}> = <\vec{q},\vec{q}>$.
 
-The euclidean norm of a vector $\vec{q}$ is denoted as $||\vec{q}||$.
+The Euclidean norm of a vector $\vec{q}$ is denoted as $||\vec{q}||$.
 
 
 ## Homogeneous coordinates
@@ -59,13 +59,15 @@ E.g. $\vec{c} =(1, 0, 0)$ has a red channel of 100%, green channel of
 
 ## Camera
 
+**Make sentence(s).**
+
 A camera is defined as 4-tuple $(\vec{p},\vec{f},\vec{r},\vec{u})$ of vectors.
 The position of the camera $\vec{p}$, where $\vec{p}$ is a point.
 The forward vector $\vec{f}$, where $\vec{f}$ is a direction.
 The right vector $\vec{r}$, where $\vec{r}$ is a direction.
 The up vector $\vec{u}$, where $\vec{u}$ is a direction.
 
-To get a better understand of these vector see section \autoref{projection}.
+To get a better understanding of these vectors, see \autoref{projection}.
 
 ## Viewing plane
 
@@ -203,6 +205,8 @@ $S(5, 1, 0) = S'$, then $S'\vec{p} = (5, 1, 0, 1)$.
 To rotate a primitive in 3D space we need to define by which axis
 and which angle $\alpha$ to rotate.
 
+**TODO.**
+
 A rotation is defined as:
 
 $$
@@ -291,6 +295,9 @@ $$
 Every combination of translating, rotating and
 scaling matrices can be represented as transformation matrix.
 
+**Use LaTeX proof.**
+
+\begin{proof}
 Proof: Given a matrix $L$ which is a result of multiplications
 of translating, rotation and scaling matrices, we extract
 3 matrices $T'$, $R'$ and $S'$ so that $T'R'S' = L$.
@@ -374,14 +381,16 @@ $$
 
 ## Material property
 
-A material property is a vector $\vec{p} = (a, d, s, r)$ which values are in
+A material property is a vector $\vec{p} = (a, d, s, r)$ whose values are in
 the interval $[0,1]$. The components are called coefficients with $a$ as the
 ambient, $d$ as the diffuse, $s$ as the specular and $r$ as the rough
 coefficient.
 
+**Explain what these are already here.**
+
 ## Object
 
-A object is a 4 tuple $(pr, M ,\vec{c}, \vec{p})$, where $pr$ is a primitive,
+An object is a 4-tuple $(pr, M ,\vec{c}, \vec{p})$, where $pr$ is a primitive,
 $M$ is a transformation matrix, $\vec{c}$ is a color and $\vec{p}$ is a
 material property.
 
@@ -392,10 +401,14 @@ In the field of 3D computer graphics the process of generating an image from
 a defined scene description is called rendering. Also the result of this process
 is a rendering.
 
+**Red thread.**
+
 In this chapter we shortly introduce rasterization. After that we introduce
 ray tracing and at the end of the chapter we will compare both methods.
 
 ## Rasterization
+
+**Shorten.**
 
 Rasterization is the most used rendering technique for real time applications.
 We display some steps that are needed to render a scene with rasterization,
@@ -576,9 +589,11 @@ textbase description language
 
 # Implementation
 
+**No "fundamental" ...**
+
 In this chapter we introduce fundamental elements that are needed to implement
 the basic ray tracing algorithm. First we discuss the intersection functions
-for the defined primitives in section \autoref{primitives}. After that we will
+for the defined primitives in \autoref{primitives}. After that we will
 show a method to keep the intersection functions simple even with
 transformations. We will describe how transformations influence normal
 vectors. Next we describe the generation of primary and how they lead to
@@ -664,6 +679,8 @@ A cylinder aligned on an arbitrary line $\vec{p_a} + \vec{v_a} * t$, a
 point on the cylinder $\vec{q}$ and radius $r$ holds
 $<\vec{q} - \vec{p_a} - <\vec{v_a},\vec{q} - \vec{p_a}> * \vec{v_a}> - r^2 = 0$.
 
+**Eliminate implies.**
+
 The definition of cylinder in section \autoref{cylinder} allows us to simplify
 the equation. We substitute the point on the cylinder $\vec{q}$ with the ray
 
@@ -692,7 +709,7 @@ $$
 where $a = y_d^2 + x_d^2$, $b = 2 * (x_o * x_d + y_o * y_d)$ and
 $c = x_o^2 + y_o^2 - r^2$.
 
-To get the nearest intersection of a cylinder preform following steps:
+To get the nearest intersection of a cylinder perform following steps:
 
 * Solve the quadratic equation.
 * Intersect with the planes $p'$, which includes
@@ -818,6 +835,8 @@ $$
 where $\vec{n}$ is the normal vector of the cone at point $\vec{p}$.
 
 ### Normal vector transformation
+
+**TODO.**
 
 Generally by applying a transformation $M$ to a point $\vec{p}$ with normal
 $\vec{n}$ doesn't follow that the normal vector is transformed properly. For
@@ -996,7 +1015,7 @@ define scene components per command line
 where is ray tracing used, some other techniques
 acceleration data structures...
 
-# Further work and conclusion
+# Conclusion
 
 # Comments
 
@@ -1008,5 +1027,13 @@ acceleration data structures...
 * Refer to scientific papers
 * Use Markdown figures and refer to them in the text where appropriate
 * Sketch out structure before writing and refine
+
+# More comments
+
+* Use present tense
+* Which / whose
+* "These can implicate the generation of new rays" ->
+  "These can generate new rays"
+* doesn't -> does not, isn't -> is not
 
 # References
