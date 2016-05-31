@@ -1,18 +1,20 @@
 module Scene where 
 
-import qualified Debug.Trace as T
 import Data.List
 import Data.Maybe
 import Data.Monoid
 import Control.Lens
 import Primitive
-import Colour
+import Data.Colour.RGBSpace
 import Data.Function (on)
+import Data.Ord   (comparing)
+import Codec.Picture.Types
+import Control.Applicative
 import Linear
 import Object
 import SceneTypes
 import Blinn_Phong
-
+import GHC.Float (double2Float)
 
 emptyScene :: SceneObject
 emptyScene = []
@@ -38,35 +40,30 @@ mapTracing :: Ray -> SceneObject -> [Intersection]
 mapTracing r = mapMaybe (rayObjectIntersection r)
 
 -- | Create image from a scene with given pixel size.
-simpleRayTracer :: Scene  -> (Int, Int) -> [[Colour]]
-simpleRayTracer s (m, n) = 
+simpleRayTracer :: Scene -> (Int, Int) -> DynamicImage
+simpleRayTracer s (m, n) =
   case mC of 
-    Nothing -> replicate n (replicate m (Colour 0 0 0)) 
+    Nothing -> imageCreator n m $ replicate n (replicate m (pure 0)) 
     Just c  -> 
-       filterColour sO sL $ (map.map) (nearestIntersection . (`mapTracing` sO)) $ generateRays c (m, n)
+       imageCreator n m $ shading sO sL $ (map.map) (nearestIntersection . (`mapTracing` sO)) $ generateRays c (m, n)
     where mC = getLast $ s ^. sCamera
           sO = s ^. sObjects
           sL = s ^. sLights
 
--- MF: TODO: do the same here as I did in Primitive.hs for frustumIntersection
--- TODO Change case [] represents no intersection
 -- | Extract nearest intersected primitive from list and return color.
 nearestIntersection :: [Intersection] -> Maybe Intersection
 nearestIntersection l =
   case l of
     [] -> Nothing
-    _  -> Just $ foldl1' nearest l
-    where nearest f s
-            | rayPointDistance (f ^. ray) (f ^. itPoint) 
-              < rayPointDistance (s ^. ray) (s ^. itPoint) = f
-            | otherwise = s
+    _  -> Just $ minimumBy 
+           (comparing (\x -> rayPointDistance (x ^. ray) (x ^. itPoint))) l
 
 generateRays :: SCamera -> (Int, Int) -> [[Ray]]
 generateRays c = (map.map) (`generateRay` c) . pixelCoordinates
 
 -- generate ray from camera and pixel coordinates                            
 generateRay :: (Double,Double)-> SCamera -> Ray
-generateRay x c = -- T.trace ("\n" ++ show c) $
+generateRay x c =
   case cType c of
     Perspective -> perspecTrans x c
     Orthographic -> orthoTrans x c
@@ -86,15 +83,19 @@ orthoTrans x c = Ray (pos c ^+^ forward c ^+^
 -- shading functions 
 -------------------------------------------------------------------------------
 
-filterColour :: SceneObject -> [Light] -> [[Maybe Intersection]] -> [[Colour]]
-filterColour s l = (map . map) (maybe (Colour 0 0 0) (intersectionColour s l))
+shading :: SceneObject -> [Light] -> [[Maybe Intersection]] -> [[RGB Double]]
+shading s l = (map . map) (maybe (pure 0) (intersectionColour s l))
 
-intersectionColour :: SceneObject -> [Light] -> Intersection -> Colour
+intersectionColour :: SceneObject -> [Light] -> Intersection -> RGB Double
 intersectionColour s ls i =
-  i ^. itTex . pigment * (ac + sum (mapMaybe (lightIntersectionColour i s) ls))
-  where ac = ambient $ i ^. itTex. property . tAmbient
+  pure (*) <*> pm <*> (pure (+) <*> (pure (ac*) <*> ambientColour) <*> c)
+  where ac = i ^. itTex. property . tAmbient
+        pm = i ^. itTex . pigment
+        tmp = mapMaybe (lightIntersectionColour i s) ls
+        c = if null tmp then pure 0 else foldl1' com tmp
+        com c1 c2 = pure (+) <*> c1 <*> c2
 
-lightIntersectionColour :: Intersection -> SceneObject -> Light -> Maybe Colour
+lightIntersectionColour :: Intersection -> SceneObject -> Light -> Maybe (RGB Double)
 lightIntersectionColour x s l
   | hitLight l (rayToLight l x) s = Just $ blinnPhong l x
   | otherwise = Nothing
@@ -115,3 +116,12 @@ hitLight l r s = case filter (not . filterIntersection distL r) (mapTracing r s)
 filterIntersection :: Double -> Ray -> Intersection -> Bool
 filterIntersection distL r i = 
   rayPointDistance r (i ^. itPoint) > distL
+
+
+-- | Convention the colour array must have r-rows and c-columns.
+imageCreator :: Int -> Int -> [[RGB Double]] -> DynamicImage
+imageCreator r c colourList = ImageRGBF $ generateImage (pixelRenderer colourList) r c
+
+pixelRenderer :: [[RGB Double]] -> Int -> Int -> PixelRGBF
+pixelRenderer l x y = PixelRGBF (double2Float r) (double2Float g) (double2Float  b)
+  where RGB r g b = (l !! y) !! x

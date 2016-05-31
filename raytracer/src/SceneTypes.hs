@@ -3,7 +3,7 @@ module SceneTypes where
 
 import Data.Monoid
 import Control.Lens
-import Colour
+import Data.Colour.RGBSpace
 import Linear
 import Object
 
@@ -12,8 +12,9 @@ data CameraType = Perspective | Orthographic
 
 data Light = Light {
   _lPosition :: V4 Double,
-  _lColour   :: Colour
+  _lColour   :: RGB Double
 } deriving(Show)
+
 
 data SCamera = SCamera {
   cType :: CameraType,

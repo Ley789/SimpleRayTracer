@@ -15,13 +15,17 @@ import           Data.Typeable
 import           Diagrams.Core.Transform
 import           Diagrams.Core.Types
 import           Diagrams.Prelude              as D hiding (Last (..), view)
-import           Fast_PPM
 import           SceneTypes
 import           Scene
 import qualified Primitive                     as P
 import           Object                        as O
-import qualified Colour                        as C
+import qualified Data.Colour.RGBSpace          as C
 import           Linear
+import           Codec.Picture.Saving
+
+import qualified Data.ByteString.Lazy as Lb
+
+data OutputType = PNG | JPG | TGA
 
 data Ray = Ray
      deriving (Eq,Ord,Read,Show,Typeable)
@@ -101,8 +105,8 @@ wrapSolid x = MRay $ setObject [x] mempty
 addTexture :: Style V3 Double -> Scene -> Scene
 addTexture st s = setObject (map (setTexture st) $ s ^. sObjects) s
 
-convertColor :: Color c => c -> C.Colour
-convertColor (colorToSRGBA -> (r,g,b,_)) = C.Colour r g b
+convertColor :: Color c => c -> C.RGB Double
+convertColor (colorToSRGBA -> (r,g,b,_)) = RGB r g b
 
 setTexture :: Style V3 Double -> Object -> Object
 setTexture sty = 
@@ -118,7 +122,7 @@ setProperty sty =
      where len = oModifier . texture . property
            (f1,f2,f3,f4) = mkFinish sty
 
-mkPigment :: Style V3 Double -> C.Colour -> C.Colour
+mkPigment :: Style V3 Double -> C.RGB Double -> C.RGB Double
 mkPigment sty = combine (fmap convertColor (view _sc sty))
 
 mkFinish :: Style v n -> (Double -> Double, Double -> Double, Double -> Double, Double -> Double)
@@ -152,10 +156,10 @@ instance Renderable (PointLight Double) Ray where
 instance Renderable (Camera PerspectiveLens Double) Ray where
   render _ c = MRay $ setCamera (Last . Just $ SCamera {
     cType   = t,
-    pos     = point $ l,
+    pos     = point l,
     forward = vector $ forLen *^ forUnit,
     right   = vector $ rightLen *^ rightUnit,
-    up      = vector $ upUnit
+    up      = vector upUnit
     }) mempty
     where
       l         = camLoc c .-. origin
@@ -170,8 +174,8 @@ instance Renderable (Camera PerspectiveLens Double) Ray where
 instance Renderable (Camera OrthoLens Double) Ray where
   render _ c = MRay $ setCamera (Last . Just $ SCamera {
     cType   = t, 
-    pos     = point $ l,
-    forward = vector $ forUnit,
+    pos     = point l,
+    forward = vector forUnit,
     right   = vector $ h *^ rightUnit,
     up      = vector $ v *^ upUnit
     }) mempty
@@ -186,6 +190,13 @@ instance Renderable (Camera OrthoLens Double) Ray where
 
 
 --------------------------------------------------------------------------------
-renderScene :: (Monoid m, Semigroup m) => FilePath -> Int -> Int -> QDiagram Ray V3 Double m -> IO ()
-renderScene out w h s = 
-  save_ppm out $ simpleRayTracer (renderDia Ray RayOptions s) (w, h)
+
+
+renderScene :: (Monoid m, Semigroup m) => FilePath-> OutputType -> Int -> Int -> QDiagram Ray V3 Double m -> IO ()
+renderScene path t w h s =
+  case t of
+    PNG -> Lb.writeFile path $ imageToPng  f
+    JPG -> Lb.writeFile path $ imageToJpg 100 f
+    TGA -> Lb.writeFile path $ imageToTga f
+  where f = simpleRayTracer (renderDia Ray RayOptions s) (w, h)
+

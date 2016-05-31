@@ -4,9 +4,10 @@ module Object where
 
 import Linear
 import Primitive
-import Colour
+import Data.Colour.RGBSpace
 import Data.Monoid
 import Control.Lens
+import Control.Applicative
 -------------------------------------------------------------------------------
 --
 --                      Types representing a scene object
@@ -30,7 +31,7 @@ data OModifier = OModifier {
 } deriving(Show)
 
 data Texture = Texture {
-  _pigment  ::  Colour,
+  _pigment  ::  RGB Double,
   _property :: TProperty
 } deriving (Show, Eq)
 
@@ -56,9 +57,9 @@ makeLenses ''Intersection
 makeLenses ''Matrices
 
 instance Monoid Texture where
-  mempty = Texture (Colour 0 0 0) mempty
+  mempty = Texture (RGB 0 0 0) mempty
   mappend (Texture c1 f1) (Texture c2 f2) =
-    Texture (c1 + c2) (mappend f1 f2)
+    Texture (pure (+) <*> c1 <*> c2) (mappend f1 f2)
 
 instance Monoid TProperty where
   mempty = TProperty 0 0 0 0
@@ -87,8 +88,8 @@ rayObjectIntersection :: Ray -> Object -> Maybe Intersection
 rayObjectIntersection r o@(Object p om) = do
   let nr = transformRay r $ om ^. matrices . invM
   res <- intersection nr p
-  let n = normalVector (om ^. matrices) $ getNormal p (normalizePoint res)
-  let pos = om ^. matrices . transM !* res
+  let n = normalVector (om ^. matrices) $ snd res
+  let pos = om ^. matrices . transM !* fst res
   return $ Intersection r (o ^. oModifier . texture) n pos
 
 
@@ -127,8 +128,8 @@ dropTrans = over _xyz (fmap (set _w 0))
 normalizeHom :: V4 Double -> V4 Double
 normalizeHom v
   | w == 0 || w == 1 = v
-  | otherwise        = v ^* w
-  where norm = 1 / w
+  | otherwise        = v ^* c
+  where c = 1 / w
         w = v ^._w
 
 oProp :: Lens' Object TProperty

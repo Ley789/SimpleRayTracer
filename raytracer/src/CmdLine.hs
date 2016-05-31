@@ -1,7 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TypeFamilies      #-}
-
 
 module CmdLine
        (
@@ -9,12 +7,9 @@ module CmdLine
        , defaultMain
        , multiMain
        , animMain
- 
        , Ray
        , B
        ) where
-
-
 
 import           Options.Applicative
 import           BackendRayTrace
@@ -23,7 +18,6 @@ import           Diagrams.Backend.CmdLine
 import           Diagrams.Prelude                hiding (height, interval,
                                                   option, output, width, (<>))
 import           Data.List.Split
-
 
 
 defaultMain :: QDiagram Ray V3 Double Any -> IO ()
@@ -38,10 +32,15 @@ chooseRender opts d =
   case splitOn "." (opts ^. output) of
     [""] -> putStrLn "No output file given."
     --atm only ppm is supported
-    ps | last ps `elem` ["ppm"] -> do
+    ps | last ps `elem` ["png","jpg","tga"] -> do
+           let outTyp = case last ps of
+                 "png" -> PNG
+                 "jpg" -> JPG
+                 "tga" -> TGA
+                 _    -> error "unsuported type"
            let w = fromIntegral <$> opts^.width
            let h = fromIntegral <$> opts^.height
-           renderScene (opts^.output) (fromMaybe 500 w) (fromMaybe 500 h) d
+           renderScene (opts^.output) outTyp (fromMaybe 500 w) (fromMaybe 500 h) d
        | otherwise -> putStrLn $ "Unknown file type: " ++ last ps
 
 
