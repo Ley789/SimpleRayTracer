@@ -15,6 +15,7 @@ import Data.Maybe (catMaybes)
 import Data.Ord   (comparing)
 import Control.Lens
 import Control.Monad
+import Control.Monad.Zip (mzipWith)
 import Control.Applicative
 
 
@@ -147,12 +148,32 @@ boxIntersection r@(EuclideanRay origin direction)
     a = slabIntersection origin invD
 -- ghc type error if ts = map a [_x, _y, _z] is used
     ts = [a _x, a _y, a _z]
+
+    -- TODO: idea
+    slab = mzipWith slab' origin invD
+    normalM = normalD' invD
+
     minL = maximumBy (comparing extMin) ts
     maxL = minimumBy (comparing extMax) ts 
     extMin = fst . fst
     extMax = snd . fst
     tMin = extMin minL
     tMax = extMax maxL
+
+-- TODO: idea
+slab' o i = over both slab coeffs
+  where
+    coeffs = if i >= 0 then (0, 1) else (1, 0)
+    slab b = b - o*i
+
+-- TODO: idea
+diagonal3 :: Num a => V3 a -> M33 a
+diagonal3 (V3 x y z) = V3 (V3 x 0 0) (V3 0 y 0) (V3 0 0 z)
+
+-- TODO: idea
+normalD' :: (Num a, Ord a, Num b) => t -> V3 a -> M33 b
+normalD' v = diagonal3 . fmap f
+  where f i = if i >= 0 then -1 else 1
 
 -- slab returns the coefficents needed to reach the bounds in the corresponding
 -- axis and the normal vector direction of the min value.
