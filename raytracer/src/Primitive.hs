@@ -13,6 +13,7 @@ import Linear     hiding (frustum)
 import Data.List
 import Data.Maybe (catMaybes)
 import Data.Ord   (comparing)
+import Control.Arrow ((&&&))
 import Control.Lens
 import Control.Monad
 import Control.Monad.Zip (mzipWith)
@@ -83,24 +84,24 @@ maybeList l  = Just l
 frustumIntersection :: EuclideanRay -> Maybe Double -> Double -> Double -> (V3 Double -> V3 Double) -> Maybe (V3 Double, V3 Double)
 frustumIntersection r@(EuclideanRay o _) t rad1 rad2 n =
   minimumBy (comparing $ distance o . fst) <$> maybeList l
-    where f  = frustumConstrain r t n
-          cB = capIntersection r (V3 0 0 0) (-1) rad1
-          cT = capIntersection r (V3 0 0 1)  1 rad2
-          l  = catMaybes [f,cB,cT]
+  where
+    f = (id &&& n) <$> frustumConstrain r t
+    cap o rad nz = (\ x -> (x, V3 0 0 nz)) <$> capIntersection r o rad
+    l = catMaybes [f, cap 0 rad1 (-1), cap 1 rad2 1]
 
-frustumConstrain :: EuclideanRay -> Maybe Double -> (V3 Double -> V3 Double) -> Maybe (V3 Double, V3 Double)
-frustumConstrain r it n = do
+frustumConstrain :: EuclideanRay -> Maybe Double -> Maybe (V3 Double)
+frustumConstrain r it = do
   p <- itPoint r <$> it
   let z = p ^. _z
   guard (z >= 0 && z <= 1)
-  return (p,n p)
+  return p
 
-capIntersection :: EuclideanRay -> V3 Double -> Double -> Double -> Maybe (V3 Double, V3 Double)
-capIntersection r o d rad = do
-  p <- itPoint r <$> planeIntersection r o (V3 0 0 1)
+capIntersection :: EuclideanRay -> Double -> Double -> Maybe (V3 Double)
+capIntersection r o rad = do
+  p <- itPoint r <$> planeIntersection r (V3 0 0 o) (V3 0 0 1)
   let q = set _z 0 p
-  guard (dot q q  <= rad ** 2)
-  return (p, V3 0 0 d)
+  guard (dot q q <= rad ** 2)
+  return p
 
 -- | Easier intersection function because of our cosntrains to the object
 --   Normalized direction vector of cylinder is (0,0,1)
@@ -108,12 +109,10 @@ cylinderIntersection :: EuclideanRay -> Double -> Maybe Double
 cylinderIntersection (EuclideanRay o d) rad =
   solveQuadratic a b c >>= uncurry nearestPositive
   where
-    vd = v d
-    vo = v o
+    (vd, vo) = over both (set _z 0) (d, o)
     a  = dot vd vd
     b  = 2 * dot vd vo
     c  = dot vo vo - rad**2
-    v  = set _z 0
 
 coneIntersection :: EuclideanRay -> Double -> Double -> Maybe Double
 coneIntersection (EuclideanRay o d) r1 r2 =
