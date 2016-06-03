@@ -77,10 +77,12 @@ intersectionf ray Box = boxIntersection ray
 intersectionf ray (Cone rad1 rad2) = frustumIntersection ray (coneIntersection ray rad1 rad2) rad1 rad2 (normalCone rad1 rad2)
 intersectionf ray (Cylinder rad) = frustumIntersection ray (cylinderIntersection ray rad) rad rad normalCylinder
 
+maybeList [] = Nothing
+maybeList l  = Just l
+
 frustumIntersection :: EuclideanRay -> Maybe Double -> Double -> Double -> (V3 Double -> V3 Double) -> Maybe (V3 Double, V3 Double)
-frustumIntersection r@(EuclideanRay o _) t rad1 rad2 n
-  | null l    = Nothing
-  | otherwise = Just $ minimumBy (comparing $ distance o . fst) l
+frustumIntersection r@(EuclideanRay o _) t rad1 rad2 n =
+  minimumBy (comparing $ distance o . fst) <$> maybeList l
     where f  = frustumConstrain r t n
           cB = capIntersection r (V3 0 0 0) (-1) rad1
           cT = capIntersection r (V3 0 0 1)  1 rad2
