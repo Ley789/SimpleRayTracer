@@ -131,10 +131,9 @@ coneIntersection (EuclideanRay o d) r1 r2 =
 -- | Given a ray, point on the plane and the normal vector to the plane
 -- return the coefficient if the ray intersects the plane.
 planeIntersection :: EuclideanRay -> V3 Double -> V3 Double -> Maybe Double
-planeIntersection (EuclideanRay o d) p n
-  | t <= 0    = Nothing
-  | otherwise = Just t
-  where t = dot n (p ^-^ o) / dot n d
+planeIntersection (EuclideanRay o d) p n =
+  let t = dot n (p ^-^ o) / dot n d in
+  guard (t > 0) >> return t
 
 -- | Calculate the intersection between the ray and the unit box aligned on the
 -- axes.
