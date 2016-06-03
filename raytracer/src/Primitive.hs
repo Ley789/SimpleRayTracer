@@ -38,11 +38,6 @@ data Ray = Ray {
  _directionR :: V4 Double
 } deriving Show
 
--- | Intern reperesentation of ray, because intersection function are
--- based on equation in euclidean space
-data EuclideanRay = EuclideanRay  (V3 Double) (V3 Double)
-  deriving Show
-
 makeLenses ''Ray
 
 _o :: Lens' Ray (V4 Double)
@@ -50,6 +45,15 @@ _o = originR
 _d :: Lens' Ray (V4 Double)
 _d = directionR
 
+-- | Intern representation of ray, because intersection functions are
+-- based on equations in euclidean space
+data EuclideanRay = EuclideanRay (V3 Double) (V3 Double)
+  deriving Show
+
+toEuclidean (Ray o d) = EuclideanRay (o ^. _xyz) (d ^. _xyz)
+
+toHom :: (V3 Double, V3 Double) -> (V4 Double, V4 Double)
+toHom (x,y) = (point x, vector y)
 
 normalCone :: Double -> Double -> V3 Double -> V3 Double
 normalCone r1 r2 p = V3 xn yn (r1 / c)
@@ -60,22 +64,18 @@ normalCone r1 r2 p = V3 xn yn (r1 / c)
           xn = (x / m) * (h / c)
           yn = (y / m) * (h / c) 
 
-normalCylinder :: V3 Double -> V3 Double
-normalCylinder p = normalize $  V3 (p ^._x) (p ^._y) 0
+normalCylinder :: (Floating a, Epsilon a, Num a) => V3 a -> V3 a
+normalCylinder = normalize . set _z 0
+
 
 intersection :: Ray -> Primitive -> Maybe (V4 Double, V4 Double)
-intersection (Ray o d) = intersectionf (EuclideanRay (o ^._xyz) (d ^._xyz))
+intersection r p = fmap toHom $ intersectionf (toEuclidean r) p
 
-intersectionf :: EuclideanRay -> Primitive -> Maybe (V4 Double, V4 Double)
-intersectionf ray Sphere = transformToHom <$> (\x -> (x,x)) <$> sphereIntersection ray
-intersectionf ray Box = transformToHom <$> boxIntersection ray
-intersectionf ray (Cone rad1 rad2) = transformToHom <$>
-  frustumIntersection ray (coneIntersection ray rad1 rad2) rad1 rad2 (normalCone rad1 rad2)
-intersectionf ray (Cylinder rad) = transformToHom <$>
-  frustumIntersection ray (cylinderIntersection ray rad) rad rad normalCylinder
-
-transformToHom :: (V3 Double, V3 Double) -> (V4 Double, V4 Double)
-transformToHom (x,y) = (point x, vector y)
+intersectionf :: EuclideanRay -> Primitive -> Maybe (V3 Double, V3 Double)
+intersectionf ray Sphere = (\x -> (x,x)) <$> sphereIntersection ray
+intersectionf ray Box = boxIntersection ray
+intersectionf ray (Cone rad1 rad2) = frustumIntersection ray (coneIntersection ray rad1 rad2) rad1 rad2 (normalCone rad1 rad2)
+intersectionf ray (Cylinder rad) = frustumIntersection ray (cylinderIntersection ray rad) rad rad normalCylinder
 
 frustumIntersection :: EuclideanRay -> Maybe Double -> Double -> Double -> (V3 Double -> V3 Double) -> Maybe (V3 Double, V3 Double)
 frustumIntersection r@(EuclideanRay o _) t rad1 rad2 n
