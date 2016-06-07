@@ -1,16 +1,170 @@
 
----
-title: Ray Tracing Backend for Diagrams
-author: Alexander Lochmann
-bibliography: bib.bib
----
-
-
 # Introduction
 
+Ray tracing is a well known rendering technique in the context of computer graphics.
+Images can be rendered, with ray tracing, by tracing the path of rays that are emitted
+from a camera that travel through pixels of an image plane. Ray tracing is well known
+for being able to produce physically realistic images. Ray tracing did not emerge as the
+primary rendering method because of its computational intensity. Rasterization based
+rendering offered better performance and is now the well established rendering method
+in interactive applications. An active field of study is the optimization of the ray tracing
+algorithm. Therefore there are a lot of techniques to accelerate ray tracing and improve
+the quality of the resulting images. Some of these improvements can be applied to all
+ray tracing methods like acceleration data structures.
 
-**test cite**
-[@kenn].  [@appel]
+This thesis focuses on the basic ray tracing algorithm and the integration into the DSL
+Diagrams. The aim of this bachelor project is to remove the dependency on POV-Ray
+by implementing a ray tracer in Haskell that renders Diagrams 3D scenes.
+
+This work begins with an introduction into the topic rendering, focused mainly on
+ray tracing. Then it defines elements that are used to represent a 3D scene followed
+by implementation details like intersection functions and normal vectors.
+At the end it discusses the general approach to integrate the renderer into Diagrams.
+
+# Rendering
+
+In the field of 3D computer graphics the process of generating an image from a defined
+scene description is called rendering. Also the result of this process is a rendering.
+
+We introduce 2 rendering techniques called rasterization and ray tracing.
+At the end of the chapter we will compare both methods.
+
+## Rasterization
+
+Rasterization is the most used rendering technique for real time applications.
+Rasterization executes at least the following steps:
+
+* Calculate the position, color and various attributes of the primitives.
+* Convert the primitives into fragments, which are stored in a raster image.
+  This raster image stores location, color, depth and other informations.
+* Calculate the final color of each pixel based on the raster image.
+
+For a further introduction on this topic see \cite{shre}.
+
+## Ray Tracing
+
+The idea of ray tracing is to trace the path of rays emitted from a camera that travel
+through a pixel grid. We can determine the visible object for each ray by intersecting
+the ray with each object in the scene. The visible object is the one with the closest intersection.
+We can calculate the color with the properties(location, material, . . . ) of the closest object
+and the scene. An intersection can generate new rays to simulate effects like reflection and
+refractions. There are several ray tracing techniques that share the same basic algorithm.
+
+### History
+
+"Some techniques for shading machine renderings of solids" is a paper by Arthur Appel
+published in 1968 \cite{appel}. It is the first approach to ray tracing. He represented rays
+as mathematical lines and checked if there is an intersection with an object. The rays
+are not traced further after an intersection, this is also known as Ray Casting.
+
+The first ray tracing technique was introduced by Whitted in 1980 \cite{whitt}, which
+is an extension of Appels algorithm. After an intersection the ray can generate 3 new
+rays, the shadow ray, reflection ray and refraction ray. These rays are called secondary
+rays. The starting point of a shadow ray is the intersection point and its direction leads
+to a light source. This is used to determine if the light source influences the object at
+the intersection point. For example the light source does not influence an object if there
+is another object between the generated shadow ray and the light source. Reflection and
+refraction rays are traced further, which makes the algorithm recursive.
+
+Distribution ray tracing was introduced by Cook in 1984 \cite{cook}. This method
+increases realism of the image by using probability distributions for
+specific effects and increases the number of generated rays to approximate the result. For
+example generating multiple shadow rays for area light sources to represent soft shadows.
+
+Path tracing was introduced by Kajiya in 1986 \cite{kaji}. Applying distributing
+rays not only to specific effects like shadows, but for the shading of all diffuse surfaces.
+Thereby indirect illumination of lights with objects can be simulated. This method is also
+called Monte Carlo ray tracing, because it uses random samples to compute the image.
+
+### Basic Algorithm
+
+The basic concept of ray tracing algorithms is efficiently finding intersections between
+a ray and a scene that consists of a set of geometric primitives \cite{wald}.
+The ray, as defined in the section \autoref{ray}, can have additional parameters
+$t_{min}$ and $t_{max}$, which specify the interval of $t$ used for the points
+traversed by the ray. In other words it
+specifies the minimum and the maximum distance of a ray.
+
+At this level the algorithm can be split in 3 tasks. The most fundamental task is to find
+the closest intersection. The second task, also called visibility/occlusion test, is to check
+if there are any intersections. The last task is to find all intersections. Checking for any
+intersections is slightly simpler than checking for the closest, so there are algorithms that
+are more efficient in this case. For example the occlusion test is used for shadow rays \cite{wald}.
+
+In ray tracing only one condition must apply for a primitive, which is that
+there must be a function that can calculate an intersection between the primitive and a
+ray. That means primitives can be of various types, from simple geometric shapes like
+spheres, cubes, triangles,. . . , to complex parametric patches like the Bézier patches and
+other complex shapes as long as there exists an intersection function. The flexibility of
+primitives allows to represent shapes with full accuracy. Although using multiple kinds
+of primitives does not limit the kinds of scenes that can be rendered. Like mentioned
+in \autoref{Rasterization} most real time applications use rasterization techniques to render an
+image and most of them only use triangles as primitives.
+
+Testing every primitive in the scene for an intersection with a ray produces the correct
+result, but the computation time extends with each ray and each primitive. For complex
+scenes it is necessary to reduce the set of primitives that the ray could intersect. It
+is common to use acceleration data structures to preserve consistency, e.g. grids and
+kd-trees \cite{copy}.
+
+
+### Performance
+
+At the beginning of modern computer graphics only scenes with a small number of
+primitives were used and interactive graphic applications were not established. Ray
+tracing is computationally intense and aims to simulate physical realistic behavior. These
+are part of the reasons why rasterization is the well-established rendering technique for
+interactive applications at the moment and ray tracing is still used rarely in this field.
+However the demand for more detailed scenes, larger scenes and physical realism leads to
+the argument that ray tracing will outperform rasterization at some point because of the
+logarithmic scene complexity \cite{wald}.
+
+Ray tracing is usually used for offline rendering due to the fact that it
+is computationally intense. The crucial factors for the ray tracing algorithm
+are:
+
+* The amount of rays. Consider an image with a resolution of 800 x 800,
+  without counting the secondary rays, this lead to a total amount of
+  640.000 rays. Depending on the scene complexity the set
+  of primary rays may only be small part compared to the set of all rays.
+
+* Scene complexity. Reducing the set of primitives for a ray with acceleration
+  data structures is the most important optimization in ray tracing because
+  it can give the algorithm a logarithmic behavior in scene complexity \cite{copy}.
+
+The common crucial factors lead to common optimizations. For the first fact, the amount
+of rays, it is sufficed to reduce the number of rays to reduce the computation time.
+This can be achieved by reducing the primary rays(smaller resolution) or reducing the
+secondary rays. The second fact, the scene complexity, can be optimized by using the
+mentioned acceleration data structures. Also using optimized intersection functions leads
+to reduced computation time.
+
+Ray tracing is known as an embarrassingly parallel problem, because the result of each
+ray can be calculated independently. The optimization of ray tracing is a topic of interest
+since the invention of the algorithm \cite{copy}.
+
+## Ray Tracing compared with rasterization
+
+Advantages of ray tracing:
+
+  * Ray tracing is known for physically realistic images in high quality.
+  * The algorithm is an embarrassingly parallel problem.
+  * The algorithm scales logarithmic with the scene complexity.
+  * Complex effects like shadows, reflection and refractions can be simulated
+    and represented correctly.
+
+Advantages of rasterization:
+
+  * Established method with approximations of physical effects.
+  * Part of the rasterization algorithm is already executed by the hardware.
+  * In general smaller computation time.
+
+Rasterization based rendering needs a number of approximations for specific effects,
+e.g. shadow maps to approximate shadows. Without specific criteria rasterization may
+not be able to simulation or approximate certain effects.
+
+Ray tracing can use approximations to save computation time but it is not
+required. Whereas rasterization needs them for certain effects.
 
 # 3D Scene
 
@@ -27,7 +181,7 @@ $<\vec{p},\vec{q}>$,
 where $<\vec{q}> = <\vec{q},\vec{q}>$.
 
 The Euclidean norm of a vector $\vec{q}$ is denoted as $||\vec{q}||$.
-
+The cross product of vector p with vector q is denoted as $\vec{p} \times \vec{q}$.
 
 ## Homogeneous coordinates
 
@@ -40,9 +194,9 @@ a direction if and only if $w = 0$.
 
 Representing coordinates of $\mathbb{R}^3$ as homogeneous vectors
 simplifies transformations because points and directions have different
-properties. If not stated different, then in every point/direction is considered
+properties. If not stated differently, every point/direction is considered
 a homogeneous point/direction except for the definitions in
-section \autoref{primitives}.
+\autoref{primitives}.
 
 
 ## Color
@@ -59,13 +213,10 @@ E.g. $\vec{c} =(1, 0, 0)$ has a red channel of 100%, green channel of
 
 ## Camera
 
-**Make sentence(s).**
-
-A camera is defined as 4-tuple $(\vec{p},\vec{f},\vec{r},\vec{u})$ of vectors.
-The position of the camera $\vec{p}$, where $\vec{p}$ is a point.
-The forward vector $\vec{f}$, where $\vec{f}$ is a direction.
-The right vector $\vec{r}$, where $\vec{r}$ is a direction.
-The up vector $\vec{u}$, where $\vec{u}$ is a direction.
+A camera is defined as 4-tuple $(\vec{p}, \vec{f} , \vec{r}, \vec{u})$
+of vectors, where $\vec{p}$ is the position,
+$\vec{f}$ is the forward direction, $\vec{r}$ is the right direction and
+$\vec{u}$ is the up direction.
 
 To get a better understanding of these vectors, see \autoref{projection}.
 
@@ -82,10 +233,12 @@ The rows and columns of the viewing plane determine the resolution.
 
 ## Light
 
-A light is defined by a position and color.
+A light is defined by a tuple $(\vec{p}, \vec{c})$, where $\vec{p}$ is the position and
+$\vec{c}$ the color of the light.
 
 We assume that the light illuminates objects with the specified color uniformly
-in all directions.
+in all directions. We also assume that illumination intensity does not fall off with
+distance.
 
 
 ## Ray
@@ -105,16 +258,23 @@ We define a number of shapes, called primitives, that can be represented in
 the euclidean space. Every shape is defined by the set of the points of its
 surface.
 
-**TODO: create pictures of primitives in coordinate system and include them**
-
 ### Sphere
 
 The unit sphere, which is centered at the origin, is defined by the set
 
 $$
-  \{p | p \in \mathbb{R}^3, ||p|| = 1 \}
+  \{\vec{p} | \vec{p} \in \mathbb{R}^3, ||\vec{p}|| = 1 \}
 $$
 
+A render of a sphere is illustrated in
+\autoref{fig:sphere}.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.25]{primSphere.png}
+\caption{Sphere}
+\label{fig:sphere}
+\end{figure}
 
 ### Box
 
@@ -136,29 +296,41 @@ $$
   P_z(v) := \{(x,v,z) | 0 \le x,z \le 1, x,z \in \mathbb{R}\}  
 $$
 
+A render of a box is illustrated in
+\autoref{fig:box}.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.25]{primBox.png}
+\caption{Box}
+\label{fig:box}
+\end{figure}
+
 ### Cylinder
 
 A cylinder aligned at the z-axis, with length 1 and radius $r \in \mathbb{R}$
 is defined by the set
 
 $$
-  \{\vec{p}=(x,y,z)| p \in \mathbb{R}^3, x^2 + y^2 = r,1 \ge z \ge 0 \}
+  \{\vec{p}=(x,y,z)| \vec{p} \in \mathbb{R}^3, x^2 + y^2 = r,1 \ge z \ge 0 \}
 $$
 
 A render of a cylinder is illustrated in
 \autoref{fig:cylinder}.
 
-![Cylinder.\label{fig:cylinder}](primCylinder.png)
-
-For image size, see: <http://www.imagemagick.org/discourse-server/viewtopic.php?t=21076>
-
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.25]{primCylinder.png}
+\caption{Cylinder}
+\label{fig:cylinder}
+\end{figure}
 
 ### Cone
 
 A cone of length 1 which is aligned at the z-axis is defined by the set
 
 $$
-  \{\vec{p}=(x,y,z)| p \in \mathbb{R}^3,
+  \{\vec{p}=(x,y,z)| \vec{p} \in \mathbb{R}^3,
   \cos^2 \alpha * (x^2 + y^2) - \sin^2 \alpha * (z - r_1 / \alpha) = 0,
   1 \ge z \ge 0\}
 $$
@@ -167,6 +339,16 @@ where the base cap is centered at the origin $\vec{p_1}$ with radius
 $r_1 \in \mathbb{R}$, the top cap is centered at $\vec{p_2} = (0,0,1)$ with
 radius $r_2 \in \mathbb{R}$ and the tangent of the half-angle is
 $\tan \alpha = r_1 - r_2 / ||\vec{p_2} - \vec{p_1}|| = r_1 - r_2$.
+
+A render of a cone is illustrated in
+\autoref{fig:cone}.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.25]{primCone.png}
+\caption{Cone}
+\label{fig:cone}
+\end{figure}
 
 ## Transformations
 
@@ -177,7 +359,7 @@ introduce a group of transformations.
 
 ### Scaling matrix
 
-The scaling is defined as
+We define the scaling function as
 
 $$
   S(s_x,s_y,s_z):= \left(
@@ -191,7 +373,7 @@ $$
 $$
 
 where the indices stands for the scaling in the corresponding axes.
-A scaling matrix is a result of the scaling function defined above and
+A scaling matrix is a result of the scaling function defined above or the
 multiplications of 2 scaling matrices.
 If $s_x = s_y = s_z$ then the scaling is called uniform.
 Multiplying every point of a primitive with a scaling matrix resizes
@@ -205,9 +387,7 @@ $S(5, 1, 0) = S'$, then $S'\vec{p} = (5, 1, 0, 1)$.
 To rotate a primitive in 3D space we need to define by which axis
 and which angle $\alpha$ to rotate.
 
-**TODO.**
-
-A rotation is defined as:
+We define the rotation function as
 
 $$
   R_x(\alpha) := \left(
@@ -242,12 +422,9 @@ $$
                   \right)
 $$
 
-where the indices indicate the axis by which we rotate and $\alpha$ the angle.
-A rotation matrix is a result of the rotation function defined above and
-multiplications of 2 rotation matrices.
-For a corresponding proof see \cite{kenn}.
-
-
+where the indices indicate the axis by which we rotate and $\alpha$ the angle. A rotation
+matrix is a result of the rotation function defined above or the multiplications of 2 rotation
+matrices. For a corresponding proof see \cite{kenn}.
 
 Multiplying every point of a primitive with a rotation matrix will rotate
 the primitive.
@@ -266,7 +443,7 @@ $$
 
 ### Translation matrix
 
-A translation is defined as
+A translation function is defined as
 
 $$
   T(x,y,z):= \left(
@@ -279,9 +456,9 @@ $$
               \right)
 $$
 
-where the indices describe the translation in the corresponding axes.
-A translation matrix is a result of the translation function defined above
-and multiplications of 2 translation matrices.
+where the indices describe the translation in the corresponding axes. A translation matrix
+is a result of the translation function defined above or the multiplications of 2 translation
+matrices.
 
 ### Transformation matrix
 
@@ -295,10 +472,11 @@ $$
 Every combination of translating, rotating and
 scaling matrices can be represented as transformation matrix.
 
-**Use LaTeX proof.**
+
 
 \begin{proof}
-Proof: Given a matrix $L$ which is a result of multiplications
+
+Given a matrix $L$ which is a result of multiplications
 of translating, rotation and scaling matrices, we extract
 3 matrices $T'$, $R'$ and $S'$ so that $T'R'S' = L$.
 
@@ -354,18 +532,18 @@ $$
 $$
 
 $$
-\begin{split}
+\begin{aligned}
   s_x &= \sqrt{(r_{11} * s_x)^2 + (r_{21} * s_x)^2 + (r_{31} * s_x)^2} \\
       &= \sqrt{ r_{11}^2 * s_x^2 + r_{21}^2 * s_x^2 + r_{31}^2 * s_x^2} \\
       &= \sqrt{ s_x^2 * (r_{11}^2 + r_{21}^2 + r_{31}^2)} \\
       &= \sqrt{ s_x^2} * \sqrt{r_{11}^2 + r_{21}^2 + r_{31}^2} \\
       &= \sqrt{ s_x^2} = s_x
-\end{split}
+\end{aligned}
 $$
 
 we know that $\sqrt{r_{11}^2 + r_{21}^2 + r_{31}^2} = 1$ because of the property
 of rotation matrices. The other components of the scaling matrix can be extracted
-analog. Now we can create the scaling matrix $S'$.
+analogously. Now we can create the scaling matrix $S'$.
 
 We also see that we can extract the scaling components for the matrix $S'$
 form arbitrary ordered multiplications of scaling and rotation matrices.
@@ -377,7 +555,7 @@ replaced by $\vec{v}=(0, 0, 0, 1)^T$
 $$
   R' = L'' * S'^{-1}
 $$
-\qedhere
+\end{proof}
 
 ## Material property
 
@@ -386,7 +564,8 @@ the interval $[0,1]$. The components are called coefficients with $a$ as the
 ambient, $d$ as the diffuse, $s$ as the specular and $r$ as the rough
 coefficient.
 
-**Explain what these are already here.**
+This values are used in \autoref{shading-model} to manipulate illumination influence. That means
+we can adjust the final color by changing these coefficients.
 
 ## Object
 
@@ -395,210 +574,73 @@ $M$ is a transformation matrix, $\vec{c}$ is a color and $\vec{p}$ is a
 material property.
 
 
-# Rendering
+# Domain-Specific Language
 
-In the field of 3D computer graphics the process of generating an image from
-a defined scene description is called rendering. Also the result of this process
-is a rendering.
+A domain is defined as a field of study that defines a set of common requirements and
+terminology. A Domain-Specific Language (DSL) is a tool that simplifies expressions and
+solves problems in a defined domain. There are 2 major kinds of DSL
 
-**Red thread.**
+* Embedded DSL: An embedded DSL is a library implemented in the host language
+   (normally a general-purpose language), providing greater abstractions related to
+    the domain. An example is SQL database connector for java.
+* Internal DSL: An internal DSL is an independent language with several tools (parser,
+    interpreters, . . . ). A common used internal DSL is CSS.
 
-In this chapter we shortly introduce rasterization. After that we introduce
-ray tracing and at the end of the chapter we will compare both methods.
-
-## Rasterization
-
-**Shorten.**
-
-Rasterization is the most used rendering technique for real time applications.
-We display some steps that are needed to render a scene with rasterization,
-which should give a short approach to this topic:
-
-* Calculate the position, color and various attributes of the primitives.
-* Convert the primitives into fragments, which are stored in a raster image.
-  This raster image stores location, color, depth and other informations.
-* Calculate the final color of each pixel based on the raster image.
-
-For a further introduction on this topic see
-**TODO add cite to the book:
-
-https://www.ics.uci.edu/~gopi/CS211B/opengl_programming_guide_8th_edition.pdf**
-
-## Ray Tracing
-
-Ray tracing is a rendering technique, which idea is to trace the path of rays
-emitted from a camera that travel through a pixel grid. By intersecting the
-rays with each object of a scene we can determine the visible object for
-each ray. The visible object is the one with the closest intersection.
-
-For each pixel corresponding to the ray we can calculate the color with the
-properties(location, material, ...) of the closest object and the scene.
-These can implicate the generation of new rays to simulate effects like
-reflection and refractions. There are several ray tracing techniques that
-share the same basic algorithm.
-
-### History
-
-Some techniques for shading machine rederings of soilds is a paper of
-Arthur Appel published in 1968 \cite{appel} it is the first approach
-to ray tracing. He represented light rays as mathematical lines and checked
-if there is an intersection with an object. After an intersection the light rays
-aren't traced further, which is also known as Ray Casting.
-This process doesn't considered shadows or reflections.
-
-The first ray tracing technique was introduced by Whitted
-in 1980 \cite{whitt}, which is an extension of Appels algorithm.
-After an intersection the ray can generate generate 3 new rays, the shadow ray,
-reflection ray and refraction ray.
-These rays are called secondary rays. The starting point of a shadow ray is
-the intersection point and its direction leads to a light source. This is
-used to determine if the light source influences the object at the intersection
-point. For example if an object is between the shadow ray and the light source
-the intersected point will not be illuminated and will be represented as shadow.
-Reflection and refraction rays are traced further, which makes the algorithm
-recursive.
-
-Distribution ray tracing was introduced by Cook in 1984 \cite{cook}. This method
-increases realism of the image by using probability distributions for specific
-effects and increases the number of generated rays to approximate the result.
-For example generating multiple shadow rays for area light sources to represent
-soft shadows.
-
-Path tracing was introduces by Kajiya in 1986 \cite{kaji}. Applying
-distributing rays not only to specific effects like shadows, but for the shading
-of all diffuse surfaces. Thereby indirect illumination of lights with
-objects can be simulated. This method is also called monte carlo
-ray tracing, because it uses random samples to compute the image.
-
-### Basic Algorithm
-
-The basic concept of ray tracing algorithms is to efficiently find intersections
-between a ray and a scene that consists a set of geometric primitives \cite{wald}.
-The ray, as defined in the section \autoref{ray}, can have additional parameters
-$t_{min}$ and $t_{max}$, which specifies the interval of $t$ used for
-the definition. In other words it specifies the minimum
-and the maximum distance of a ray.
-
-At this level the algorithm can be split in 3 tasks.
-The most fundamental task is to find the closest intersection. The second task,
-also called visibility/occlusion test, is to check if there are any intersections.
-The last task is to find all intersections.
-Checking for any intersections is slightly simpler than checking for the
-closest, so there are algorithms that are more efficient in this case. For
-example the occlusion test is used for shadow rays \cite{wald}.
-In ray tracing only one condition must apply for a primitive, which is that there
-must be a function that can calculate an intersection between the primitive and a ray.
-That means primitives can be of various types, from simple geometric shapes like
-sphere, cubes, trianles,..., to complex parametric patches like the
-Bézier patches and other complex shapes as long as there exist an intersection
-function. The flexibility of primitives allows to represent shapes with full
-accuracy. Although using multiple kinds of primitives does not limit the kinds
-of scenes that can be rendered. Like mentioned in the chapter \autoref{Rasterization}
-most real time applications uses rasterization techniques to render an image and
-most of them only uses triangles as primitives.
-
-Testing every primitive in the scene for an intersection with a ray produces
-the correct result, but the computation time extends with each ray and each
-primitive. For complex scenes it is necessary to reduce the set of primitives
-that the ray could intersect. It is common to use acceleration data structures
-to preserve consistency, e.g. grids and kd-trees \cite{copy}.
-
-
-### Performance
-
-At the beginning of modern computer graphics only scenes, whit a small number of
-primitives, were used and interactive graphic applications weren't established.
-Ray tracing is computational intense that aims to simulate physical realistic
-behavior. These are part of the reasons why rasterization is
-the well-established rendering technique for interactive applications at the moment
-and ray tracing is still seldom in this field.
-
-However the demand of more detailed scenes, larger scenes and physical realism
-leads to the argument that ray tracing will outperform rasterization at some
-point because of the logarithmic scene complexity \cite{wald}.
-
-Ray tracing is usually used for offline rendering due to the fact that it
-is computational intense. The crucial factors for the ray tracing algorithm
-are:
-
-* The amount of rays. Consider an image with a resolution of 800 x 800,
-  without counting the secondary rays, this lead to a total amount of
-  640.000 rays. Depending on the scene complexity the set
-  of primary rays may only be small part compared to the set of all rays.
-
-* Scene complexity. Reducing the set of primitives for a ray with acceleration
-  data structures is the most important optimization in ray tracing because
-  it can give the algorithm a logarithmic behavior in scene complexity \cite{copy}.
-
-
-The common crucial factors lead to common optimizations. For the first fact,
-the amount of rays, it is sufficed to reduce the number of rays to reduce
-the computation time. This can be achieved by reducing the primary rays(smaller
-resolution) or reducing the secondary rays. The second fact, the scene complexity,
-can be optimized by using the mentioned acceleration data structures. Also
-using optimized intersection functions leads to reduced computation time. \\
-Ray tracing is known as an embarrassingly parallel problem,
-because the result of each ray can be calculated independently.
-The optimization of ray tracing is a topic of interest since the
-invention of the algorithm \cite{copy}.
-
-## Ray Tracing compared with rasterization
-
-Advantages of ray tracing:
-
-  * Ray tracing in known for physically realistic images in high quality.
-  * The algorithm is an embarrassingly parallel problem.
-  * The algorithm scales logarithmic with the scene complexity.
-  * Complex effects like shadows, reflection and refractions can be simulated
-    and represented correctly.
-
-Advantages of rasterization:
-
-  * Established method with approximations of physical effects.
-  * Part of the rasterization algorithm is already executed by the hardware.
-  * In general fast computation time.
-
-Rasterization based rendering needs a number of approximations
-for specific effects, e.g. shadow maps to approximate shadows. Without specific
-criteria rasterization may not be able to simulation or approximate
-certain effects.
-
-Ray tracing can use approximations to save computation time but it isn't
-required. Whereas rasterization needs them for certain effects.
-
-# DSL
-
-short introduction to DSL
-
-embedded vs external
+In this chapter we introduce the embedded DSL Diagrams. Next we discuss the usability
+of Diagrams in 3D.
 
 ## Diagrams
 
-embedded DSL
-haskell  host language
-scene description
-haskell abstraction
+Diagrams is an embedded DSL with host language Haskell that provides powerful and
+flexible ways to create vector graphics. Diagrams is optimized for simplicity and flexibility
+rather than for speed. It uses the abstractions of Haskell to provide these features.
+Diagrams allows to describe 2D and 3D scenes. An example of a Haskell 2D scene
 
+\begin{minted}{haskell}
+hilbert 0 = mempty
+  hilbert n = hilbert' (n-1)         # reflectY <> vrule 1
+             <> hilbert (n-1)        <> hrule 1
+             <> hilbert (n-1)        <> vrule (-1)
+             <> hilbert' (n-1)       # reflectX
+    where
+       hilbert' m = hilbert m        # rotateBy (1/4)
+\end{minted}
 
-### 3D backend
-POV-Ray
-only 3d Backend
-textbase description language
+A illustration of that scene is in \autoref{fig:hilbert}
 
-**Why using diagrams instead of pov ray?**
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.25]{Hilbert.png}
+\caption{Hilber}
+\label{fig:hilbert}
+\end{figure}
+
+### Backend
+
+Diagrams offers an interface to render the described scenes, which is called backend. The
+only existing backend for Diagrams 3D translates the scene to the text-base description
+language of POV-Ray, an open source renderer.
+
+### Advantage of Diagrams over POV-ray
+
+There are several advantages of using Diagrams over POV-Ray
+
+* Diagrams can describe more scenes as the text-base description of POV-Ray. For
+     example an animation in Diagrams is a scene that changes over time. This cannot
+     be described in POV-Ray.
+* Scene descriptions are generally shorter in Diagrams than in POV-Ray because
+     Diagrams scenes can take advantages of the expression power of Haskell.
+* Extension of Diagrams is independent of the backend.
 
 # Implementation
 
-**No "fundamental" ...**
+In this chapter we introduce elements that are needed to implement the basic ray tracing
+algorithm. First we discuss the intersection functions for the defined primitives in \autoref{primitives}.
+After that we will show a method to keep the intersection functions simple even with
+transformations. We will describe how transformations influence normal vectors. Next
+we describe the generation of primary rays and how they lead to different projections. At
+the end we introduce a well known shading algorithm to approximate light behavior.
 
-In this chapter we introduce fundamental elements that are needed to implement
-the basic ray tracing algorithm. First we discuss the intersection functions
-for the defined primitives in \autoref{primitives}. After that we will
-show a method to keep the intersection functions simple even with
-transformations. We will describe how transformations influence normal
-vectors. Next we describe the generation of primary and how they lead to
-different projections. At the end we introduce a well known shading
-algorithm to approximate light behavior.
 
 ## Intersection functions
 
@@ -621,13 +663,13 @@ $$
   <\vec{o} + t*\vec{d}, \vec{o} + t*\vec{d}> = 1
 $$
 
-$\implies$
+This can be simplified to the quadratic equation
 
 $$
   <\vec{o},\vec{o}> + t * 2 * <\vec{o}, \vec{d}> + t^2 * <\vec{d}, \vec{d}> - 1 = 0
 $$
 
-This leads to following quadratic equation:
+Now we can solve the quadratic equation
 
 $$
   t = \frac{-b \pm \sqrt{b^2 - 4 * a* c}}{2 * a},
@@ -640,7 +682,7 @@ intersection.
 ### Box intersection
 
 To get the nearest intersection between a ray and a box we check the boundaries.
-We will show this for the x-component, for the other components it works analog.
+We will show this for the x-component, for the other components it works analogously.
 
 $$
   \begin{split}
@@ -679,7 +721,6 @@ A cylinder aligned on an arbitrary line $\vec{p_a} + \vec{v_a} * t$, a
 point on the cylinder $\vec{q}$ and radius $r$ holds
 $<\vec{q} - \vec{p_a} - <\vec{v_a},\vec{q} - \vec{p_a}> * \vec{v_a}> - r^2 = 0$.
 
-**Eliminate implies.**
 
 The definition of cylinder in section \autoref{cylinder} allows us to simplify
 the equation. We substitute the point on the cylinder $\vec{q}$ with the ray
@@ -688,24 +729,24 @@ $$
   <\vec{o} + t * \vec{d} - (0,0, z_o + t * z_d)> - r^2 = 0
 $$
 
-$\implies$
+This can be simplified to
 
 $$
   (x_o + t * x_d)^2 + (y_o + t * y_d)^2 - r^2 = 0
 $$
 
-$\implies$
+which leads to the following quadratic equation
 
 $$
   t^2 * (y_d^2 + x_d^2) + t * 2 * (x_o * x_d + y_o * y_d) + x_o^2 + y_o^2 - r^2 = 0
 $$
 
-This leads to following quadratic equation
+Now we can solve the quadratic equation
 
 $$
   t = \frac{-b \pm \sqrt{b^2 - 4 * a* c}}{2 * a},
 $$
-**wrong, did not consider p_a!!!!**
+
 where $a = y_d^2 + x_d^2$, $b = 2 * (x_o * x_d + y_o * y_d)$ and
 $c = x_o^2 + y_o^2 - r^2$.
 
@@ -745,8 +786,8 @@ with
 $$
   \begin{split}
     a &= \cos^2 \alpha * (x_d^2 + y_d^2) - \sin^2 \alpha * z_d^2 \\
-    b &= 2* \cos^2 \alpha * (x_d * x_o + y_d * y_o) - 2 * sin^2 \alpha * (z_o - z_d) \\
-    c &= cos^2 \alpha * (x_o^2 + y_o^2) - sin^2 \alpha * (z_o - 1)^2,
+    b &= 2* \cos^2 \alpha * (x_d * x_o + y_d * y_o) - 2 * sin^2 \alpha * z_d * (z_o - \frac{r_1}{r_1 - r_2}) \\          
+    c &= cos^2 \alpha * (x_o^2 + y_o^2) - sin^2 \alpha * (z_o - \frac{r_1}{r_1 - r_2})^2,
   \end{split}
 $$
 
@@ -774,7 +815,7 @@ $$
   r = M\vec{p}
 $$
 
-$\implies$
+we can multiply both sides with $M^{-1}$ that leads to
 
 $$
   M^{-1}r = M^{-1}M\vec{p} = I\vec{p} = \vec{p}
@@ -792,7 +833,7 @@ We see that we get the same result as applying the transformation on a point.
 
 ## Normal vectors
 
-Normal vectors are unit vectors which are orthogonal to a given surface at a given
+Normal vectors are unit vectors that are orthogonal to a given surface at a given
 point. In this subsection we show how to calculate normal vectors for the
 primitives.
 
@@ -812,7 +853,8 @@ With the plane normal we can calculate the normal of the primitive box.
 
 Given a point $\vec{p}=(x,y,z)$ on the surface of a cylinder then the normal
 vector is $\vec{n} = (x /m, y /m, 0)$, where $m = \sqrt{x^2 + y^2}$.
-ot consider p_a!!
+
+
 ### Cone normal
 
 Given a point $\vec{p}=(x,y,z)$ on the surface of a cone, the radius $r_1$ of the
@@ -836,19 +878,17 @@ where $\vec{n}$ is the normal vector of the cone at point $\vec{p}$.
 
 ### Normal vector transformation
 
-**TODO.**
 
-Generally by applying a transformation $M$ to a point $\vec{p}$ with normal
-$\vec{n}$ doesn't follow that the normal vector is transformed properly. For
-example if we apply a non uniform scaling. So we need to find a transformation
-that transforms our normal vector correctly. First we transform the normal vector
-to a homogeneous direction. After we see that
+After we apply a transformation $M$ to a point $\vec{p}$ and to its corresponding normal vector $\vec{n}$
+it is not guaranteed that $<M \vec{n}, M \vec{p}> = 0$.For example if we apply a non uniform scaling.
+So we need to find a transformation that transforms our normal vector correctly. First
+we transform the normal vector to a homogeneous direction. After we see that
 
 $$
   <\vec{n}, \vec{p}> = \vec{n}^{\tr}\vec{p} = 0
 $$
 
-$\implies$
+which leads to
 
 $$
   \vec{n}^{\tr} I \vec{p} = \vec{n}^{\tr} M^{-1} M\vec{p} = 0,
@@ -861,7 +901,7 @@ $$
   \vec{n'}^{\tr} = \vec{n}^{\tr} M^{-1}
 $$
 
-$\implies$
+this is equivalent to
 
 $$
   \vec{n'} = (\vec{n}^{\tr} M^{-1})^{\tr} = (M^{-1})^{\tr} \vec{n}
@@ -873,23 +913,17 @@ $$
   \begin{split}
   (M^{-1})^{\tr} \vec{n} &= (S^{-1}R^{-1}T^{-1})^T \vec{n} \\
                    &= (T^{-1})^{\tr} (R^{-1})^{\tr} (S^{-1})^{\tr} \vec{n} \\
-                   &= R S^{-1}\vec{n}
+                   &= (T^{-1})^{\tr} R S^{-1}\vec{n}
   \end{split}
 $$
-
-So the equation for the transformed normal vector is
-$\vec{n'} = R S^{-1}\vec{n}$.
-
 
 We used the property of rotation matrices that for every rotation matrix
 $R$ follows that $(R^{-1})^{\tr} = R$.
 
-
-**check and maybe rewrite**
 ## Projection
 
 In the context of computer graphics, a projection transforms points in 3D
-onto a plane with finite many points\cite{kevi}.
+onto a 2D grid \cite{kevi}.
 The way we generate the rays determines the kind of projection.
 
 ### Perspective
@@ -902,20 +936,20 @@ $$
     P_{ij} :=  (\vec{p}, \vec{f} + snd(V_{ij}) * \vec{r} + fst(V_{ij}) * \vec{u})
 $$
 
-where $snd((x,y)) = y$ and $fst((x,y)) = y$. The indices of the matrix
+where $snd((x,y)) = y$ and $fst((x,y)) = x$. The indices of the matrix
 determine the position of the pixels in the resulting image.
 
 ### Orthographic
 
 In an orthographic projection every ray is parallel to each other and has its
-center in the view plane. Given a camera $c=(p,f,u,r)$ and a viewing plane $V$,
+center in the view plane. Given a camera $c=(\vec{p},\vec{f},\vec{u},\vec{r})$ and a viewing plane $V$,
 we define the matrix of rays that represents an orthographic projection as
 
 $$
     O_{ij} :=  (\vec{f} + snd(V_{ij}) * \vec{r} + fst(V_{ij}), \vec{f})
 $$
 
-where $snd((x,y)) = y$ and $fst((x,y)) = y$. The indices of the matrix
+where $snd((x,y)) = y$ and $fst((x,y)) = x$. The indices of the matrix
 determine the position of the pixels in the resulting image.
 
 ## Shading model
@@ -927,21 +961,29 @@ We use a slightly different shading model that is described in the book
 After generating the projection we intersect each ray with each objects
 primitive and we consider only the closest intersection. If there is no
 intersection, then the resulting color will be black. If we find
-a intersection, we will use the following defined shading method.
-
-**TODO insert pictures that demonstrate the effect of the coefficients**
-
+an intersection, we will use the following defined shading method.
 
 ### Ambient light
 
-Simulating indirect illumination is very computation depending, a common
+Simulating indirect illumination is very computationally intense, a common
 practice is to assume that illumination is constant throughout the scene.
-This is called ambient illumination and it's not a good approximation, but it
+This is called ambient illumination and it is not a good approximation, but it
 provides some illumination for the parts that do not receive direct illumination
 \cite{kevi}.
 
 We calculate the ambient color of an object with the ambient coefficient $a$ of
 the objects material property multiplied by the color $\vec{c_a} = (1, 1, 1)$.
+
+A illustration of a scene with 5 spheres and changing ambient coefficient is in
+\autoref{fig:ambient}.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.5]{ambient.png}
+\caption{The ambient coefficient increases for each sphere from left
+	to right by 0.2 starting from 0.}
+\label{fig:ambient}
+\end{figure}
 
 ### Diffuse light
 
@@ -965,9 +1007,21 @@ where $n$ is the normal vector of the surface at position $\vec{p}$, $d$ is the
 diffuse coefficient of the objects material property, $\vec{c}$ the color of
 the light and $\vec{l_d}$ is the normalized vector $\vec{d}$.
 
+A illustration of a scene with 5 spheres and changing diffuse coefficient is in
+\autoref{fig:diffuse}.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.5]{diffuse.png}
+\caption{The diffuse coefficient increases for each sphere from left
+	to right by 0.2 starting from 0.}
+\label{fig:diffuse}
+\end{figure}
+
+
 ### Specular reflection
 
-To simulate smooth, shinny objects we allow them to reflect light that's
+To simulate smooth, shiny objects we allow them to reflect light that's
 concentrated around the direction of mirror-reflection \cite{kevi}.
 
 For specular reflection we also need to check if there is no object between
@@ -986,55 +1040,68 @@ material property, $\vec{c}$ the color of the light,
 $\vec{l_d}$ is the normalized vector $\vec{d} = \vec{l_p} - \vec{p}$ and $\vec{v}$
 is the negated normalized direction of the ray that intersected the object.
 
+A illustration of a scene with 5 spheres and changing specular coefficient is in
+\autoref{fig:diffuse}.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[scale=0.5]{specular.png}
+\caption{The specular coefficient increases for each sphere from left
+	to right by 0.2 starting from 0. The rough coefficient is 150.}
+\label{fig:specular}
+\end{figure}
+
 
 ### Multiple lights and final results
 
-We get the final color by calculating the diffuse color and the specular
-reflection color for each light, add them together, then add the
-ambient color and finally multiply with the objects color.
+To compute the final color value, we add ambient, diffuse and specular reflection color
+together and multiply it with the color of the object. If we have multiple lights, then we
+add all diffuse and specular reflection color together and multiply the result with the
+color of the object. Note that the ambient color is only added once, since it simulates
+indirect illumination.
 
 # Integration
 
-on the surface description
+To integrate the ray tracer into Diagrams a backend is needed. This backend extracts
+scene informations from a simplified data structure provided by Diagrams. After the
+extraction the scene can be rendered. In this chapter we introduce superficially
+the methods used by the backend.
 
 ## Diagrams Backend
 
-data family
-interface Diagrams.Backend
-function render
-type classes e.g. Rendering
+Diagrams distinguish between backends with the use of type family. Type family
+are Haskells extension to support ad-hoc overloading of data types. Type family are
+parametric types that are specialized representations based on the type parameters. The
+type of the scenes will indicate which backend will be used e.g. which function based on
+the name and the parameter signature.
+
+An instance of Diagrams backend defines type families and a function “renderRTree” that
+extracts scene informations. These are used to translate the scene information to a data
+structure that is used in the rendering.
 
 ## Diagrams command line Backend
 
-type classes, abstraction
-multiMain, defaultMain...
-define scene components per command line
+Sometimes we want to specify the details about the diagram at the start of the program.
+For example the output file, image format, and size of the diagram. The Diagrams
+CmdLine module provides creation of a command-line interface that supports standard
+options as well as easy customization for additional parameters. The abstraction allows
+by simply defining the rendering backend and the interpretation of the command line
+arguments to use these features.
 
-# Related Work
+# Conclusion and Further Work
 
-where is ray tracing used, some other techniques
-acceleration data structures...
+Despite the fact that the DSL Diagrams is flexible and powerful in describing vector
+graphics, this cannot be utilized without a certain understanding of haskell and its
+abstraction system. These are deeper concepts that must be learned.
 
-# Conclusion
+Ray tracing can be optimized in various ways. It would be interesting to use acceleration
+data structures to get a logarithmic scene complexity. It would also be interesting to
+extend the implementation to use different devices for the computations. Also extending
+the DSL Diagrams to allow more light types, different material properties, textures
+(function that changes the color of a primitive per point) and more primitives.
 
-
-# Comments
-
-* Give (mathematical) definitions
-* Use "follows" correctly
-* Use `git diff`!
-* Use uniform enumerations, e.g. "translating, rotating, and scaling"
-* Give full definitions if possible, i.e. do not "truncate" things afterwards
-* Refer to scientific papers
-* Use Markdown figures and refer to them in the text where appropriate
-* Sketch out structure before writing and refine
-
-# More comments
-
-* Use present tense
-* Which / whose
-* "These can implicate the generation of new rays" ->
-  "These can generate new rays"
-* doesn't -> does not, isn't -> is not
-
-# References
+The implemented ray tracer does not use advanced rendering techniques. It does not
+consider reflections, refractions and area light. As shading technique is used the well
+known Blinn-Phong model which approximates certain light behavior.
+Advanced methods like path tracing, instant radiosity, Monte Carlo ray tracing, can be
+added to the implementation for rendering more realistic images.
