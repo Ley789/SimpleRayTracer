@@ -152,7 +152,7 @@ instance Renderable (PointLight Double) Ray where
 -- Renderable Camera
 --------------------------------------------------------------------
 
---TODO Test 
+
 instance Renderable (Camera PerspectiveLens Double) Ray where
   render _ c = MRay $ setCamera (Last . Just $ SCamera {
     cType   = t,
@@ -191,12 +191,11 @@ instance Renderable (Camera OrthoLens Double) Ray where
 
 --------------------------------------------------------------------------------
 
-
 renderScene :: (Monoid m, Semigroup m) => FilePath-> OutputType -> Int -> Int -> QDiagram Ray V3 Double m -> IO ()
-renderScene path t w h s =
+renderScene path t h w s =
   case t of
     PNG -> Lb.writeFile path $ imageToPng  f
     JPG -> Lb.writeFile path $ imageToJpg 100 f
     TGA -> Lb.writeFile path $ imageToTga f
-  where f = simpleRayTracer (renderDia Ray RayOptions s) (w, h)
+  where f = simpleRayTracer (renderDia Ray RayOptions s) (h, w)
 

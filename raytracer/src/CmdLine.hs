@@ -40,7 +40,7 @@ chooseRender opts d =
                  _    -> error "unsuported type"
            let w = fromIntegral <$> opts^.width
            let h = fromIntegral <$> opts^.height
-           renderScene (opts^.output) outTyp (fromMaybe 500 w) (fromMaybe 500 h) d
+           renderScene (opts^.output) outTyp (fromMaybe 480 h) (fromMaybe 640 w) d
        | otherwise -> putStrLn $ "Unknown file type: " ++ last ps
 
 

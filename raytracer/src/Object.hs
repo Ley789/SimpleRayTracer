@@ -103,8 +103,12 @@ rayObjectIntersection r o@(Object p om) = do
 rayPointDistance :: Ray -> V4 Double -> Double
 rayPointDistance r p = distance (r ^._o . _xyz) (p ^._xyz)
 
+
+-- Normal vector is a direction, so w = 0. Thats why it is not
+-- needed to convert to Euclidean space before normalazing.
 normalVector :: Matrices -> V4 Double -> V4 Double
 normalVector m p =  normalize $ m ^. normM !* p
+
 
 rot44 :: M44 Double -> M44 Double -> M44 Double
 rot44 s t = r !*! s !*! s
