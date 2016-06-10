@@ -177,11 +177,10 @@ The multiplication of a vector $\vec{v}$ with a scalar $t$ is denoted as
 $\vec{p} * t = t * \vec{p}$.
 
 The standard scalar product of vectors $\vec{p}$ and $\vec{q}$ is denoted as
-$<\vec{p},\vec{q}>$,
-where $<\vec{q}> = <\vec{q},\vec{q}>$.
+$\langle\vec{p},\vec{q} \rangle $,
+where $\langle \vec{q} \rangle = \langle \vec{q},\vec{q} \rangle$.
 
 The Euclidean norm of a vector $\vec{q}$ is denoted as $||\vec{q}||$.
-The cross product of vector p with vector q is denoted as $\vec{p} \times \vec{q}$.
 
 ## Homogeneous coordinates
 
@@ -660,13 +659,14 @@ We see from the definition of the sphere \autoref{sphere} that we have to solve
 the equation
 
 $$
-  <\vec{o} + t*\vec{d}, \vec{o} + t*\vec{d}> = 1
+  \langle \vec{o} + t*\vec{d}, \vec{o} + t*\vec{d} \rangle  = 1
 $$
 
 This can be simplified to the quadratic equation
 
 $$
-  <\vec{o},\vec{o}> + t * 2 * <\vec{o}, \vec{d}> + t^2 * <\vec{d}, \vec{d}> - 1 = 0
+  \langle \vec{o},\vec{o} \rangle  + t * 2 * \langle \vec{o}, \vec{d} \rangle  + t^2 *
+  \langle \vec{d}, \vec{d} \rangle  - 1 = 0
 $$
 
 Now we can solve the quadratic equation
@@ -675,7 +675,8 @@ $$
   t = \frac{-b \pm \sqrt{b^2 - 4 * a* c}}{2 * a},
 $$
 
-where $a = <\vec{d},\vec{d}>$, $b=2*<\vec{o},\vec{d}>$ and $c=<\vec{o},\vec{o}>$.
+where $a = \langle \vec{d},\vec{d} \rangle $, $b=2* \langle \vec{o},\vec{d}
+\rangle $ and $c= \langle \vec{o},\vec{o} \rangle $.
 The smallest positive result of the quadratic equation leads to the nearest
 intersection.
 
@@ -694,7 +695,7 @@ $$
 Now we have the minimum for the x-component. After calculating the minimum and
 the maximum values for the other components we take the maximum of all minimums,
 $tmin = max(tmin_x, tmin_y, tmin_z)$, and the minimum of all maximums,
-$tmax = max(tmax_x, tmax_y, tmax_z)$. If $tmin > tmax$ or $tmin <= tmax <0$ then
+$tmax = max(tmax_x, tmax_y, tmax_z)$. If $tmin > tmax$ or $tmin \le tmax <0$ then
 there is no intersection. If $tmin < 0$ and $tmax > 0$ then $tmax$ leads to the
 nearest intersection. For further details see \cite{will}.
 
@@ -712,21 +713,22 @@ We need to check if the displacement between the ray and $\vec{p}$ is in the
 same plane. This leads to the equation
 
 $$
-  t = \frac{<\vec{n}, \vec{p} - \vec{o}>}{<\vec{n}, \vec{d}>}  
+  t = \frac{\langle \vec{n}, \vec{p} - \vec{o} \rangle }{\langle \vec{n}, \vec{d} \rangle }  
 $$
 
 ### Cylinder intersection
 
 A cylinder aligned on an arbitrary line $\vec{p_a} + \vec{v_a} * t$, a
 point on the cylinder $\vec{q}$ and radius $r$ holds
-$<\vec{q} - \vec{p_a} - <\vec{v_a},\vec{q} - \vec{p_a}> * \vec{v_a}> - r^2 = 0$.
+$\langle \vec{q} - \vec{p_a} - \langle \vec{v_a},\vec{q} - \vec{p_a}
+\rangle * \vec{v_a} \rangle - r^2 = 0$.
 
 
 The definition of cylinder in section \autoref{cylinder} allows us to simplify
 the equation. We substitute the point on the cylinder $\vec{q}$ with the ray
 
 $$
-  <\vec{o} + t * \vec{d} - (0,0, z_o + t * z_d)> - r^2 = 0
+  \langle \vec{o} + t * \vec{d} - (0,0, z_o + t * z_d) \rangle  - r^2 = 0
 $$
 
 This can be simplified to
@@ -768,8 +770,9 @@ To get the nearest intersection of a cylinder perform following steps:
 For a cone aligned on an arbitrary line $\vec{p_a} + \vec{v_a} * t$ with apex
 $\vec{p_a}$, center of the base cap at $\vec{p_1}$, center of the top cap at
 $\vec{p_2}$, a point on the cone $\vec{q}$ and half-angle $\alpha$ holds
-$\cos^2 \alpha <\vec{q} - \vec{p_a} - <\vec{v_a},<\vec{q} - \vec{p_a},\vec{v_a}>>
- - \sin^2 \alpha <\vec{v_a},\vec{q} - \vec{p_a}> = 0$,
+$\cos^2 \alpha \langle \vec{q} - \vec{p_a} - \langle \vec{v_a}, \langle \vec{q}
+- \vec{p_a} \rangle  \vec{v_a} \rangle - \sin^2 \alpha
+\langle \vec{v_a},\vec{q} - \vec{p_a} \rangle  = 0$,
 
 where $\vec{p_a} = \vec{p_1} + r_1 * (\vec{p_2} - \vec{p_1})/(r_1 - r_2)$.
 
@@ -870,8 +873,8 @@ and $x/y$ plane component of the normal vector, which is $r_1/c$ for the $z$
 plane and $h/c$ for the $x/y$ plane. Now we combine these results
 
 $$
-  \vec{n} = ( \frac{x}{(x^2 + y^2)} * \frac{h}{c},
-              \frac{y}{(x^2 + y^2)} * \frac{h}{c}, r_1/c),
+  \vec{n} = ( \frac{x}{x^2 + y^2} * \frac{h}{c},
+              \frac{y}{x^2 + y^2} * \frac{h}{c}, \frac{r_1}{c}),
 $$
 
 where $\vec{n}$ is the normal vector of the cone at point $\vec{p}$.
@@ -880,12 +883,13 @@ where $\vec{n}$ is the normal vector of the cone at point $\vec{p}$.
 
 
 After we apply a transformation $M$ to a point $\vec{p}$ and to its corresponding normal vector $\vec{n}$
-it is not guaranteed that $<M \vec{n}, M \vec{p}> = 0$.For example if we apply a non uniform scaling.
+it is not guaranteed that $\langle M \vec{n}, M \vec{p} \rangle  = 0$.
+For example if we apply a non uniform scaling.
 So we need to find a transformation that transforms our normal vector correctly. First
 we transform the normal vector to a homogeneous direction. After we see that
 
 $$
-  <\vec{n}, \vec{p}> = \vec{n}^{\tr}\vec{p} = 0
+  \langle \vec{n}, \vec{p} \rangle  = \vec{n}^{\tr}\vec{p} = 0
 $$
 
 which leads to
@@ -999,7 +1003,7 @@ illuminates the object and we calculate the diffuse color with following
 equation
 
 $$
-  \vec{c_d} = \vec{c} * d * \max (0, <\vec{l_d}, \vec{n}>),
+  \vec{c_d} = \vec{c} * d * \max (0, \langle \vec{l_d}, \vec{n} \rangle ),
 $$
 
 
@@ -1030,8 +1034,8 @@ we calculate the specular reflection color with following equation
 ot consider p_a!!
 
 $$
-  \vec{c_d} = \vec{c} * s * \max (0, <\frac{\vec{v} + \vec{l_d}}{||\vec{v} + \vec{l_d}||},
-     \vec{n}>)^r,
+  \vec{c_d} = \vec{c} * s * \max (0,\langle \frac{\vec{v} + \vec{l_d}}{||\vec{v} + \vec{l_d}||},
+     \vec{n} \rangle )^r,
 $$
 
 where $n$ is the normal vector of the surface at position $\vec{p}$, $s$ is the
