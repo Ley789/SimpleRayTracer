@@ -13,8 +13,10 @@ import Linear     hiding (frustum)
 import Data.List
 import Data.Maybe (catMaybes)
 import Data.Ord   (comparing)
+import Control.Arrow ((&&&))
 import Control.Lens
 import Control.Monad
+import Control.Monad.Zip (mzipWith)
 import Control.Applicative
 
 
@@ -37,11 +39,6 @@ data Ray = Ray {
  _directionR :: V4 Double
 } deriving Show
 
--- | Intern reperesentation of ray, because intersection function are
--- based on equation in euclidean space
-data EuclideanRay = EuclideanRay  (V3 Double) (V3 Double)
-  deriving Show
-
 makeLenses ''Ray
 
 _o :: Lens' Ray (V4 Double)
@@ -49,6 +46,15 @@ _o = originR
 _d :: Lens' Ray (V4 Double)
 _d = directionR
 
+-- | Intern representation of ray, because intersection functions are
+-- based on equations in euclidean space
+data EuclideanRay = EuclideanRay (V3 Double) (V3 Double)
+  deriving Show
+
+toEuclidean (Ray o d) = EuclideanRay (o ^. _xyz) (d ^. _xyz)
+
+toHom :: (V3 Double, V3 Double) -> (V4 Double, V4 Double)
+toHom (x,y) = (point x, vector y)
 
 normalCone :: Double -> Double -> V3 Double -> V3 Double
 normalCone r1 r2 p = V3 xn yn (r1 / c)
@@ -59,45 +65,43 @@ normalCone r1 r2 p = V3 xn yn (r1 / c)
           xn = (x / m) * (h / c)
           yn = (y / m) * (h / c) 
 
-normalCylinder :: V3 Double -> V3 Double
-normalCylinder p = normalize $  V3 (p ^._x) (p ^._y) 0
+normalCylinder :: (Floating a, Epsilon a, Num a) => V3 a -> V3 a
+normalCylinder = normalize . set _z 0
+
 
 intersection :: Ray -> Primitive -> Maybe (V4 Double, V4 Double)
-intersection (Ray o d) = intersectionf (EuclideanRay (o ^._xyz) (d ^._xyz))
+intersection r p = fmap toHom $ intersectionf (toEuclidean r) p
 
-intersectionf :: EuclideanRay -> Primitive -> Maybe (V4 Double, V4 Double)
-intersectionf ray Sphere = transformToHom <$> (\x -> (x,x)) <$> sphereIntersection ray
-intersectionf ray Box = transformToHom <$> boxIntersection ray
-intersectionf ray (Cone rad1 rad2) = transformToHom <$>
-  frustumIntersection ray (coneIntersection ray rad1 rad2) rad1 rad2 (normalCone rad1 rad2)
-intersectionf ray (Cylinder rad) = transformToHom <$>
-  frustumIntersection ray (cylinderIntersection ray rad) rad rad normalCylinder
+intersectionf :: EuclideanRay -> Primitive -> Maybe (V3 Double, V3 Double)
+intersectionf ray Sphere = (\x -> (x,x)) <$> sphereIntersection ray
+intersectionf ray Box = boxIntersection ray
+intersectionf ray (Cone rad1 rad2) = frustumIntersection ray (coneIntersection ray rad1 rad2) rad1 rad2 (normalCone rad1 rad2)
+intersectionf ray (Cylinder rad) = frustumIntersection ray (cylinderIntersection ray rad) rad rad normalCylinder
 
-transformToHom :: (V3 Double, V3 Double) -> (V4 Double, V4 Double)
-transformToHom (x,y) = (point x, vector y)
+maybeList [] = Nothing
+maybeList l  = Just l
 
 frustumIntersection :: EuclideanRay -> Maybe Double -> Double -> Double -> (V3 Double -> V3 Double) -> Maybe (V3 Double, V3 Double)
-frustumIntersection r@(EuclideanRay o _) t rad1 rad2 n
-  | null l    = Nothing
-  | otherwise = Just $ minimumBy (comparing $ distance o . fst) l
-    where f  = frustumConstrain r t n
-          cB = capIntersection r (V3 0 0 0) (-1) rad1
-          cT = capIntersection r (V3 0 0 1)  1 rad2
-          l  = catMaybes [f,cB,cT]
+frustumIntersection r@(EuclideanRay o _) t rad1 rad2 n =
+  minimumBy (comparing $ distance o . fst) <$> maybeList l
+  where
+    f = (id &&& n) <$> frustumConstrain r t
+    cap o rad nz = (\ x -> (x, V3 0 0 nz)) <$> capIntersection r o rad
+    l = catMaybes [f, cap 0 rad1 (-1), cap 1 rad2 1]
 
-frustumConstrain :: EuclideanRay -> Maybe Double -> (V3 Double -> V3 Double) -> Maybe (V3 Double, V3 Double)
-frustumConstrain r it n = do
+frustumConstrain :: EuclideanRay -> Maybe Double -> Maybe (V3 Double)
+frustumConstrain r it = do
   p <- itPoint r <$> it
   let z = p ^. _z
   guard (z >= 0 && z <= 1)
-  return (p,n p)
+  return p
 
-capIntersection :: EuclideanRay -> V3 Double -> Double -> Double -> Maybe (V3 Double, V3 Double)
-capIntersection r o d rad = do
-  p <- itPoint r <$> planeIntersection r o (V3 0 0 1)
+capIntersection :: EuclideanRay -> Double -> Double -> Maybe (V3 Double)
+capIntersection r o rad = do
+  p <- itPoint r <$> planeIntersection r (V3 0 0 o) (V3 0 0 1)
   let q = set _z 0 p
-  guard (dot q q  <= rad ** 2)
-  return (p, V3 0 0 d)
+  guard (dot q q <= rad ** 2)
+  return p
 
 -- | Easier intersection function because of our cosntrains to the object
 --   Normalized direction vector of cylinder is (0,0,1)
@@ -105,12 +109,10 @@ cylinderIntersection :: EuclideanRay -> Double -> Maybe Double
 cylinderIntersection (EuclideanRay o d) rad =
   solveQuadratic a b c >>= uncurry nearestPositive
   where
-    vd = v d
-    vo = v o
+    (vd, vo) = over both (set _z 0) (d, o)
     a  = dot vd vd
     b  = 2 * dot vd vo
     c  = dot vo vo - rad**2
-    v  = set _z 0
 
 coneIntersection :: EuclideanRay -> Double -> Double -> Maybe Double
 coneIntersection (EuclideanRay o d) r1 r2 =
@@ -128,10 +130,9 @@ coneIntersection (EuclideanRay o d) r1 r2 =
 -- | Given a ray, point on the plane and the normal vector to the plane
 -- return the coefficient if the ray intersects the plane.
 planeIntersection :: EuclideanRay -> V3 Double -> V3 Double -> Maybe Double
-planeIntersection (EuclideanRay o d) p n
-  | t <= 0    = Nothing
-  | otherwise = Just t
-  where t = dot n (p ^-^ o) / dot n d
+planeIntersection (EuclideanRay o d) p n =
+  let t = dot n (p ^-^ o) / dot n d in
+  guard (t > 0) >> return t
 
 -- | Calculate the intersection between the ray and the unit box aligned on the
 -- axes.
@@ -147,12 +148,32 @@ boxIntersection r@(EuclideanRay origin direction)
     a = slabIntersection origin invD
 -- ghc type error if ts = map a [_x, _y, _z] is used
     ts = [a _x, a _y, a _z]
+
+    -- TODO: idea
+    slab = mzipWith slab' origin invD
+    normalM = normalD' invD
+
     minL = maximumBy (comparing extMin) ts
     maxL = minimumBy (comparing extMax) ts 
     extMin = fst . fst
     extMax = snd . fst
     tMin = extMin minL
     tMax = extMax maxL
+
+-- TODO: idea
+slab' o i = over both slab coeffs
+  where
+    coeffs = if i >= 0 then (0, 1) else (1, 0)
+    slab b = b - o*i
+
+-- TODO: idea
+diagonal3 :: Num a => V3 a -> M33 a
+diagonal3 (V3 x y z) = V3 (V3 x 0 0) (V3 0 y 0) (V3 0 0 z)
+
+-- TODO: idea
+normalD' :: (Num a, Ord a, Num b) => t -> V3 a -> M33 b
+normalD' v = diagonal3 . fmap f
+  where f i = if i >= 0 then -1 else 1
 
 -- slab returns the coefficents needed to reach the bounds in the corresponding
 -- axis and the normal vector direction of the min value.
