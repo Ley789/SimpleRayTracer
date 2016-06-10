@@ -33,11 +33,17 @@ data Primitive =
   | Cylinder Double
      deriving(Show)
 
--- | Convention: 4-th value of originR is always 1
+-- Convention: 4-th value of originR is always 1
 data Ray = Ray {
  _originR :: V4 Double,
  _directionR :: V4 Double
 } deriving Show
+
+data SlabI = SlabI {
+ tmin :: Double,
+ tmax :: Double,
+ normal :: V3 Double
+}
 
 makeLenses ''Ray
 
@@ -140,50 +146,37 @@ boxIntersection :: EuclideanRay -> Maybe (V3 Double, V3 Double)
 boxIntersection r@(EuclideanRay origin direction)
   | tMax < 0    = Nothing
   | tMin > tMax = Nothing
-  | tMin > 0    = Just (itPoint r tMin, snd minL)
-  | tMax > 0    = Just (itPoint r tMax, negate $ snd minL)
+  | tMin > 0    = Just (itPoint r tMin, normal minL)
+  | tMax > 0    = Just (itPoint r tMax, negate $ normal minL)
   | otherwise   = Nothing
   where
     invD = fmap (1/) direction
     a = slabIntersection origin invD
--- ghc type error if ts = map a [_x, _y, _z] is used
     ts = [a _x, a _y, a _z]
+    minL = maximumBy (comparing tmin) ts
+    maxL = minimumBy (comparing tmax) ts 
+    tMin = tmin minL
+    tMax = tmax maxL
 
-    -- TODO: idea
-    slab = mzipWith slab' origin invD
-    normalM = normalD' invD
+-- slab returns the coefficents needed to reach the bounds in the corresponding
+-- axis and the normal vector of the min value.
+slabIntersection :: V3 Double -> V3 Double -> Lens' (V3 Double) Double -> SlabI
+slabIntersection o i l = SlabI f s (normalD' l d)
+  where res = slab' (o ^. l) d
+        f = fst res
+        s = snd res
+        d = i ^. l
 
-    minL = maximumBy (comparing extMin) ts
-    maxL = minimumBy (comparing extMax) ts 
-    extMin = fst . fst
-    extMax = snd . fst
-    tMin = extMin minL
-    tMax = extMax maxL
-
--- TODO: idea
+slab' :: Double -> Double -> (Double, Double)
 slab' o i = over both slab coeffs
   where
     coeffs = if i >= 0 then (0, 1) else (1, 0)
     slab b = b - o*i
 
--- TODO: idea
-diagonal3 :: Num a => V3 a -> M33 a
-diagonal3 (V3 x y z) = V3 (V3 x 0 0) (V3 0 y 0) (V3 0 0 z)
+normalD' :: Lens' (V3 Double) Double -> Double -> V3 Double
+normalD' l i = set l v (V3 0 0 0)
+  where v = if i >= 0 then -1 else 1
 
--- TODO: idea
-normalD' :: (Num a, Ord a, Num b) => t -> V3 a -> M33 b
-normalD' v = diagonal3 . fmap f
-  where f i = if i >= 0 then -1 else 1
-
--- slab returns the coefficents needed to reach the bounds in the corresponding
--- axis and the normal vector direction of the min value.
-slabIntersection :: V3 Double -> V3 Double -> Lens' (V3 Double) Double -> ((Double, Double), V3 Double)
-slabIntersection o i l
-  | i ^. l >= 0 = (over both slab (0,1), normalD (-1))
-  | otherwise   = (over both slab (1,0), normalD 1)
-  where
-    slab b = (b - (o ^. l)) * (i ^. l)
-    normalD v = set l v (V3 0 0 0)
 
 -- | Calculate the possible intersection point.
 sphereIntersection :: EuclideanRay -> Maybe (V3 Double)
