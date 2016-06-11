@@ -23,11 +23,11 @@ At the end it discusses the general approach to integrate the renderer into Diag
 
 # Rendering
 
-In the field of 3D computer graphics the process of generating an image from a defined
-scene description is called rendering. Also the result of this process is a rendering.
+In the field of 3D computer graphics the process of generating an image from a Euclidean
+space with geometric shapes is called rendering. Also the result of this process is a rendering.
 
 We introduce 2 rendering techniques called rasterization and ray tracing.
-At the end of the chapter we will compare both methods.
+At the end of the chapter we compare both methods.
 
 ## Rasterization
 
@@ -46,7 +46,7 @@ For a further introduction on this topic see \cite{shre}.
 The idea of ray tracing is to trace the path of rays emitted from a camera that travel
 through a pixel grid. We can determine the visible object for each ray by intersecting
 the ray with each object in the scene. The visible object is the one with the closest intersection.
-We can calculate the color with the properties(location, material, . . . ) of the closest object
+We can calculate the color with the properties (location, material, etc. ) of the closest object
 and the scene. An intersection can generate new rays to simulate effects like reflection and
 refractions. There are several ray tracing techniques that share the same basic algorithm.
 
@@ -55,7 +55,7 @@ refractions. There are several ray tracing techniques that share the same basic 
 "Some techniques for shading machine renderings of solids" is a paper by Arthur Appel
 published in 1968 \cite{appel}. It is the first approach to ray tracing. He represented rays
 as mathematical lines and checked if there is an intersection with an object. The rays
-are not traced further after an intersection, this is also known as Ray Casting.
+are not traced further after an intersection. That algorithm is known as Ray Casting.
 
 The first ray tracing technique was introduced by Whitted in 1980 \cite{whitt}, which
 is an extension of Appels algorithm. After an intersection the ray can generate 3 new
@@ -80,12 +80,12 @@ called Monte Carlo ray tracing, because it uses random samples to compute the im
 
 The basic concept of ray tracing algorithms is efficiently finding intersections between
 a ray and a scene that consists of a set of geometric primitives \cite{wald}.
-The ray, as defined in the section \autoref{ray}, can have additional parameters
+The ray, as defined in the \autoref{ray}, can have additional parameters
 $t_{min}$ and $t_{max}$, which specify the interval of $t$ used for the points
 traversed by the ray. In other words it
 specifies the minimum and the maximum distance of a ray.
 
-At this level the algorithm can be split in 3 tasks. The most fundamental task is to find
+The algorithm can be split in 3 tasks. The most fundamental task is to find
 the closest intersection. The second task, also called visibility/occlusion test, is to check
 if there are any intersections. The last task is to find all intersections. Checking for any
 intersections is slightly simpler than checking for the closest, so there are algorithms that
@@ -94,11 +94,11 @@ are more efficient in this case. For example the occlusion test is used for shad
 In ray tracing only one condition must apply for a primitive, which is that
 there must be a function that can calculate an intersection between the primitive and a
 ray. That means primitives can be of various types, from simple geometric shapes like
-spheres, cubes, triangles,. . . , to complex parametric patches like the Bézier patches and
-other complex shapes as long as there exists an intersection function. The flexibility of
+spheres, cubes, triangles, etc., to complex shapes and parametric patches like the Bézier patches
+as long as there exists an intersection function. The flexibility of
 primitives allows to represent shapes with full accuracy. Although using multiple kinds
 of primitives does not limit the kinds of scenes that can be rendered. Like mentioned
-in \autoref{Rasterization} most real time applications use rasterization techniques to render an
+in \autoref{rasterization} most real time applications use rasterization techniques to render an
 image and most of them only use triangles as primitives.
 
 Testing every primitive in the scene for an intersection with a ray produces the correct
@@ -111,7 +111,7 @@ kd-trees \cite{copy}.
 ### Performance
 
 At the beginning of modern computer graphics only scenes with a small number of
-primitives were used and interactive graphic applications were not established. Ray
+primitives were used and interactive graphic applications were not established \cite{copy}. Ray
 tracing is computationally intense and aims to simulate physical realistic behavior. These
 are part of the reasons why rasterization is the well-established rendering technique for
 interactive applications at the moment and ray tracing is still used rarely in this field.
@@ -120,10 +120,10 @@ the argument that ray tracing will outperform rasterization at some point becaus
 logarithmic scene complexity \cite{wald}.
 
 Ray tracing is usually used for offline rendering due to the fact that it
-is computationally intense. The crucial factors for the ray tracing algorithm
+is computationally intense. The crucial factors for ray tracing algorithms
 are:
 
-* The amount of rays. Consider an image with a resolution of 800 x 800,
+* The amount of rays. Consider an image with a resolution of 800 $\times$ 800,
   without counting the secondary rays, this lead to a total amount of
   640.000 rays. Depending on the scene complexity the set
   of primary rays may only be small part compared to the set of all rays.
@@ -132,47 +132,47 @@ are:
   data structures is the most important optimization in ray tracing because
   it can give the algorithm a logarithmic behavior in scene complexity \cite{copy}.
 
-The common crucial factors lead to common optimizations. For the first fact, the amount
-of rays, it is sufficed to reduce the number of rays to reduce the computation time.
-This can be achieved by reducing the primary rays(smaller resolution) or reducing the
+The common crucial factors lead to common optimizations. For the amount
+of rays, it suffices to reduce the number of rays to reduce the computation time.
+This can be achieved by reducing the primary rays (smaller resolution) or reducing the number of
 secondary rays. The second fact, the scene complexity, can be optimized by using the
 mentioned acceleration data structures. Also using optimized intersection functions leads
 to reduced computation time.
 
-Ray tracing is known as an embarrassingly parallel problem, because the result of each
+Ray tracing is known to be massively parallel problem, because the result of each
 ray can be calculated independently. The optimization of ray tracing is a topic of interest
 since the invention of the algorithm \cite{copy}.
 
 ## Ray Tracing compared with rasterization
 
-Advantages of ray tracing:
+The advantages of ray tracing are:
 
-  * Ray tracing is known for physically realistic images in high quality.
+  * Ray tracing is known for physically realistic high quality images.
   * The algorithm is an embarrassingly parallel problem.
-  * The algorithm scales logarithmic with the scene complexity.
+  * The algorithm scales logarithmically with the scene complexity.
   * Complex effects like shadows, reflection and refractions can be simulated
     and represented correctly.
 
 Advantages of rasterization:
 
   * Established method with approximations of physical effects.
-  * Part of the rasterization algorithm is already executed by the hardware.
+  * Part of the rasterization algorithm is already executed by the hardware \cite{shre}.
   * In general smaller computation time.
 
 Rasterization based rendering needs a number of approximations for specific effects,
 e.g. shadow maps to approximate shadows. Without specific criteria rasterization may
-not be able to simulation or approximate certain effects.
+not be able to simulate or approximate certain effects.
 
-Ray tracing can use approximations to save computation time but it is not
-required. Whereas rasterization needs them for certain effects.
+Ray tracing can use approximations to save computation time.
+However rasterization needs them for certain effects.
 
 # 3D Scene
 
-In this chapter we will introduce definitions that we use to describe 3D scenes.
+In this chapter we introduce definitions that we use to describe 3D scenes.
 
 ## Vector notation
 
-We will introduce notation conventions which we use in this thesis.
+We introduce notation conventions which we use in this thesis.
 The multiplication of a vector $\vec{v}$ with a scalar $t$ is denoted as
 $\vec{p} * t = t * \vec{p}$.
 
@@ -185,15 +185,17 @@ The Euclidean norm of a vector $\vec{q}$ is denoted as $||\vec{q}||$.
 ## Homogeneous coordinates
 
 Given a vector $\vec{p}=(x_1,...,x_n)$, the vector
-$\vec{q}=(x_1 * w, ..., x_n * w, w)$ with $w \ne 0$ is a homogeneous vector
-of the vector $\vec{p}$. It follows that for every scalar $t \in \mathbb{R}$ and
-$t \ne 0$, $t*\vec{q}$ is a homogeneous vector of $\vec{p}$. A homogeneous
-vector is called a point if and only if $w \ne 0$. A homogeneous vector is called
-a direction if and only if $w = 0$.
+$\vec{q}=(x_1 * w, ..., x_n * w, w)$ with $w \ne 0$ is a homogeneous point
+of the vector $\vec{p}$ and the vector $\vec{q'}=(x_1, ..., x_n, 0)$
+is a homogeneous direction of the vector $\vec{p}$.
+
+It follows that for every scalar $t \in \mathbb{R}$ and
+$t \ne 0$, $t*\vec{q}$ is a homogeneous point and $t*\vec{q'}$ is a
+homogeneous direction of $\vec{p}$.
 
 Representing coordinates of $\mathbb{R}^3$ as homogeneous vectors
 simplifies transformations because points and directions have different
-properties. If not stated differently, every point/direction is considered
+properties. If not stated otherwise, every point/direction is considered
 a homogeneous point/direction except for the definitions in
 \autoref{primitives}.
 
@@ -217,7 +219,7 @@ of vectors, where $\vec{p}$ is the position,
 $\vec{f}$ is the forward direction, $\vec{r}$ is the right direction and
 $\vec{u}$ is the up direction.
 
-To get a better understanding of these vectors, see \autoref{projection}.
+The relation between the vectors is explained in \autoref{projection}.
 
 ## Viewing plane
 
@@ -229,6 +231,8 @@ $$
 
 where $1 \le i \le n$, $1 \le j \le m$ and $f(x,y)= ((x - 1)/ (y - 1)) - 0.5$.
 The rows and columns of the viewing plane determine the resolution.
+
+The viewing plane represents the image grid, e.g. the pixels that will be rendered.
 
 ## Light
 
@@ -247,14 +251,14 @@ the position and $\vec{d}$ the direction of the ray.
 The ray travels through all points of the set
 
 $$
- \{ \vec{o} + t * \vec{d} | t \in \mathbb{R}, t > 0 \}
+ \{ \vec{o} + t * \vec{d} | t \in \mathbb{R}, t > 0 \}.
 $$
 
 
 ## Primitives
 
 We define a number of shapes, called primitives, that can be represented in
-the euclidean space. Every shape is defined by the set of the points of its
+the Euclidean space. Every shape is defined by the set of the points of its
 surface.
 
 ### Sphere
@@ -262,7 +266,7 @@ surface.
 The unit sphere, which is centered at the origin, is defined by the set
 
 $$
-  \{\vec{p} | \vec{p} \in \mathbb{R}^3, ||\vec{p}|| = 1 \}
+  \{\vec{p} | \vec{p} \in \mathbb{R}^3, ||\vec{p}|| = 1 \}.
 $$
 
 A render of a sphere is illustrated in
@@ -280,7 +284,7 @@ A render of a sphere is illustrated in
 The box aligned with the axes and all four sides of length 1 is defined by the set
 
 $$
-  P_x(0) \cup P_x(1) \cup P_y(0) \cup P_y(1) \cup P_z(0) \cup P_z(1)
+  P_x(0) \cup P_x(1) \cup P_y(0) \cup P_y(1) \cup P_z(0) \cup P_z(1),
 $$
 
 where
@@ -292,7 +296,7 @@ $$
   P_y(v) := \{(v,y,z) | 0 \le y,z \le 1, y,z \in \mathbb{R}\}
 $$
 $$
-  P_z(v) := \{(x,v,z) | 0 \le x,z \le 1, x,z \in \mathbb{R}\}  
+  P_z(v) := \{(x,v,z) | 0 \le x,z \le 1, x,z \in \mathbb{R}\}.
 $$
 
 A render of a box is illustrated in
@@ -311,7 +315,7 @@ A cylinder aligned at the z-axis, with length 1 and radius $r \in \mathbb{R}$
 is defined by the set
 
 $$
-  \{\vec{p}=(x,y,z)| \vec{p} \in \mathbb{R}^3, x^2 + y^2 = r,1 \ge z \ge 0 \}
+  \{\vec{p}=(x,y,z)| x,y,z \in \mathbb{R}^3, x^2 + y^2 = r,1 \ge z \ge 0 \}.
 $$
 
 A render of a cylinder is illustrated in
@@ -329,15 +333,18 @@ A render of a cylinder is illustrated in
 A cone of length 1 which is aligned at the z-axis is defined by the set
 
 $$
-  \{\vec{p}=(x,y,z)| \vec{p} \in \mathbb{R}^3,
+  \{\vec{p}=(x,y,z)| x,y,z \in \mathbb{R}^3,
   \cos^2 \alpha * (x^2 + y^2) - \sin^2 \alpha * (z - r_1 / \alpha) = 0,
-  1 \ge z \ge 0\}
+  1 \ge z \ge 0\},
 $$
 
 where the base cap is centered at the origin $\vec{p_1}$ with radius
 $r_1 \in \mathbb{R}$, the top cap is centered at $\vec{p_2} = (0,0,1)$ with
 radius $r_2 \in \mathbb{R}$ and the tangent of the half-angle is
 $\tan \alpha = r_1 - r_2 / ||\vec{p_2} - \vec{p_1}|| = r_1 - r_2$.
+
+This definition allows have different half-angles and apex positions,
+which are calculated with the radii.
 
 A render of a cone is illustrated in
 \autoref{fig:cone}.
@@ -352,7 +359,7 @@ A render of a cone is illustrated in
 ## Transformations
 
 A transformation is a function that takes a vector $\vec{p} = (x_1,...,x_n)$
-and returns a vector $\vec{q} = (y_1,...,y_n)$. In the next sections we will
+and returns a vector $\vec{q} = (y_1,...,y_n)$. In the next sections we
 introduce a group of transformations.
 
 
@@ -368,7 +375,7 @@ $$
               0   & 0   & s_z & 0 \\
               0   & 0   &  0  & 1
            \end{array}
-       \right)
+       \right),
 $$
 
 where the indices stands for the scaling in the corresponding axes.
@@ -418,14 +425,14 @@ $$
                       0          & 0           & 1 & 0 \\
                       0          & 0           & 0 & 1
                    \end{array}
-                  \right)
+                  \right),
 $$
 
 where the indices indicate the axis by which we rotate and $\alpha$ the angle. A rotation
 matrix is a result of the rotation function defined above or the multiplications of 2 rotation
 matrices. For a corresponding proof see \cite{kenn}.
 
-Multiplying every point of a primitive with a rotation matrix will rotate
+Multiplying every point of a primitive with a rotation matrix rotates
 the primitive.
 
 To rotate a point $\vec{p}$ on an arbitrary axis $\vec{a}$ by the angle $\alpha$,
@@ -437,7 +444,7 @@ with $R_a^{-1}$. This leads to the rotated point $\vec{p''} = R_a^{-1}\vec{p'}$.
 We can combine these steps to one rotation matrix
 
 $$
-  R = R_a^{-1}R_s(\alpha)R_a
+  R = R_a^{-1}R_s(\alpha)R_a.
 $$
 
 ### Translation matrix
@@ -452,7 +459,7 @@ $$
                   0 & 0 & 1 & t_z \\
                   0 & 0 & 0 & 1
                 \end{array}
-              \right)
+              \right),
 $$
 
 where the indices describe the translation in the corresponding axes. A translation matrix
@@ -462,10 +469,10 @@ matrices.
 ### Transformation matrix
 
 We define a transformation matrix $M$ as multiplications of a
-translation $T'$, rotation $R'$ and scaling matrix $S'$.
+translation $T'$, rotation $R'$ and scaling matrix $S'$
 
 $$
-  M := T'R'S'
+  M := T'R'S'.
 $$
 
 Every combination of translating, rotating and
@@ -540,7 +547,7 @@ $$
 \end{aligned}
 $$
 
-we know that $\sqrt{r_{11}^2 + r_{21}^2 + r_{31}^2} = 1$ because of the property
+We know that $\sqrt{r_{11}^2 + r_{21}^2 + r_{31}^2} = 1$ because of the property
 of rotation matrices. The other components of the scaling matrix can be extracted
 analogously. Now we can create the scaling matrix $S'$.
 
@@ -549,7 +556,7 @@ form arbitrary ordered multiplications of scaling and rotation matrices.
 
 The remaining matrix $R'$ can be obtained by multiplying the inverse scaling
 matrix with $L''$, where $L''$ is the matrix $L$ but with the last column
-replaced by $\vec{v}=(0, 0, 0, 1)^T$
+replaced by $\vec{v}=(0, 0, 0, 1)^T$.
 
 $$
   R' = L'' * S'^{-1}
@@ -563,7 +570,7 @@ the interval $[0,1]$. The components are called coefficients with $a$ as the
 ambient, $d$ as the diffuse, $s$ as the specular and $r$ as the rough
 coefficient.
 
-This values are used in \autoref{shading-model} to manipulate illumination influence. That means
+These values are used in \autoref{shading-model} to manipulate illumination influence. That means
 we can adjust the final color by changing these coefficients.
 
 ## Object
@@ -575,18 +582,17 @@ material property.
 
 # Domain-Specific Language
 
-A domain is defined as a field of study that defines a set of common requirements and
-terminology. A Domain-Specific Language (DSL) is a tool that simplifies expressions and
+A Domain-Specific Language (DSL) is a language that simplifies expressions and
 solves problems in a defined domain. There are 2 major kinds of DSL
 
 * Embedded DSL: An embedded DSL is a library implemented in the host language
    (normally a general-purpose language), providing greater abstractions related to
-    the domain. An example is SQL database connector for java.
+    the domain. An example is SQL database connector for Java.
 * Internal DSL: An internal DSL is an independent language with several tools (parser,
     interpreters, . . . ). A common used internal DSL is CSS.
 
-In this chapter we introduce the embedded DSL Diagrams. Next we discuss the usability
-of Diagrams in 3D.
+In this chapter we introduce Diagrams. It is a embedded DSL for vector graphics and
+3D scenes. Next we discuss the usability of Diagrams in 3D.
 
 ## Diagrams
 
@@ -605,12 +611,17 @@ hilbert 0 = mempty
        hilbert' m = hilbert m        # rotateBy (1/4)
 \end{minted}
 
+In this Haskell code a function hilbert is defined recursively. The function
+uses monads to concatenate scene elements (<> is mappend in infix notation). The
+scene elements (vrule and hrule), the properties (reflectX, reflectY and rotateBy)
+and the function # which combines them are part of the Diagrams DSL.
+
 A illustration of that scene is in \autoref{fig:hilbert}
 
 \begin{figure}[!ht]
 \centering
 \includegraphics[scale=0.25]{Hilbert.png}
-\caption{Hilber}
+\caption{Hilbert}
 \label{fig:hilbert}
 \end{figure}
 
@@ -624,34 +635,36 @@ language of POV-Ray, an open source renderer.
 
 There are several advantages of using Diagrams over POV-Ray
 
-* Diagrams can describe more scenes as the text-base description of POV-Ray. For
+* Diagrams can describe more scenes than the text-base description of POV-Ray. For
      example an animation in Diagrams is a scene that changes over time. This cannot
      be described in POV-Ray.
 * Scene descriptions are generally shorter in Diagrams than in POV-Ray because
      Diagrams scenes can take advantages of the expression power of Haskell.
-* Extension of Diagrams is independent of the backend.
+* Extension of Diagrams is independent of the backend. That means that backends
+  can support the features of Diagrams. A extension of the text-base scene
+  description of POV-Ray only makes sense if POV-Ray supports the extension.
 
-# Implementation
+# Algorithms used in the implementation
 
 In this chapter we introduce elements that are needed to implement the basic ray tracing
 algorithm. First we discuss the intersection functions for the defined primitives in \autoref{primitives}.
-After that we will show a method to keep the intersection functions simple even with
-transformations. We will describe how transformations influence normal vectors. Next
+After that we show a method to keep the intersection functions simple even with
+transformations. We describe how transformations influence normal vectors. Next
 we describe the generation of primary rays and how they lead to different projections. At
 the end we introduce a well known shading algorithm to approximate light behavior.
 
 
 ## Intersection functions
 
-The intersection functions are based on euclidean space. So we first need to
-convert a ray to euclidean coordinates. Given a ray $R$ with origin at point
+The intersection functions are based on Euclidean space. So we first need to
+convert a ray to Euclidean coordinates. Given a ray $R$ with origin at point
 $\vec{o} = (o_x,o_y,o_z,w)$ and direction $\vec{d} = (d_x, d_y, d_z, 0)$, then
 the ray with the origin $\vec{o'}= (o_x / w, o_y / w, o_z / w)$ and the direction
-$\vec{d'}= (d_x, d_y, d_z)$ represents $R$ in euclidean space.
+$\vec{d'}= (d_x, d_y, d_z)$ represents $R$ in Euclidean space.
 
 In the following subsections we denote $\vec{o}=(x_o, y_o, z_o)$ as origin and
 $\vec{d} = (x_d, y_d, z_d)$ as direction of a ray and for all points and
-directions follows that they are denoted in euclidean space.
+directions follows that they are denoted in Euclidean space.
 
 ### Sphere intersection
 
@@ -683,7 +696,7 @@ intersection.
 ### Box intersection
 
 To get the nearest intersection between a ray and a box we check the boundaries.
-We will show this for the x-component, for the other components it works analogously.
+We show this for the x-component, for the other components it works analogously.
 
 $$
   \begin{split}
@@ -694,8 +707,8 @@ $$
 
 Now we have the minimum for the x-component. After calculating the minimum and
 the maximum values for the other components we take the maximum of all minimums,
-$tmin = max(tmin_x, tmin_y, tmin_z)$, and the minimum of all maximums,
-$tmax = max(tmax_x, tmax_y, tmax_z)$. If $tmin > tmax$ or $tmin \le tmax <0$ then
+$tmin = max (tmin_x, tmin_y, tmin_z)$, and the minimum of all maximums,
+$tmax = max (tmax_x, tmax_y, tmax_z)$. If $tmin > tmax$ or $tmin \le tmax <0$ then
 there is no intersection. If $tmin < 0$ and $tmax > 0$ then $tmax$ leads to the
 nearest intersection. For further details see \cite{will}.
 
@@ -724,7 +737,7 @@ $\langle \vec{q} - \vec{p_a} - \langle \vec{v_a},\vec{q} - \vec{p_a}
 \rangle * \vec{v_a} \rangle - r^2 = 0$.
 
 
-The definition of cylinder in section \autoref{cylinder} allows us to simplify
+The definition of cylinder in \autoref{cylinder} allows us to simplify
 the equation. We substitute the point on the cylinder $\vec{q}$ with the ray
 
 $$
@@ -777,7 +790,7 @@ $\cos^2 \alpha \langle \vec{q} - \vec{p_a} - \langle \vec{v_a}, \langle \vec{q}
 where $\vec{p_a} = \vec{p_1} + r_1 * (\vec{p_2} - \vec{p_1})/(r_1 - r_2)$.
 
 Same as for the cylinder, substitute the ray with $\vec{q}$ and solve the
-equation for $t$. The definition of cone in section \autoref{cone} allows us
+equation for $t$. The definition of cone in \autoref{cone} allows us
 to simplify the resulting components for the quadratic equation
 
 $$
@@ -815,17 +828,17 @@ of the primitives. Given a ray $r = \vec{o} + t * \vec{d}$, a transformation
 matrix $M = TRS$ and a point $\vec{p}$, we see that
 
 $$
-  r = M\vec{p}
+  r = M\vec{p}.
 $$
 
-we can multiply both sides with $M^{-1}$ that leads to
+We can multiply both sides with $M^{-1}$ that leads to
 
 $$
-  M^{-1}r = M^{-1}M\vec{p} = I\vec{p} = \vec{p}
+  M^{-1}r = M^{-1}M\vec{p} = I\vec{p} = \vec{p}.
 $$
 
 Now we simplify the expression because a translation does not affect
-a direction
+a direction.
 
 $$
   M^{-1}(\vec(o) + t * \vec{d}) = M^{-1}\vec{o} + S^{-1}R^{-1}\vec{d} * t
@@ -839,10 +852,11 @@ We see that we get the same result as applying the transformation on a point.
 Normal vectors are unit vectors that are orthogonal to a given surface at a given
 point. In this subsection we show how to calculate normal vectors for the
 primitives.
+The normal vectors are used to simulate light effects see \autoref{shading-model}.
 
 ### Sphere normal
 
-From the sphere definition in section \autoref{sphere} follows that for all
+From the sphere definition in \autoref{sphere} follows that for all
 points $\vec{p}$ of the sphere holds that $p$ is the normal vector of the
 surface at position $\vec{p}$.
 
@@ -868,7 +882,7 @@ We first calculate the direction
 of the normal on the $x/y$ plane which is the vector $\vec{n_{xy}}=(x,y,0)$. After
 we calculate the normal direction on the $z$ plane. From trigonometry follows
 that the height of the cone is $||\vec{p_a}|| = h$ and the hypotenuse
-$c = \sqrt{r_1^2 + h^2}$. Now we can calculate the euclidean norm for the $z$
+$c = \sqrt{r_1^2 + h^2}$. Now we can calculate the Euclidean norm for the $z$
 and $x/y$ plane component of the normal vector, which is $r_1/c$ for the $z$
 plane and $h/c$ for the $x/y$ plane. Now we combine these results
 
@@ -917,7 +931,7 @@ $$
   \begin{split}
   (M^{-1})^{\tr} \vec{n} &= (S^{-1}R^{-1}T^{-1})^T \vec{n} \\
                    &= (T^{-1})^{\tr} (R^{-1})^{\tr} (S^{-1})^{\tr} \vec{n} \\
-                   &= (T^{-1})^{\tr} R S^{-1}\vec{n}
+                   &= (T^{-1})^{\tr} R S^{-1}\vec{n}.
   \end{split}
 $$
 
@@ -927,8 +941,8 @@ $R$ follows that $(R^{-1})^{\tr} = R$.
 ## Projection
 
 In the context of computer graphics, a projection transforms points in 3D
-onto a 2D grid \cite{kevi}.
-The way we generate the rays determines the kind of projection.
+onto a 2D grid \cite{kevi}. In ray tracing we change the kind of projection
+with the way we generate the rays.
 
 ### Perspective
 
@@ -945,7 +959,7 @@ determine the position of the pixels in the resulting image.
 
 ### Orthographic
 
-In an orthographic projection every ray is parallel to each other and has its
+In an orthographic projection every ray has the same direction and has its
 center in the view plane. Given a camera $c=(\vec{p},\vec{f},\vec{u},\vec{r})$ and a viewing plane $V$,
 we define the matrix of rays that represents an orthographic projection as
 
@@ -964,8 +978,8 @@ We use a slightly different shading model that is described in the book
 
 After generating the projection we intersect each ray with each objects
 primitive and we consider only the closest intersection. If there is no
-intersection, then the resulting color will be black. If we find
-an intersection, we will use the following defined shading method.
+intersection, then the resulting color is black. If we find
+an intersection, we use the following defined shading method.
 
 ### Ambient light
 
@@ -1031,7 +1045,6 @@ concentrated around the direction of mirror-reflection \cite{kevi}.
 For specular reflection we also need to check if there is no object between
 the intersection point and the light. We assume that there in between, then
 we calculate the specular reflection color with following equation
-ot consider p_a!!
 
 $$
   \vec{c_d} = \vec{c} * s * \max (0,\langle \frac{\vec{v} + \vec{l_d}}{||\vec{v} + \vec{l_d}||},
@@ -1044,8 +1057,8 @@ material property, $\vec{c}$ the color of the light,
 $\vec{l_d}$ is the normalized vector $\vec{d} = \vec{l_p} - \vec{p}$ and $\vec{v}$
 is the negated normalized direction of the ray that intersected the object.
 
-A illustration of a scene with 5 spheres and changing specular coefficient is in
-\autoref{fig:diffuse}.
+A illustration of a scene with 5 spheres and changing specular coefficient is given in
+\autoref{fig:specular}.
 
 \begin{figure}[!ht]
 \centering
@@ -1058,17 +1071,29 @@ A illustration of a scene with 5 spheres and changing specular coefficient is in
 
 ### Multiple lights and final results
 
-To compute the final color value, we add ambient, diffuse and specular reflection color
-together and multiply it with the color of the object. If we have multiple lights, then we
-add all diffuse and specular reflection color together and multiply the result with the
-color of the object. Note that the ambient color is only added once, since it simulates
-indirect illumination.
+The final color $c_f$ is computed as
+
+$$
+  c_f = c_o * ( c_a + c_d + c_s ),
+$$
+
+where $c_a$ is the ambient color, $c_d$ is the diffuse color,
+$c_s$ is the specular reflection color and $c_o$ is the color of the object.
+
+If we have multiple lights $I$ then the final color is computed as
+
+$$
+ c_f =  c_o * ( c_a + \sum_{i=0}^I c_{di} + c_{si} ),
+$$
+
+where $c_{\_i}$ is the color of the i-th light.
+
 
 # Integration
 
 To integrate the ray tracer into Diagrams a backend is needed. This backend extracts
 scene informations from a simplified data structure provided by Diagrams. After the
-extraction the scene can be rendered. In this chapter we introduce superficially
+extraction the scene can be rendered. In this chapter we briefly introduce
 the methods used by the backend.
 
 ## Diagrams Backend
@@ -1076,7 +1101,7 @@ the methods used by the backend.
 Diagrams distinguish between backends with the use of type family. Type family
 are Haskells extension to support ad-hoc overloading of data types. Type family are
 parametric types that are specialized representations based on the type parameters. The
-type of the scenes will indicate which backend will be used e.g. which function based on
+type of the scenes indicate which backend is used e.g. which function based on
 the name and the parameter signature.
 
 An instance of Diagrams backend defines type families and a function “renderRTree” that
@@ -1096,7 +1121,7 @@ arguments to use these features.
 
 Despite the fact that the DSL Diagrams is flexible and powerful in describing vector
 graphics, this cannot be utilized without a certain understanding of haskell and its
-abstraction system. These are deeper concepts that must be learned.
+abstraction system.
 
 Ray tracing can be optimized in various ways. It would be interesting to use acceleration
 data structures to get a logarithmic scene complexity. It would also be interesting to
