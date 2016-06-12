@@ -101,10 +101,9 @@ lightIntersectionColour x s l
   | otherwise = Nothing
 
 rayToLight :: Light -> Intersection -> Ray
-rayToLight l i = Ray origin  direction
-  where direction = (l ^. lPosition) ^-^ origin
-        origin = (i ^. itPoint) ^-^ e *^ oldDirection
-        oldDirection = normalize $ i ^. ray . _d
+rayToLight l i = Ray (origin  ^+^ e *^ direction)  direction
+  where direction = normalize $ (l ^. lPosition) ^-^ origin
+        origin = (i ^. itPoint)
         e      = 0.00001
 
 hitLight :: Light -> Ray -> SceneObject -> Bool

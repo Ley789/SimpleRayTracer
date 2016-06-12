@@ -1,9 +1,13 @@
 
 # Introduction
 
+Diagrams is a declarative DSL for creating 2D and 3D scenes in Haskell. It is
+optimized for simplicity and flexibility. This is achieved by exploiting monoids.
+The standard Backend for 3D scenes is POV-Ray, which is a open source ray tracer.
+
 Ray tracing is a well known rendering technique in the context of computer graphics.
 Images can be rendered, with ray tracing, by tracing the path of rays that are emitted
-from a camera that travel through pixels of an image plane. Ray tracing is well known
+from a camera that travel through pixels of an image plane. Ray tracing is also known
 for being able to produce physically realistic images. Ray tracing did not emerge as the
 primary rendering method because of its computational intensity. Rasterization based
 rendering offered better performance and is now the well established rendering method
@@ -12,14 +16,29 @@ algorithm. Therefore there are a lot of techniques to accelerate ray tracing and
 the quality of the resulting images. Some of these improvements can be applied to all
 ray tracing methods like acceleration data structures.
 
-This thesis focuses on the basic ray tracing algorithm and the integration into the DSL
-Diagrams. The aim of this bachelor project is to remove the dependency on POV-Ray
-by implementing a ray tracer in Haskell that renders Diagrams 3D scenes.
+POV-Ray renders scenes based on a text-base
+scene description file. It can render scenes described in Diagrams by translating
+the Diagrams DSL to the text-base scene description file of POV-Ray.
+The aim of this bachelor project is to remove the dependency on POV-Ray.
 
-This work begins with an introduction into the topic rendering, focused mainly on
-ray tracing. Then it defines elements that are used to represent a 3D scene followed
-by implementation details like intersection functions and normal vectors.
-At the end it discusses the general approach to integrate the renderer into Diagrams.
+In this thesis we provide an alternated Backend for Diagrams.
+This is achieved by implementing a native renderer. The renderer is based on
+the basic ray tracing algorithm. The thesis provides additionally the integration
+into Diagrams.
+
+This work documents the data structure and algorithms mostly mathematically.
+It describes the structure of the implementation, e.g. the tasks of the different modules.
+It also describes the problems occurred while implementing the ray tracer and
+the functional behavior to solve these issues.
+
+In \autoref{rendering} an introduction into the topic rendering is given, focused mainly on
+ray tracing. Next \autoref{d-scene} defines the used data structure in the
+implementation. In the \autoref{domain-specific-language} we shortly introduced
+DSL and Diagrams. Then in the \autoref{algorithms-used-in-the-implementation} we introduce
+the algorithm details of the implementation. It contains the intersection function,
+normal vector calculations and an introduction to shading.
+In \autoref{implementation-and-integration} we describe the structure
+of the implementation and the exploited functional behavior.
 
 # Rendering
 
@@ -1089,14 +1108,60 @@ $$
 where $c_{\_i}$ is the color of the i-th light.
 
 
-# Integration
+# Implementation and Integration
 
 To integrate the ray tracer into Diagrams a backend is needed. This backend extracts
 scene informations from a simplified data structure provided by Diagrams. After the
-extraction the scene can be rendered. In this chapter we briefly introduce
-the methods used by the backend.
+extraction the scene can be rendered. In this chapter discuss the implemented modules
+and their functionality. At the end we briefly introduce the methods used by the backend.
 
-## Diagrams Backend
+## Modules
+
+### Primitive
+
+The module primitive defines the primitives and the ray as described in \autoref{primitives}
+and \autoref{ray}. It contains the intersection functions described in \autoref{intersection-functions}
+and normal vector calculation functions described in \autoref{normal-vectors}.
+
+While intersecting a primitive with a ray we know which normal vector function
+is needed to calculate the actual normal vector. This does not generally apply
+if we have a intersection point and a primitive because of the numerical error
+in the IEEE-754 double representation. For example if we have a intersection point
+of a cone that is not represented mathematically correct then we do not know
+if the point lies on the bot cap, top cap or at the cone without allowing some
+error. We solved this problem by exploiting the laziness property of Haskell.
+We calculate the normal vector in the intersection function.
+We know that the calculation is only executed when the value is needed
+because of laziness.
+
+### Object
+
+The module Object defines the scene objects as described in \autoref{object}.
+The object stores the needed matrices to save computation time, transforms the
+rays and the intersection point as described in \autoref{ray-transformations}.
+
+### SceneTypes
+
+The module SceneTypes defines light, camera and a scene as described in \autoref{d-scene}.
+A scene is a instance of the monoid class to combine multiple scenes. The scenes
+are combined by using the first defined camera, insert the objects and the lights
+of both scenes in the new scene.
+
+### Blinn-Phong
+
+The module Blinn-Phong calculates the ambient, diffuse and specular reflection color
+as described in \autoref{shading-model}. The color operations are executed by
+using the applicative class.
+
+### Scene
+
+The module Scene generates primary rays to represent the projection,
+depending on the camera type, as described in \autoref{projection}. It calculates
+the nearest intersection for each ray, generates the shadow ray and computes
+the final color by using the functions defined in the module Blinn-Phong.
+
+
+### BackendRayTrace
 
 Diagrams distinguish between backends with the use of type family. Type family
 are Haskells extension to support ad-hoc overloading of data types. Type family are
@@ -1104,11 +1169,12 @@ parametric types that are specialized representations based on the type paramete
 type of the scenes indicate which backend is used e.g. which function based on
 the name and the parameter signature.
 
-An instance of Diagrams backend defines type families and a function “renderRTree” that
-extracts scene informations. These are used to translate the scene information to a data
-structure that is used in the rendering.
+The module BackendRayTrace defines an instance of Diagrams backend type families
+and a function “renderRTree” that extracts scene informations.
+These are used to translate the scene information to a data structure that is
+used in the rendering.
 
-## Diagrams command line Backend
+### CmdLine
 
 Sometimes we want to specify the details about the diagram at the start of the program.
 For example the output file, image format, and size of the diagram. The Diagrams
@@ -1117,10 +1183,28 @@ options as well as easy customization for additional parameters. The abstraction
 by simply defining the rendering backend and the interpretation of the command line
 arguments to use these features.
 
+## Comparison with POV-Ray
+
+A comparison between a rendering of POV-Ray and the implemented raytracer is
+given in **FIGURE**. Both render the same scene and were executed on a
+machine with
+
+* CPU: **CPU**
+* GPU: **GPU**
+* OS: **OS**.
+
 # Conclusion and Further Work
 
+In this thesis we provided a alternative Backend for the DSL Diagrams. The Backend
+is a native renderer which implements the basic ray tracing algorithm. It supports
+different kinds of primitives as described in \autoref{primitives}. The implementation
+also provides a command-line Backend, which allows to define animations via Diagrams.
+It exploits functional properties to simplify modification of data structures and certain
+functions as described in \autoref{modules}. This removes the dependency on
+POV-Ray from Diagrams.
+
 Despite the fact that the DSL Diagrams is flexible and powerful in describing vector
-graphics, this cannot be utilized without a certain understanding of haskell and its
+graphics, this cannot be utilized without a certain understanding of Haskell and its
 abstraction system.
 
 Ray tracing can be optimized in various ways. It would be interesting to use acceleration

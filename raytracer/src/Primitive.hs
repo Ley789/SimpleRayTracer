@@ -11,7 +11,7 @@ module Primitive (
 
 import Linear     hiding (frustum)
 import Data.List
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromMaybe)
 import Data.Ord   (comparing)
 import Control.Arrow ((&&&))
 import Control.Lens
@@ -87,20 +87,20 @@ intersectionf ray (Cylinder rad) = frustumIntersection ray (cylinderIntersection
 maybeList [] = Nothing
 maybeList l  = Just l
 
-frustumIntersection :: EuclideanRay -> Maybe Double -> Double -> Double -> (V3 Double -> V3 Double) -> Maybe (V3 Double, V3 Double)
+frustumIntersection :: EuclideanRay -> Maybe [Double] -> Double -> Double -> (V3 Double -> V3 Double) -> Maybe (V3 Double, V3 Double)
 frustumIntersection r@(EuclideanRay o _) t rad1 rad2 n =
   minimumBy (comparing $ distance o . fst) <$> maybeList l
   where
-    f = (id &&& n) <$> frustumConstrain r t
+    f = map (((id &&& n) <$>) . frustumConstrain r) $ fromMaybe [] t
     cap o rad nz = (\ x -> (x, V3 0 0 nz)) <$> capIntersection r o rad
-    l = catMaybes [f, cap 0 rad1 (-1), cap 1 rad2 1]
+    l = catMaybes $ f ++ [cap 0 rad1 (-1), cap 1 rad2 1]
 
-frustumConstrain :: EuclideanRay -> Maybe Double -> Maybe (V3 Double)
-frustumConstrain r it = do
-  p <- itPoint r <$> it
-  let z = p ^. _z
-  guard (z >= 0 && z <= 1)
-  return p
+frustumConstrain :: EuclideanRay -> Double -> Maybe (V3 Double)
+frustumConstrain r it
+  | z >= 0 && z <= 1 = Just p
+  | otherwise        = Nothing
+  where p = itPoint r it
+        z = p ^. _z
 
 capIntersection :: EuclideanRay -> Double -> Double -> Maybe (V3 Double)
 capIntersection r o rad = do
@@ -111,18 +111,18 @@ capIntersection r o rad = do
 
 -- | Easier intersection function because of our cosntrains to the object
 --   Normalized direction vector of cylinder is (0,0,1)
-cylinderIntersection :: EuclideanRay -> Double -> Maybe Double
+cylinderIntersection :: EuclideanRay -> Double -> Maybe [Double]
 cylinderIntersection (EuclideanRay o d) rad =
-  solveQuadratic a b c >>= uncurry nearestPositive
+  solveQuadratic a b c >>= uncurry coefficentConstrain
   where
     (vd, vo) = over both (set _z 0) (d, o)
     a  = dot vd vd
     b  = 2 * dot vd vo
     c  = dot vo vo - rad**2
 
-coneIntersection :: EuclideanRay -> Double -> Double -> Maybe Double
+coneIntersection :: EuclideanRay -> Double -> Double -> Maybe [Double]
 coneIntersection (EuclideanRay o d) r1 r2 =
-  solveQuadratic a b c >>= uncurry nearestPositive
+  solveQuadratic a b c >>= uncurry coefficentConstrain
     where alpha = atan $ r1 - r2
           si = sin alpha ** 2
           co = cos alpha ** 2
@@ -132,6 +132,13 @@ coneIntersection (EuclideanRay o d) r1 r2 =
           rc = r1 / (r1 - r2)
           V3 xo yo zo = o
           V3 xd yd zd = d
+
+coefficentConstrain :: (Fractional a, Num a, Ord a) => a -> a -> Maybe [a]
+coefficentConstrain t1 t2
+  | t1 > 0 && t2 > 0 = Just [t1, t2]
+  | t1 > 0           = Just [t1]
+  | t2 > 0           = Just [t2]
+  | otherwise        = Nothing
 
 -- | Given a ray, point on the plane and the normal vector to the plane
 -- return the coefficient if the ray intersects the plane.
