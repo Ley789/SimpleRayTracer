@@ -3,7 +3,7 @@ documentclass: clbthesis
 title: Ray Tracing Backend for Diagrams
 author: Alexander Lochmann
 date: \today
-supervisors:
+supervisor:
   - Michael Färber
   - Cezary Kaliszyk
 abstract:
@@ -17,7 +17,5 @@ abstract:
   design and implementation.
 
 biblio-style: abbrv
-bibliography: biblio
-natbib: true
 numbersections: true
 ---
