@@ -621,18 +621,19 @@ Diagrams allows to describe 2D and 3D scenes. An example of a Haskell 2D scene:
 
 ~~~ haskell
 hilbert 0 = mempty
-  hilbert n = hilbert' (n-1)         # reflectY <> vrule 1
-             <> hilbert (n-1)        <> hrule 1
-             <> hilbert (n-1)        <> vrule (-1)
-             <> hilbert' (n-1)       # reflectX
-    where
-       hilbert' m = hilbert m        # rotateBy (1/4)
+hilbert n = hilbert' (n-1)         # reflectY <> vrule 1
+           <> hilbert (n-1)        <> hrule 1
+           <> hilbert (n-1)        <> vrule (-1)
+           <> hilbert' (n-1)       # reflectX
+  where
+     hilbert' m = hilbert m        # rotateBy (1/4)
 ~~~
 
-In this Haskell code a function hilbert is defined recursively. The function
-uses monads to concatenate scene elements (<> is mappend in infix notation). The
-scene elements (vrule and hrule), the properties (reflectX, reflectY and rotateBy)
-and the function # which combines them are part of the Diagrams DSL.
+In this Haskell code a function `hilbert` is defined recursively. The function
+uses monoids to concatenate scene elements (`<>` is `mappend` in infix notation).
+The scene elements (`vrule` and `hrule`),
+the properties (`reflectX`, `reflectY` and `rotateBy`)
+and the function `#` which combines them are part of the Diagrams DSL.
 
 A illustration of that scene is in \autoref{fig:hilbert}
 
@@ -651,13 +652,13 @@ language of POV-Ray, an open source renderer.
 
 ### Advantage of Diagrams over POV-ray
 
-There are several advantages of using Diagrams over POV-Ray
+There are several advantages of using Diagrams over POV-Ray:
 
 * Diagrams can describe more scenes than the text-base description of POV-Ray. For
-     example an animation in Diagrams is a scene that changes over time. This cannot
-     be described in POV-Ray.
+  example an animation in Diagrams is a scene that changes over time. This cannot
+  be described in POV-Ray.
 * Scene descriptions are generally shorter in Diagrams than in POV-Ray because
-     Diagrams scenes can take advantages of the expression power of Haskell.
+  Diagrams scenes can take advantages of the expression power of Haskell.
 * Extension of Diagrams is independent of the backend. That means that backends
   can support the features of Diagrams. A extension of the text-base scene
   description of POV-Ray only makes sense if POV-Ray supports the extension.
