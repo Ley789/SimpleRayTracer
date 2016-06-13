@@ -1,38 +1,43 @@
 # Introduction
 
+**"backend" is lowercase!**
+
+**"text-base" -> "text-based"**
+
 Diagrams is a declarative DSL for creating 2D and 3D scenes in Haskell. It is
 optimized for simplicity and flexibility. This is achieved by exploiting monoids.
-The standard Backend for 3D scenes is POV-Ray, which is a open source ray tracer.
+The standard Backend for 3D scenes is POV-Ray, an open source ray tracer.
 
 Ray tracing is a well known rendering technique in the context of computer graphics.
 Images can be rendered, with ray tracing, by tracing the path of rays that are emitted
 from a camera that travel through pixels of an image plane. Ray tracing is also known
 for being able to produce physically realistic images. Ray tracing did not emerge as the
 primary rendering method because of its computational intensity. Rasterization based
-rendering offered better performance and is now the well established rendering method
+rendering offers better performance and is now a well established rendering method
 in interactive applications. An active field of study is the optimization of the ray tracing
 algorithm. Therefore there are a lot of techniques to accelerate ray tracing and improve
-the quality of the resulting images. Some of these improvements can be applied to all
-ray tracing methods like acceleration data structures.
+the quality of the resulting images.
+Some of these improvements, such as acceleration data structures,
+can be applied to all ray tracing methods.
 
-POV-Ray renders scenes based on a text-base
-scene description file. It can render scenes described in Diagrams by translating
-the Diagrams DSL to the text-base scene description file of POV-Ray.
+POV-Ray renders scenes based on a text-based scene description format.
+It can render scenes described in Diagrams by translating
+the Diagrams DSL to the text-based format of POV-Ray.
 The aim of this bachelor project is to remove the dependency on POV-Ray.
 
-In this thesis we provide an alternated Backend for Diagrams.
+In this thesis we provide an alternate Backend for Diagrams.
 This is achieved by implementing a native renderer. The renderer is based on
-the basic ray tracing algorithm. The thesis provides additionally the integration
+the basic ray tracing algorithm. The thesis additionally provides the integration
 into Diagrams.
 
-This work documents the data structure and algorithms mostly mathematically.
+This work documents the data structures and algorithms.
 It describes the structure of the implementation, e.g. the tasks of the different modules.
-It also describes the problems occurred while implementing the ray tracer and
-the functional behavior to solve these issues.
+It also describes the problems encountered while implementing the ray tracer and
+how to solve these issues.
 
 In \autoref{rendering} an introduction into the topic rendering is given, focused mainly on
-ray tracing. Next \autoref{d-scene} defines the used data structure in the
-implementation. In the \autoref{domain-specific-language} we shortly introduced
+ray tracing. Next, \autoref{d-scene} defines the used data structure in the
+implementation. In \autoref{domain-specific-language} we introduce
 DSL and Diagrams. Then in the \autoref{algorithms-used-in-the-implementation} we introduce
 the algorithm details of the implementation. It contains the intersection function,
 normal vector calculations and an introduction to shading.
@@ -41,10 +46,11 @@ of the implementation and the exploited functional behavior.
 
 # Rendering
 
-In the field of 3D computer graphics the process of generating an image from a Euclidean
-space with geometric shapes is called rendering. Also the result of this process is a rendering.
+In the field of 3D computer graphics the process of generating an image from an
+Euclidean space with geometric shapes is called rendering.
+The result of this process is also called a rendering.
 
-We introduce 2 rendering techniques called rasterization and ray tracing.
+We introduce two rendering techniques, namely rasterization and ray tracing.
 At the end of the chapter we compare both methods.
 
 ## Rasterization
@@ -64,18 +70,18 @@ For a further introduction on this topic see \cite{shre}.
 The idea of ray tracing is to trace the path of rays emitted from a camera that travel
 through a pixel grid. We can determine the visible object for each ray by intersecting
 the ray with each object in the scene. The visible object is the one with the closest intersection.
-We can calculate the color with the properties (location, material, etc. ) of the closest object
+We calculate the color with the properties (location, material, etc. ) of the closest object
 and the scene. An intersection can generate new rays to simulate effects like reflection and
 refractions. There are several ray tracing techniques that share the same basic algorithm.
 
 ### History
 
 "Some techniques for shading machine renderings of solids" is a paper by Arthur Appel
-published in 1968 \cite{appel}. It is the first approach to ray tracing. He represented rays
+published in 1968 [@appel]. It is the first approach to ray tracing. He represented rays
 as mathematical lines and checked if there is an intersection with an object. The rays
 are not traced further after an intersection. That algorithm is known as Ray Casting.
 
-The first ray tracing technique was introduced by Whitted in 1980 \cite{whitt}, which
+The first ray tracing technique was introduced by Whitted in 1980 [@whitt], which
 is an extension of Appels algorithm. After an intersection the ray can generate 3 new
 rays, the shadow ray, reflection ray and refraction ray. These rays are called secondary
 rays. The starting point of a shadow ray is the intersection point and its direction leads
@@ -86,7 +92,7 @@ refraction rays are traced further, which makes the algorithm recursive.
 
 Distribution ray tracing was introduced by Cook in 1984 \cite{cook}. This method
 increases realism of the image by using probability distributions for
-specific effects and increases the number of generated rays to approximate the result. For
+specific effects and increases the number of generated rays to approximate the result; for
 example generating multiple shadow rays for area light sources to represent soft shadows.
 
 Path tracing was introduced by Kajiya in 1986 \cite{kaji}. Applying distributing
@@ -96,12 +102,18 @@ called Monte Carlo ray tracing, because it uses random samples to compute the im
 
 ### Basic Algorithm
 
+**do not reference sections "in the future", e.g. \autoref{ray}**
+
 The basic concept of ray tracing algorithms is efficiently finding intersections between
 a ray and a scene that consists of a set of geometric primitives \cite{wald}.
-The ray, as defined in the \autoref{ray}, can have additional parameters
+The ray, as defined in \autoref{ray}, can have additional parameters
 $t_{min}$ and $t_{max}$, which specify the interval of $t$ used for the points
 traversed by the ray. In other words it
 specifies the minimum and the maximum distance of a ray.
+
+**the three task splitting sounds strange: why can't you just find once all
+intersections, then derive the other two tasks from that?**
+**ok, you explain that afterwards, but I would have expected that explanation before**
 
 The algorithm can be split in 3 tasks. The most fundamental task is to find
 the closest intersection. The second task, also called visibility/occlusion test, is to check
@@ -109,7 +121,9 @@ if there are any intersections. The last task is to find all intersections. Chec
 intersections is slightly simpler than checking for the closest, so there are algorithms that
 are more efficient in this case. For example the occlusion test is used for shadow rays \cite{wald}.
 
-In ray tracing only one condition must apply for a primitive, which is that
+**and what about the normal vector (below)?**
+
+In ray tracing only one condition must apply for a primitive, namely that
 there must be a function that can calculate an intersection between the primitive and a
 ray. That means primitives can be of various types, from simple geometric shapes like
 spheres, cubes, triangles, etc., to complex shapes and parametric patches like the Bézier patches
@@ -120,18 +134,18 @@ in \autoref{rasterization} most real time applications use rasterization techniq
 image and most of them only use triangles as primitives.
 
 Testing every primitive in the scene for an intersection with a ray produces the correct
-result, but the computation time extends with each ray and each primitive. For complex
-scenes it is necessary to reduce the set of primitives that the ray could intersect. It
-is common to use acceleration data structures to preserve consistency, e.g. grids and
+result, but the computation time increases with each ray and each primitive. For complex
+scenes it is necessary to reduce the set of primitives that the ray could intersect with.
+It is common to use acceleration data structures to preserve consistency, e.g. grids and
 kd-trees \cite{copy}.
 
 
 ### Performance
 
 At the beginning of modern computer graphics only scenes with a small number of
-primitives were used and interactive graphic applications were not established \cite{copy}. Ray
-tracing is computationally intense and aims to simulate physical realistic behavior. These
-are part of the reasons why rasterization is the well-established rendering technique for
+primitives were used and interactive graphic applications were not established \cite{copy}.
+Ray tracing is computationally intense and aims to simulate physically realistic behavior.
+These are part of the reasons why rasterization is the established rendering technique for
 interactive applications at the moment and ray tracing is still used rarely in this field.
 However the demand for more detailed scenes, larger scenes and physical realism leads to
 the argument that ray tracing will outperform rasterization at some point because of the
@@ -144,7 +158,7 @@ are:
 * The amount of rays. Consider an image with a resolution of 800 $\times$ 800,
   without counting the secondary rays, this lead to a total amount of
   640.000 rays. Depending on the scene complexity the set
-  of primary rays may only be small part compared to the set of all rays.
+  of primary rays may only be a small part of all rays.
 
 * Scene complexity. Reducing the set of primitives for a ray with acceleration
   data structures is the most important optimization in ray tracing because
@@ -153,9 +167,9 @@ are:
 The common crucial factors lead to common optimizations. For the amount
 of rays, it suffices to reduce the number of rays to reduce the computation time.
 This can be achieved by reducing the primary rays (smaller resolution) or reducing the number of
-secondary rays. The second fact, the scene complexity, can be optimized by using the
+secondary rays. The scene complexity can be reduced by using the
 mentioned acceleration data structures. Also using optimized intersection functions leads
-to reduced computation time.
+to reduced computation times.
 
 Ray tracing is known to be massively parallel problem, because the result of each
 ray can be calculated independently. The optimization of ray tracing is a topic of interest
@@ -653,6 +667,12 @@ language of POV-Ray, an open source renderer.
 ### Advantage of Diagrams over POV-ray
 
 There are several advantages of using Diagrams over POV-Ray:
+
+**Several things here are fishy:
+POV-Ray does support animations!
+Did you make a study about the average length of POV-Ray scenes?
+If not, do not say that scenes in Diagrams are generally shorter!
+The last point ("extension of POV-Ray") is confusing for me, I do not understand it at all.**
 
 * Diagrams can describe more scenes than the text-base description of POV-Ray. For
   example an animation in Diagrams is a scene that changes over time. This cannot
