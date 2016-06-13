@@ -7,7 +7,7 @@ clean:
 	pandoc metadata.yaml --template template.latex -H header.tex --chapters --toc -s $< -o $@
 
 %.pdf: %.tex
-	pdflatex --shell-escape $<
+	pdflatex $<
 	bibtex $*
-	pdflatex --shell-escape $<
-	pdflatex --shell-escape $<
+	pdflatex $<
+	pdflatex $<
