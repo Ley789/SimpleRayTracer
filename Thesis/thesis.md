@@ -1144,6 +1144,9 @@ $$
 **fix**
 where $c_{\_i}$ is the color of the i-th light.
 
+**and what do you do if the sum if greater than 1? according to your color definition,
+all color channels are in the range [0, 1].**
+
 
 # Implementation and Integration
 
