@@ -1,13 +1,10 @@
-all: clb.pdf
+all: thesis.pdf
 
-%.pdf: %.md
-	pandoc --filter pandoc-citeproc -V documentclass:clbthesis -H header.tex $< -o $@
+%.tex: %.md metadata.yaml template.latex
+	pandoc metadata.yaml --template template.latex -H header.tex --chapters --toc -s $< -o $@
 
-%.tex: %.md
-	pandoc --chapter $< -o $@
-
-clb.pdf: clb.tex thesis.tex
+%.pdf: %.tex
 	pdflatex --shell-escape $<
-	bibtex clb
+	bibtex thesis
 	pdflatex --shell-escape $<
 	pdflatex --shell-escape $<

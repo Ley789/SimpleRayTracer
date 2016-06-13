@@ -1,4 +1,3 @@
-
 # Introduction
 
 Diagrams is a declarative DSL for creating 2D and 3D scenes in Haskell. It is
@@ -618,9 +617,9 @@ In this chapter we introduce Diagrams. It is a embedded DSL for vector graphics 
 Diagrams is an embedded DSL with host language Haskell that provides powerful and
 flexible ways to create vector graphics. Diagrams is optimized for simplicity and flexibility
 rather than for speed. It uses the abstractions of Haskell to provide these features.
-Diagrams allows to describe 2D and 3D scenes. An example of a Haskell 2D scene
+Diagrams allows to describe 2D and 3D scenes. An example of a Haskell 2D scene:
 
-\begin{minted}{haskell}
+~~~ haskell
 hilbert 0 = mempty
   hilbert n = hilbert' (n-1)         # reflectY <> vrule 1
              <> hilbert (n-1)        <> hrule 1
@@ -628,7 +627,7 @@ hilbert 0 = mempty
              <> hilbert' (n-1)       # reflectX
     where
        hilbert' m = hilbert m        # rotateBy (1/4)
-\end{minted}
+~~~
 
 In this Haskell code a function hilbert is defined recursively. The function
 uses monads to concatenate scene elements (<> is mappend in infix notation). The
