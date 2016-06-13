@@ -196,7 +196,7 @@ The multiplication of a vector $\vec{v}$ with a scalar $t$ is denoted as
 $\vec{p} * t = t * \vec{p}$.
 
 The standard scalar product of vectors $\vec{p}$ and $\vec{q}$ is denoted as
-$\langle\vec{p},\vec{q} \rangle $,
+$\langle\vec{p},\vec{q} \rangle$,
 where $\langle \vec{q} \rangle = \langle \vec{q},\vec{q} \rangle$.
 
 The Euclidean norm of a vector $\vec{q}$ is denoted as $||\vec{q}||$.
@@ -707,8 +707,9 @@ $$
   t = \frac{-b \pm \sqrt{b^2 - 4 * a* c}}{2 * a},
 $$
 
-where $a = \langle \vec{d},\vec{d} \rangle $, $b=2* \langle \vec{o},\vec{d}
-\rangle $ and $c= \langle \vec{o},\vec{o} \rangle $.
+where $a = \langle \vec{d},\vec{d} \rangle$,
+$b=2* \langle \vec{o},\vec{d}\rangle$ and
+$c= \langle \vec{o},\vec{o} \rangle$.
 The smallest positive result of the quadratic equation leads to the nearest
 intersection.
 
