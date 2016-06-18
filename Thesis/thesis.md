@@ -1,40 +1,46 @@
-**cite more, IEEE double representation, blinn phong, rendering book**
 
 # Introduction
 
+**cite more, IEEE double representation, blinn phong, rendering book**
+
+**"backend" is lowercase!**
+
+**"text-base" -> "text-based"**
+
 Diagrams is a declarative DSL for creating 2D and 3D scenes in Haskell. It is
 optimized for simplicity and flexibility. This is achieved by exploiting monoids.
-The standard Backend for 3D scenes is POV-Ray, which is a open source ray tracer.
+The standard Backend for 3D scenes is POV-Ray, an open source ray tracer.
 
 Ray tracing is a well known rendering technique in the context of computer graphics.
 Images can be rendered, with ray tracing, by tracing the path of rays that are emitted
 from a camera that travel through pixels of an image plane. Ray tracing is also known
 for being able to produce physically realistic images. Ray tracing did not emerge as the
 primary rendering method because of its computational intensity. Rasterization based
-rendering offered better performance and is now the well established rendering method
+rendering offers better performance and is now a well established rendering method
 in interactive applications. An active field of study is the optimization of the ray tracing
 algorithm. Therefore there are a lot of techniques to accelerate ray tracing and improve
-the quality of the resulting images. Some of these improvements can be applied to all
-ray tracing methods like acceleration data structures.
+the quality of the resulting images.
+Some of these improvements, such as acceleration data structures,
+can be applied to all ray tracing methods.
 
-POV-Ray renders scenes based on a text-base
-scene description file. It can render scenes described in Diagrams by translating
-the Diagrams DSL to the text-base scene description file of POV-Ray.
+POV-Ray renders scenes based on a text-based scene description format.
+It can render scenes described in Diagrams by translating
+the Diagrams DSL to the text-based format of POV-Ray.
 The aim of this bachelor project is to remove the dependency on POV-Ray.
 
-In this thesis we provide an alternated Backend for Diagrams.
+In this thesis we provide an alternate Backend for Diagrams.
 This is achieved by implementing a native renderer. The renderer is based on
-the basic ray tracing algorithm. The thesis provides additionally the integration
+the basic ray tracing algorithm. The thesis additionally provides the integration
 into Diagrams.
 
-This work documents the data structure and algorithms mostly mathematically.
+This work documents the data structures and algorithms.
 It describes the structure of the implementation, e.g. the tasks of the different modules.
-It also describes the problems occurred while implementing the ray tracer and
-the functional behavior to solve these issues.
+It also describes the problems encountered while implementing the ray tracer and
+how to solve these issues.
 
 In \autoref{rendering} an introduction into the topic rendering is given, focused mainly on
-ray tracing. Next \autoref{d-scene} defines the used data structure in the
-implementation. In the \autoref{domain-specific-language} we shortly introduced
+ray tracing. Next, \autoref{d-scene} defines the used data structure in the
+implementation. In \autoref{domain-specific-language} we introduce
 DSL and Diagrams. Then in the \autoref{algorithms-used-in-the-implementation} we introduce
 the algorithm details of the implementation. It contains the intersection function,
 normal vector calculations and an introduction to shading.
@@ -43,10 +49,11 @@ of the implementation and the exploited functional behavior.
 
 # Rendering
 
-In the field of 3D computer graphics the process of generating an image from a Euclidean
-space with geometric shapes is called rendering. Also the result of this process is a rendering.
+In the field of 3D computer graphics the process of generating an image from an
+Euclidean space with geometric shapes is called rendering.
+The result of this process is also called a rendering.
 
-We introduce 2 rendering techniques called rasterization and ray tracing.
+We introduce two rendering techniques, namely rasterization and ray tracing.
 At the end of the chapter we compare both methods.
 
 ## Rasterization
@@ -66,18 +73,18 @@ For a further introduction on this topic see \cite{shre}.
 The idea of ray tracing is to trace the path of rays emitted from a camera that travel
 through a pixel grid. We can determine the visible object for each ray by intersecting
 the ray with each object in the scene. The visible object is the one with the closest intersection.
-We can calculate the color with the properties (location, material, etc. ) of the closest object
+We calculate the color with the properties (location, material, etc. ) of the closest object
 and the scene. An intersection can generate new rays to simulate effects like reflection and
 refractions. There are several ray tracing techniques that share the same basic algorithm.
 
 ### History
 
 "Some techniques for shading machine renderings of solids" is a paper by Arthur Appel
-published in 1968 \cite{appel}. It is the first approach to ray tracing. He represented rays
+published in 1968 [@appel]. It is the first approach to ray tracing. He represented rays
 as mathematical lines and checked if there is an intersection with an object. The rays
 are not traced further after an intersection. That algorithm is known as Ray Casting.
 
-The first ray tracing technique was introduced by Whitted in 1980 \cite{whitt}, which
+The first ray tracing technique was introduced by Whitted in 1980 [@whitt], which
 is an extension of Appels algorithm. After an intersection the ray can generate 3 new
 rays, the shadow ray, reflection ray and refraction ray. These rays are called secondary
 rays. The starting point of a shadow ray is the intersection point and its direction leads
@@ -88,7 +95,7 @@ refraction rays are traced further, which makes the algorithm recursive.
 
 Distribution ray tracing was introduced by Cook in 1984 \cite{cook}. This method
 increases realism of the image by using probability distributions for
-specific effects and increases the number of generated rays to approximate the result. For
+specific effects and increases the number of generated rays to approximate the result; for
 example generating multiple shadow rays for area light sources to represent soft shadows.
 
 Path tracing was introduced by Kajiya in 1986 \cite{kaji}. Applying distributing
@@ -98,12 +105,18 @@ called Monte Carlo ray tracing, because it uses random samples to compute the im
 
 ### Basic Algorithm
 
+**do not reference sections "in the future", e.g. \autoref{ray}**
+
 The basic concept of ray tracing algorithms is efficiently finding intersections between
 a ray and a scene that consists of a set of geometric primitives \cite{wald}.
-The ray, as defined in the \autoref{ray}, can have additional parameters
+The ray, as defined in \autoref{ray}, can have additional parameters
 $t_{min}$ and $t_{max}$, which specify the interval of $t$ used for the points
 traversed by the ray. In other words it
 specifies the minimum and the maximum distance of a ray.
+
+**the three task splitting sounds strange: why can't you just find once all
+intersections, then derive the other two tasks from that?**
+**ok, you explain that afterwards, but I would have expected that explanation before**
 
 The algorithm can be split in 3 tasks. The most fundamental task is to find
 the closest intersection. The second task, also called visibility/occlusion test, is to check
@@ -111,7 +124,9 @@ if there are any intersections. The last task is to find all intersections. Chec
 intersections is slightly simpler than checking for the closest, so there are algorithms that
 are more efficient in this case. For example the occlusion test is used for shadow rays \cite{wald}.
 
-In ray tracing only one condition must apply for a primitive, which is that
+**and what about the normal vector (below)?**
+
+In ray tracing only one condition must apply for a primitive, namely that
 there must be a function that can calculate an intersection between the primitive and a
 ray. That means primitives can be of various types, from simple geometric shapes like
 spheres, cubes, triangles, etc., to complex shapes and parametric patches like the Bézier patches
@@ -122,18 +137,18 @@ in \autoref{rasterization} most real time applications use rasterization techniq
 image and most of them only use triangles as primitives.
 
 Testing every primitive in the scene for an intersection with a ray produces the correct
-result, but the computation time extends with each ray and each primitive. For complex
-scenes it is necessary to reduce the set of primitives that the ray could intersect. It
-is common to use acceleration data structures to preserve consistency, e.g. grids and
+result, but the computation time increases with each ray and each primitive. For complex
+scenes it is necessary to reduce the set of primitives that the ray could intersect with.
+It is common to use acceleration data structures to preserve consistency, e.g. grids and
 kd-trees \cite{copy}.
 
 
 ### Performance
 
 At the beginning of modern computer graphics only scenes with a small number of
-primitives were used and interactive graphic applications were not established \cite{copy}. Ray
-tracing is computationally intense and aims to simulate physical realistic behavior. These
-are part of the reasons why rasterization is the well-established rendering technique for
+primitives were used and interactive graphic applications were not established \cite{copy}.
+Ray tracing is computationally intense and aims to simulate physically realistic behavior.
+These are part of the reasons why rasterization is the established rendering technique for
 interactive applications at the moment and ray tracing is still used rarely in this field.
 However the demand for more detailed scenes, larger scenes and physical realism leads to
 the argument that ray tracing will outperform rasterization at some point because of the
@@ -146,7 +161,7 @@ are:
 * The amount of rays. Consider an image with a resolution of 800 $\times$ 800,
   without counting the secondary rays, this lead to a total amount of
   640.000 rays. Depending on the scene complexity the set
-  of primary rays may only be small part compared to the set of all rays.
+  of primary rays may only be a small part of all rays.
 
 * Scene complexity. Reducing the set of primitives for a ray with acceleration
   data structures is the most important optimization in ray tracing because
@@ -155,9 +170,9 @@ are:
 The common crucial factors lead to common optimizations. For the amount
 of rays, it suffices to reduce the number of rays to reduce the computation time.
 This can be achieved by reducing the primary rays (smaller resolution) or reducing the number of
-secondary rays. The second fact, the scene complexity, can be optimized by using the
+secondary rays. The scene complexity can be reduced by using the
 mentioned acceleration data structures. Also using optimized intersection functions leads
-to reduced computation time.
+to reduced computation times.
 
 Ray tracing is known to be massively parallel problem, because the result of each
 ray can be calculated independently. The optimization of ray tracing is a topic of interest
@@ -184,11 +199,12 @@ e.g. shadow maps to approximate shadows. Without specific criteria rasterization
 not be able to simulate or approximate certain effects.
 
 Ray tracing can use approximations to save computation time.
-However rasterization needs them for certain effects.
+In contrast, rasterization needs them for certain effects.
+
 
 # 3D Scene
 
-In this chapter we introduce definitions that we use to describe 3D scenes.
+In this chapter we introduce concepts that we use to describe 3D scenes.
 
 ## Vector notation
 
@@ -197,7 +213,7 @@ The multiplication of a vector $\vec{v}$ with a scalar $t$ is denoted as
 $\vec{p} * t = t * \vec{p}$.
 
 The standard scalar product of vectors $\vec{p}$ and $\vec{q}$ is denoted as
-$\langle\vec{p},\vec{q} \rangle $,
+$\langle\vec{p},\vec{q} \rangle$,
 where $\langle \vec{q} \rangle = \langle \vec{q},\vec{q} \rangle$.
 
 The Euclidean norm of a vector $\vec{q}$ is denoted as $||\vec{q}||$.
@@ -292,6 +308,9 @@ $$
 A render of a sphere is illustrated in
 \autoref{fig:sphere}.
 
+**why are these PDF files so large??? still, I recommend to use them instead
+of PNG, they scale better**
+
 \begin{figure}[!ht]
 \centering
 \includegraphics[scale=0.25]{primSphere.png}
@@ -301,14 +320,13 @@ A render of a sphere is illustrated in
 
 ### Box
 
-The box aligned with the axes and all four sides of length 1 is defined by the set
+**do not make new paragraphs for each formula, just like I did it here**
 
+The box aligned with the axes and all four sides of length 1 is defined by the set
 $$
   P_x(0) \cup P_x(1) \cup P_y(0) \cup P_y(1) \cup P_z(0) \cup P_z(1),
 $$
-
 where
-
 $$
   P_x(v) := \{(x,y,v) | 0 \le x,y \le 1, x,y \in \mathbb{R}\}
 $$
@@ -318,7 +336,6 @@ $$
 $$
   P_z(v) := \{(x,v,z) | 0 \le x,z \le 1, x,z \in \mathbb{R}\}.
 $$
-
 A render of a box is illustrated in
 \autoref{fig:box}.
 
@@ -333,11 +350,9 @@ A render of a box is illustrated in
 
 A cylinder aligned at the z-axis, with length 1 and radius $r \in \mathbb{R}$
 is defined by the set
-
 $$
   \{\vec{p}=(x,y,z)| x,y,z \in \mathbb{R}^3, x^2 + y^2 = r,1 \ge z \ge 0 \}.
 $$
-
 A render of a cylinder is illustrated in
 \autoref{fig:cylinder}.
 
@@ -412,6 +427,8 @@ $S(5, 1, 0) = S'$, then $S'\vec{p} = (5, 1, 0, 1)$.
 
 To rotate a primitive in 3D space we need to define by which axis
 and which angle $\alpha$ to rotate.
+
+**these are three functions, not one!**
 
 We define the rotation function as
 
@@ -611,30 +628,31 @@ solves problems in a defined domain. There are 2 major kinds of DSL
 * Internal DSL: An internal DSL is an independent language with several tools (parser,
     interpreters, . . . ). A common used internal DSL is CSS.
 
-In this chapter we introduce Diagrams. It is a embedded DSL for vector graphics and
-3D scenes. Next we discuss the usability of Diagrams in 3D.
+In this chapter we introduce Diagrams, an embedded DSL for vector graphics and
+3D scenes. We discuss the usability of Diagrams for 3D.
 
 ## Diagrams
 
 Diagrams is an embedded DSL with host language Haskell that provides powerful and
 flexible ways to create vector graphics. Diagrams is optimized for simplicity and flexibility
 rather than for speed. It uses the abstractions of Haskell to provide these features.
-Diagrams allows to describe 2D and 3D scenes. An example of a Haskell 2D scene
+Diagrams allows to describe 2D and 3D scenes. An example of a Haskell 2D scene:
 
-\begin{minted}{haskell}
+~~~ haskell
 hilbert 0 = mempty
-  hilbert n = hilbert' (n-1)         # reflectY <> vrule 1
-             <> hilbert (n-1)        <> hrule 1
-             <> hilbert (n-1)        <> vrule (-1)
-             <> hilbert' (n-1)       # reflectX
-    where
-       hilbert' m = hilbert m        # rotateBy (1/4)
-\end{minted}
+hilbert n = hilbert' (n-1)         # reflectY <> vrule 1
+           <> hilbert (n-1)        <> hrule 1
+           <> hilbert (n-1)        <> vrule (-1)
+           <> hilbert' (n-1)       # reflectX
+  where
+     hilbert' m = hilbert m        # rotateBy (1/4)
+~~~
 
-In this Haskell code a function hilbert is defined recursively. The function
-uses monads to concatenate scene elements (<> is mappend in infix notation). The
-scene elements (vrule and hrule), the properties (reflectX, reflectY and rotateBy)
-and the function # which combines them are part of the Diagrams DSL.
+In this Haskell code, the function `hilbert` is defined recursively. The function
+uses monoids to concatenate scene elements (`<>` is `mappend` in infix notation).
+The scene elements (`vrule` and `hrule`),
+the properties (`reflectX`, `reflectY` and `rotateBy`)
+and the function `#` which combines them are part of the Diagrams DSL.
 
 A illustration of that scene is in \autoref{fig:hilbert}
 
@@ -653,13 +671,19 @@ language of POV-Ray, an open source renderer.
 
 ### Advantage of Diagrams over POV-ray
 
-There are several advantages of using Diagrams over POV-Ray
+There are several advantages of using Diagrams over POV-Ray:
+
+**Several things here are fishy:
+POV-Ray does support animations!
+Did you make a study about the average length of POV-Ray scenes?
+If not, do not say that scenes in Diagrams are generally shorter!
+The last point ("extension of POV-Ray") is confusing for me, I do not understand it at all.**
 
 * Diagrams can describe more scenes than the text-base description of POV-Ray. For
-     example an animation in Diagrams is a scene that changes over time. This cannot
-     be described in POV-Ray.
+  example an animation in Diagrams is a scene that changes over time. This cannot
+  be described in POV-Ray.
 * Scene descriptions are generally shorter in Diagrams than in POV-Ray because
-     Diagrams scenes can take advantages of the expression power of Haskell.
+  Diagrams scenes can take advantages of the expression power of Haskell.
 * Extension of Diagrams is independent of the backend. That means that backends
   can support the features of Diagrams. A extension of the text-base scene
   description of POV-Ray only makes sense if POV-Ray supports the extension.
@@ -683,13 +707,16 @@ the ray with the origin $\vec{o'}= (o_x / w, o_y / w, o_z / w)$ and the directio
 $\vec{d'}= (d_x, d_y, d_z)$ represents $R$ in Euclidean space.
 
 In the following subsections we denote $\vec{o}=(x_o, y_o, z_o)$ as origin and
-$\vec{d} = (x_d, y_d, z_d)$ as direction of a ray and for all points and
+$\vec{d} = (x_d, y_d, z_d)$ as direction of a ray. For all points and
 directions follows that they are denoted in Euclidean space.
 
 ### Sphere intersection
 
 We see from the definition of the sphere \autoref{sphere} that we have to solve
 the equation
+
+**use punctuation to close formulas consistently, e.g. a dot or a comma at the
+end of an equation**
 
 $$
   \langle \vec{o} + t*\vec{d}, \vec{o} + t*\vec{d} \rangle  = 1
@@ -704,12 +731,15 @@ $$
 
 Now we can solve the quadratic equation
 
+**give the formula how to solve quadr. equations maximally once!**
+
 $$
   t = \frac{-b \pm \sqrt{b^2 - 4 * a* c}}{2 * a},
 $$
 
-where $a = \langle \vec{d},\vec{d} \rangle $, $b=2* \langle \vec{o},\vec{d}
-\rangle $ and $c= \langle \vec{o},\vec{o} \rangle $.
+where $a = \langle \vec{d},\vec{d} \rangle$,
+$b=2* \langle \vec{o},\vec{d}\rangle$ and
+$c= \langle \vec{o},\vec{o} \rangle$.
 The smallest positive result of the quadratic equation leads to the nearest
 intersection.
 
@@ -806,7 +836,6 @@ $\vec{p_2}$, a point on the cone $\vec{q}$ and half-angle $\alpha$ holds
 $\cos^2 \alpha \langle \vec{q} - \vec{p_a} - \langle \vec{v_a}, \langle \vec{q}
 - \vec{p_a} \rangle  \vec{v_a} \rangle - \sin^2 \alpha
 \langle \vec{v_a},\vec{q} - \vec{p_a} \rangle  = 0$,
-
 where $\vec{p_a} = \vec{p_1} + r_1 * (\vec{p_2} - \vec{p_1})/(r_1 - r_2)$.
 
 Same as for the cylinder, substitute the ray with $\vec{q}$ and solve the
@@ -827,7 +856,7 @@ $$
   \end{split}
 $$
 
-To get the nearest intersection of a cone preform following steps:
+To get the nearest intersection of a cone:
 
 * Solve the quadratic equation.
 * Intersect with the planes $p'$, which includes
@@ -876,26 +905,28 @@ The normal vectors are used to simulate light effects see \autoref{shading-model
 
 ### Sphere normal
 
+**what is $p$ here compared to $\vec{p}$?**
+
 From the sphere definition in \autoref{sphere} follows that for all
 points $\vec{p}$ of the sphere holds that $p$ is the normal vector of the
 surface at position $\vec{p}$.
 
 ### Plane normal
 
-For each point on the surface holds that they have the same normal vector, which
+For all points on the surface holds that they have the same normal vector, which
 is already defined in the plane definition in \autoref{plane-intersection}.
 With the plane normal we can calculate the normal of the primitive box.
 
 ### Cylinder normal
 
-Given a point $\vec{p}=(x,y,z)$ on the surface of a cylinder then the normal
+Given a point $\vec{p}=(x,y,z)$ on the surface of a cylinder, the normal
 vector is $\vec{n} = (x /m, y /m, 0)$, where $m = \sqrt{x^2 + y^2}$.
 
 
 ### Cone normal
 
 Given a point $\vec{p}=(x,y,z)$ on the surface of a cone, the radius $r_1$ of the
-base cap and radius $r_2$ of the top cap, then the apex is
+base cap and radius $r_2$ of the top cap, the apex is
 $\vec{p_a} = (0 ,0 , r_1 / (r_1 - r_2))$.
 
 We first calculate the direction
@@ -913,14 +944,17 @@ $$
 
 where $\vec{n}$ is the normal vector of the cone at point $\vec{p}$.
 
+
 ### Normal vector transformation
 
-
 After we apply a transformation $M$ to a point $\vec{p}$ and to its corresponding normal vector $\vec{n}$
-it is not guaranteed that $\langle M \vec{n}, M \vec{p} \rangle  = 0$.
+it is not guaranteed that $\langle M \vec{n}, M \vec{p} \rangle = 0$.
+**this is not a complete sentence**
 For example if we apply a non uniform scaling.
 So we need to find a transformation that transforms our normal vector correctly. First
-we transform the normal vector to a homogeneous direction. After we see that
+we transform the normal vector to a homogeneous direction.
+**the next sentence is strange -- after we see what?**
+After we see that
 
 $$
   \langle \vec{n}, \vec{p} \rangle  = \vec{n}^{\tr}\vec{p} = 0
@@ -939,6 +973,7 @@ $$
   \vec{n'}^{\tr} = \vec{n}^{\tr} M^{-1}
 $$
 
+**also here, is this one sentence or several?**
 this is equivalent to
 
 $$
@@ -983,6 +1018,8 @@ In an orthographic projection every ray has the same direction and has its
 center in the view plane. Given a camera $c=(\vec{p},\vec{f},\vec{u},\vec{r})$ and a viewing plane $V$,
 we define the matrix of rays that represents an orthographic projection as
 
+**use operators for snd, see http://tex.stackexchange.com/questions/67506/newcommand-vs-declaremathoperator**
+
 $$
     O_{ij} :=  (\vec{f} + snd(V_{ij}) * \vec{r} + fst(V_{ij}), \vec{f})
 $$
@@ -993,8 +1030,12 @@ determine the position of the pixels in the resulting image.
 ## Shading model
 
 Shading defines the calculation of the output color for each pixel.
+<<<<<<< HEAD
 We use a shading model that is described in the book
 \cite{kevi}, which is also known as Blinn-Phong shading model.
+=======
+We use the Blinn-Phong shading model [@kevi].
+>>>>>>> 5c1757234323872de30d2c183dd04de612c3886f
 
 After generating the projection we intersect each ray with each objects
 primitive and we consider only the closest intersection. If there is no
@@ -1059,11 +1100,11 @@ A illustration of a scene with 5 spheres and changing diffuse coefficient is in
 
 ### Specular reflection
 
-To simulate smooth, shiny objects we allow them to reflect light that's
+To simulate smooth, shiny objects we allow them to reflect light that is
 concentrated around the direction of mirror-reflection \cite{kevi}.
 
 For specular reflection we also need to check if there is no object between
-the intersection point and the light. We assume that there in between, then
+the intersection point and the light. We assume that there in between **TODO: fix**, then
 we calculate the specular reflection color with following equation
 
 $$
@@ -1079,6 +1120,8 @@ is the negated normalized direction of the ray that intersected the object.
 
 A illustration of a scene with 5 spheres and changing specular coefficient is given in
 \autoref{fig:specular}.
+
+**I find the red background and the huge spheres really distracting**
 
 \begin{figure}[!ht]
 \centering
@@ -1106,14 +1149,22 @@ $$
  c_f =  c_o * ( c_a + \sum_{i=0}^I c_{di} + c_{si} ),
 $$
 
+**fix**
 where $c_{\_i}$ is the color of the i-th light.
+
+**and what do you do if the sum if greater than 1? according to your color definition,
+all color channels are in the range [0, 1].**
 
 
 # Implementation and Integration
 
 To integrate the ray tracer into Diagrams a backend is needed. This backend extracts
 scene informations from a simplified data structure provided by Diagrams. After the
+<<<<<<< HEAD
 extraction the scene can be rendered. This chapter discusses the implemented modules
+=======
+extraction the scene can be rendered. In this chapter we discuss the implemented modules
+>>>>>>> 5c1757234323872de30d2c183dd04de612c3886f
 and their functionality. At the end we briefly introduce the methods used by the backend.
 
 ## Modules
@@ -1167,12 +1218,15 @@ the final color by using the functions defined in the module Blinn-Phong.
 
 ### BackendRayTrace
 
+**family -> families**
 Diagrams distinguish between backends with the use of type family. Type family
-are Haskells extension to support ad-hoc overloading of data types. Type family are
+are Haskell's extension to support ad-hoc overloading of data types. Type family are
 parametric types that are specialized representations based on the type parameters. The
 type of the scenes indicate which backend is used e.g. which function based on
 the name and the parameter signature.
 
+**write functions like `renderRTree`, but in this case, is it really necessary
+to mention the name of the function? I would omit it**
 The module BackendRayTrace defines an instance of Diagrams backend type families
 and a function “renderRTree” that extracts scene informations.
 These are used to translate the scene information to a data structure that is
@@ -1182,7 +1236,7 @@ used in the rendering.
 
 Sometimes we want to specify the details about the diagram at the start of the program.
 For example the output file, image format, and size of the diagram. The Diagrams
-CmdLine module provides creation of a command-line interface that supports standard
+CmdLine module provides a command-line interface that supports standard
 options as well as easy customization for additional parameters. The abstraction allows
 by simply defining the rendering backend and the interpretation of the command line
 arguments to use these features.
@@ -1226,10 +1280,10 @@ also provides a command-line Backend, which allows to define animations via Diag
 It exploits functional properties to simplify modification of data structures and certain
 functions as described in \autoref{modules}. This removes the dependency on
 POV-Ray from Diagrams.
+**actually, Diagrams is not dependent on POV-Ray, because it is optional**
 
 Despite the fact that the DSL Diagrams is flexible and powerful in describing vector
-graphics, this cannot be utilized without a certain understanding of Haskell and its
-abstraction system.
+graphics, this cannot be utilized without a certain understanding of Haskell.
 
 Ray tracing can be optimized in various ways. It would be interesting to use acceleration
 data structures to get a logarithmic scene complexity. It would also be interesting to
@@ -1238,7 +1292,8 @@ the DSL Diagrams to allow more light types, different material properties, textu
 (function that changes the color of a primitive per point) and more primitives.
 
 The implemented ray tracer does not use advanced rendering techniques. It does not
-consider reflections, refractions and area light. As shading technique is used the well
-known Blinn-Phong model which approximates certain light behavior.
+consider reflections, refractions and area light.
+The well-known Blinn-Phong model which approximates certain light behavior
+is used as shading technique.
 Advanced methods like path tracing, instant radiosity, Monte Carlo ray tracing, can be
 added to the implementation for rendering more realistic images.

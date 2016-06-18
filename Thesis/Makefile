@@ -1,13 +1,15 @@
-all: $(patsubst %.md, %.tex, $(wildcard *.md))
+all: thesis.pdf
 
-%.pdf: %.md
-	pandoc --filter pandoc-citeproc -V documentclass:clbthesis -H header.tex $< -o $@
+clean:
+	rm *.aux *.bbl *.blg *.log *.out *.toc
 
-%.tex: %.md
-	rm thesis.tex; \
-	rm thesis.pdf; \
-	pandoc --chapter $< -o $@; \
-	pdflatex --shell-escape  clb.tex; \
-	bibtex clb;       \
-	pdflatex --shell-escape clb.tex; \
-	pdflatex --shell-escape clb.tex; \
+%.tex: %.md biblio.bib metadata.yaml template.latex
+	pandoc --natbib --bibliography biblio.bib \
+	  metadata.yaml --template template.latex -H header.tex \
+	  --chapters --toc -s $< -o $@
+
+%.pdf: %.tex
+	pdflatex $<
+	bibtex $*
+	pdflatex $<
+	pdflatex $<
