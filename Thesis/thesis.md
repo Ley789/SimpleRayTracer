@@ -1,3 +1,4 @@
+**cite more, IEEE double representation, blinn phong, rendering book**
 
 # Introduction
 
@@ -992,7 +993,7 @@ determine the position of the pixels in the resulting image.
 ## Shading model
 
 Shading defines the calculation of the output color for each pixel.
-We use a slightly different shading model that is described in the book
+We use a shading model that is described in the book
 \cite{kevi}, which is also known as Blinn-Phong shading model.
 
 After generating the projection we intersect each ray with each objects
@@ -1090,7 +1091,7 @@ A illustration of a scene with 5 spheres and changing specular coefficient is gi
 
 ### Multiple lights and final results
 
-The final color $c_f$ is computed as
+The final color $c_f$ is computed
 
 $$
   c_f = c_o * ( c_a + c_d + c_s ),
@@ -1112,7 +1113,7 @@ where $c_{\_i}$ is the color of the i-th light.
 
 To integrate the ray tracer into Diagrams a backend is needed. This backend extracts
 scene informations from a simplified data structure provided by Diagrams. After the
-extraction the scene can be rendered. In this chapter discuss the implemented modules
+extraction the scene can be rendered. This chapter discusses the implemented modules
 and their functionality. At the end we briefly introduce the methods used by the backend.
 
 ## Modules
@@ -1127,25 +1128,28 @@ While intersecting a primitive with a ray we know which normal vector function
 is needed to calculate the actual normal vector. This does not generally apply
 if we have a intersection point and a primitive because of the numerical error
 in the IEEE-754 double representation. For example if we have a intersection point
-of a cone that is not represented mathematically correct then we do not know
+of a cone that is not represented mathematically correctly then we do not know
 if the point lies on the bot cap, top cap or at the cone without allowing some
 error. We solved this problem by exploiting the laziness property of Haskell.
 We calculate the normal vector in the intersection function.
-We know that the calculation is only executed when the value is needed
+We know that the calculation is only evaluated when the value is needed
 because of laziness.
 
 ### Object
 
 The module Object defines the scene objects as described in \autoref{object}.
-The object stores the needed matrices to save computation time, transforms the
-rays and the intersection point as described in \autoref{ray-transformations}.
+The object stores the needed matrices to save computation time. It preforms
+the transformations of the rays and the intersection point as described in
+\autoref{ray-transformations}. It uses the monoid instance to simplify the
+modifications of the properties of an object.
 
 ### SceneTypes
 
 The module SceneTypes defines light, camera and a scene as described in \autoref{d-scene}.
 A scene is a instance of the monoid class to combine multiple scenes. The scenes
-are combined by using the first defined camera, insert the objects and the lights
-of both scenes in the new scene.
+are combined by inserting the objects and the lights
+of both scenes in the new scene and using the last defined camera, which means
+the second argument to mappend.
 
 ### Blinn-Phong
 
@@ -1186,16 +1190,36 @@ arguments to use these features.
 ## Comparison with POV-Ray
 
 A comparison between a rendering of POV-Ray and the implemented raytracer is
-given in **FIGURE**. Both render the same scene and were executed on a
-machine with
+given in \autoref{fig:snowman}. Both render the same scene with the image resolution 800 $\times$ 600
+and were executed on a machine with
 
-* CPU: **CPU**
-* GPU: **GPU**
-* OS: **OS**.
+* CPU: intel core i7 920.
+* GPU: AMD Readon HD 6970.
+* OS: Ubuntu 14.04.4 LTS.
+
+\begin{figure}[htbp]
+\begin{minipage}[b]{0.5\linewidth}
+\centering
+\includegraphics[width=.8\linewidth]{snow.png}
+\caption{Rendering of own raytracer.
+   Rendering time was 6,1175 seconds.}
+\label{fig:snow1}
+\end{minipage}
+\hspace{0.5cm}
+\begin{minipage}[b]{0.5\linewidth}
+\centering
+\includegraphics[width=.8\linewidth]{snowPOV.png}
+\caption{Rendering of POV-Ray.
+  Rendering time was 0.920 seconds.}
+\label{fig:sub2}
+\end{minipage}
+\caption{A comparison between the implemented raytracer and POV-Ray using 4 cores.}
+\label{fig:snowman}
+\end{figure}
 
 # Conclusion and Further Work
 
-In this thesis we provided a alternative Backend for the DSL Diagrams. The Backend
+In this thesis we provided an alternative Backend for the DSL Diagrams. The Backend
 is a native renderer which implements the basic ray tracing algorithm. It supports
 different kinds of primitives as described in \autoref{primitives}. The implementation
 also provides a command-line Backend, which allows to define animations via Diagrams.
