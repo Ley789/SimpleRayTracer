@@ -104,7 +104,7 @@ rayToLight :: Light -> Intersection -> Ray
 rayToLight l i = Ray (origin  ^+^ e *^ direction)  direction
   where direction = normalize $ (l ^. lPosition) ^-^ origin
         origin = (i ^. itPoint)
-        e      = 0.00001
+        e      = 0.0001
 
 hitLight :: Light -> Ray -> SceneObject -> Bool
 hitLight l r s = case filter (not . filterIntersection distL r) (mapTracing r s) of
@@ -122,5 +122,6 @@ imageCreator :: Int -> Int -> [[RGB Double]] -> DynamicImage
 imageCreator r c colourList = ImageRGBF $ generateImage (pixelRenderer colourList) r c
 
 pixelRenderer :: [[RGB Double]] -> Int -> Int -> PixelRGBF
-pixelRenderer l x y = PixelRGBF (double2Float r) (double2Float g) (double2Float  b)
+pixelRenderer l x y = PixelRGBF (double2Float $ clamp r) (double2Float $ clamp g) (double2Float $ clamp b)
   where RGB r g b = (l !! y) !! x
+        clamp c = if c > 1 then 1 else c

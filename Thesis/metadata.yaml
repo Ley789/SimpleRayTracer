@@ -4,17 +4,20 @@ title: Ray Tracing Backend for Diagrams
 author: Alexander Lochmann
 date: \today
 supervisor:
-  - Michael Färber
-  - Cezary Kaliszyk
+  - Michael Färber, MSc
+  - Priv.-Doz. Dr. Cezary Kaliszyk
 abstract:
   Ray tracing is a rendering technique that aims to render physically realistic
   images. Ray tracing is computationally intense and is therefore mostly used
   for offline rendering.
   Diagrams is a flexible and powerful DSL for vector graphics written in Haskell.
   It allows to define 3D scenes.
-  This thesis wants to replace POV-Ray as standard 3D Backend of Diagrams by implementing
+  This thesis aims to replace POV-Ray as standard 3D Backend of Diagrams by implementing
   a ray tracer in the functional language Haskell. It provides details about the
-  design and implementation.
+  used primitives, describes the intersection functions and how to apply
+  transformations to the scene. The implementation uses the Blinn-Phong
+  shading model and descibes the different color computations. Also a comparison
+  with POV-Ray is given.
 
 biblio-style: abbrv
 numbersections: true

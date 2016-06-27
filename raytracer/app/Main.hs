@@ -5,7 +5,7 @@ import BackendRayTrace
 
 --cameraLight :: Diagram Ray
 cameraLight = mm50Camera # translate (V3 0 0 15) 
-              <> pointLight white # translate (V3 5 (-0.5) 15)
+              <> pointLight white # translate (V3 15 0 8)
 
 example = sphere # sc blue  # ambient 0.2 # diffuse 0.6 # highlight (Specular 0.8 20) # (transform . aboutX) (90 @@ deg) # translateX 2
 
