@@ -145,4 +145,5 @@ oProp = oModifier . texture . property
 -------------------------------------------------------------------------------
 
 matricesOfM44 :: M44 Double -> Matrices
-matricesOfM44 m = Matrices m (inv44 m) (rot44 (invScale44 m) m)
+matricesOfM44 m = Matrices m i (transpose i)
+  where i = inv44 m
